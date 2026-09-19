@@ -2,28 +2,83 @@
 
 These instructions apply to the entire repository.
 
+## Read first
+
+For controlled repository work, read these before editing:
+
+1. `AGENTS.md`
+2. `implementation_plan.md` when it exists
+3. `CONTRIBUTING.md`
+4. `docs/CHANGE-MANAGEMENT.md`
+5. `docs/RELEASE-MANAGEMENT.md`
+6. `docs/ARCHITECTURE.md` when architecture or presentation boundaries are involved
+
+WG-ARCH-001 §27 is the organization repository baseline. Project-specific behavior may extend it, but a departure must be deliberate and documented rather than accidental.
+
+## Controlled-change discipline
+
+Hexframe uses the `HF-###` namespace.
+
+- Start from an up-to-date `main`.
+- Reuse an existing branch or PR for the current ID instead of creating a duplicate.
+- Otherwise use the next sequential ID and branch `hf-###-imperative-summary`.
+- Work only the current controlled change. Do not begin a later planned ID in the same branch.
+- Preserve unrelated or user-authored work. Never reset, clean, overwrite, or discard it to make the tree look clean.
+- Keep the commit and PR title in the form `[HF-###] [TYPE] Imperative summary` using exactly one type allowed by `docs/CHANGE-MANAGEMENT.md`.
+
+When `implementation_plan.md` defines the current sequence, treat its task order and acceptance criteria as the scope boundary. Do not skip ahead merely because a later task looks easy.
+
 ## Definition of done
 
-After every task that changes repository files, the agent must finish the delivery loop before handing the task back:
+A repository-changing task is not finished at "PR ready." Complete the delivery loop:
 
-1. Inspect the worktree and account for every modified, deleted, and untracked file.
-2. Preserve unrelated or user-authored work. Never discard, overwrite, reset, or clean away changes merely to make the tree appear clean.
-3. Remove only task-created temporary artifacts, then run the relevant tests, type checks, production build, and `git diff --check`.
-4. Commit all intended task changes with a concise, descriptive commit message. Do not leave task changes staged, unstaged, or untracked.
-5. Push the commit to the configured upstream branch.
-6. Open a pull request. Do not push to `main`, and do not deploy from a branch.
-7. Confirm `git status --short` is empty before reporting completion.
+1. Inspect all modified, deleted, and untracked files and account for them.
+2. Remove only task-created temporary artifacts.
+3. Run the relevant focused tests while working.
+4. Before committing, run:
+   ```bash
+   npm run check
+   git diff --check
+   ```
+5. Commit all intended task changes with the controlled-change title and an appropriate change record.
+6. Push the branch and open or update its pull request. Never push directly to `main`.
+7. Re-fetch the PR head and CI state after the push.
+8. If the PR's current head is green, up to date, authoritative for the current change, and mergeable, merge it with a merge commit. Do not stop merely because the next requested change is only one ID ahead.
+9. If another sequential prompt follows, start it only after the current merge is confirmed.
+10. Report the merged PR and resulting `main` commit. If a blocker prevents completion, report the exact blocker without claiming completion.
 
-## Deployment is not part of the delivery loop
+Do not squash or rebase a controlled change into `main`.
 
-An earlier version of this workflow deployed every commit to production. That is superseded
-by the release model: production deploys a **release tag**, never an arbitrary `main` commit,
-and the deployment records its own identity at `/version.json`.
+## Validation and CI
 
-See [docs/RELEASE-MANAGEMENT.md](docs/RELEASE-MANAGEMENT.md). The historical workflow is kept
-in this repository's history because it explains why the reconstructed source commits deploy
-as often as they do.
+`npm run check` is the credential-free repository validation command and CI runs it on pull requests and `main`. Add new credential-free validation to `check` rather than creating a parallel unofficial gate.
 
-If a required check, commit, push, deployment, or live verification cannot be completed, do not claim the task is finished. Report the exact blocker and leave all recoverable work intact.
+Dependency-changing work must also use `npm ci` against the committed lockfile before completion.
 
-Read-only questions and reviews that do not change repository files do not require an empty commit or redundant deployment.
+No green CI, no merge.
+
+## Release and deployment boundary
+
+Normal feature, fix, refactor, documentation, test, and build changes do not deploy production.
+
+Production is an immutable release action:
+
+```text
+main -> annotated v* tag -> GitHub Release -> protected production workflow
+```
+
+Do not deploy from a branch or arbitrary `main` commit. Do not use local production mutation as a substitute for the release workflow. A task that intentionally changes release/deployment controls must still not deploy unless deployment is explicitly part of that controlled change.
+
+## Documentation authority
+
+Keep repository prose about the current system. Do not add a changelog, per-version Markdown release archive, or historical narrative to preserve information already carried by Git/GitHub.
+
+Use:
+- executable source/contracts for behavior;
+- current architecture/policy docs for present design and rules;
+- Git history, PRs, Actions, annotated tags, and GitHub Releases for superseded changes and releases;
+- provider history for deployment/runtime evidence.
+
+If required validation or provider state cannot be checked, leave recoverable work intact and state exactly what remains unverified.
+
+Read-only reviews that change no repository files do not require a commit or PR.
