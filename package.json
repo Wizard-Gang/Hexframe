@@ -18,9 +18,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:content": "vitest run tests/content",
+    "check:history": "node scripts/check-history.mjs",
     "secrets:push": "node scripts/sync-secrets.mjs",
     "deploy": "node scripts/deploy.mjs",
-    "check": "npm run typecheck && npm run test && npm run build && npm run validate:content"
+    "check": "npm run check:history && npm run typecheck && npm run test && npm run build && npm run validate:content"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260823.1",

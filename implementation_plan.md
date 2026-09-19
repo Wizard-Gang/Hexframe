@@ -1,54 +1,25 @@
 # Hexframe organization-normalization implementation plan
 
 Status: active  
-Baseline: WG-ARCH-001 §27, published in `SouthernGentlemen/wizardgang-architecture-demo`  
-Starting point: HF-115 merged to `main`
+Baseline: WG-ARCH-001 §27
 
 ## Goal
 
-Normalize Hexframe to the WizardGang product-repository baseline without mixing the work into one large migration. Each task below is one controlled HF change, is completed in order, and must be merged before the next task begins.
-
-This plan is current work, not release history. Git/GitHub remains the authority for completed and superseded states.
-
-## Current baseline review
-
-HF-115 established the Node/npm portion of the baseline: Node 26 is pinned in `.node-version`, npm 11 is exact in `packageManager`, engines are enforced, install scripts are allow-listed, workflows read `.node-version`, and CI runs `npm run check`.
-
-The remaining material gaps are:
-
-- `check` does not validate sequential HF change IDs.
-- TypeScript, Vite, and Vitest are still below the §27 majors.
-- React 19 is not present. The three HTML entry documents are hand-authored and the public/client presentation is largely assembled with HTML strings and `innerHTML`.
-- the application CSP still permits `style-src 'unsafe-inline'`.
-- the architecture document does not yet record Hexframe's explicit game/client-application exception and the boundary between build-time documents and interactive game code.
-- local scripts can mutate production by deploying the Worker and pushing production secrets.
-- release automation still reads checked-in per-version Markdown release notes.
-- `CHANGELOG.md`, `docs/releases/**`, reconstruction/provenance material, and historical deployment/publication records duplicate history that §15/§18 assign to Git, GitHub Releases, Actions, and platform history.
-- current contributor/release prose still contains pre-baseline rules, including "linear history only" and references to `docs/history/**`.
-- no expected GitHub-settings file or verifier exists. The repository currently has no rulesets, and GitHub still allows squash and rebase merges in addition to merge commits.
+Normalize Hexframe to the WizardGang product-repository baseline through small sequential controlled changes. This file is the live queue for current/future work only.
 
 ## Execution rules
 
-- Work the tasks below in order.
+- Pick up the first open task unless the user explicitly overrides the queue or a prerequisite blocks it.
 - One task equals one controlled change and one PR.
 - Do not begin a later task while its prerequisite PR is open.
 - Preserve product behavior unless the task explicitly changes a platform or presentation contract.
 - No task in this plan deploys production merely because it merges.
 - Every task finishes with `npm run check`, any task-specific checks, and `git diff --check`.
 - Merge the current PR when its current head is green, up to date, authoritative for the task, and mergeable.
+- The merge that completes a task removes that task from this file. Do not keep completed tasks or legacy narrative here.
+- Delete this file when no future planned tasks remain.
 
 ## Planned controlled changes
-
-### [ ] HF-117 — BUILD — Enforce controlled-change history
-
-Add the repository history validator required by §27 and make it part of `npm run check`.
-
-Acceptance:
-- add a deterministic `check:history`/equivalent validator for the `HF-###` namespace;
-- prove IDs are sequential through the current change without accepting duplicates, gaps, malformed titles, or later IDs;
-- keep PR-title validation on the complete §16 type vocabulary;
-- align `CONTRIBUTING.md` and `docs/CHANGE-MANAGEMENT.md` with merge-commit history and current-state documentation rules;
-- remove reconstructed-change-only instructions from the normal forward change template where they no longer apply.
 
 ### [ ] HF-118 — BUILD — Complete the baseline toolchain majors
 
@@ -140,12 +111,12 @@ Acceptance:
 Perform the final repository-wide acceptance pass against WG-ARCH-001 §27.
 
 Acceptance:
-- re-inventory the repository from current `main`, not from this initial gap list;
+- re-inventory the repository from current `main`;
 - confirm toolchain, commands, presentation boundary, CSP, change control, release flow, repository contents, GitHub settings, and current-state docs match the standard;
 - remove dead transitional code/config/docs revealed by the migration;
 - ensure README, AGENTS, CONTRIBUTING, SECURITY, architecture, change-management, and release-management documentation agree;
 - run `npm ci`, `npm run check`, repository-settings verification, and `git diff --check`;
-- retire this implementation plan after its final useful acceptance evidence is captured in Git/GitHub.
+- delete this implementation plan in the completing merge after its remaining work is delivered.
 
 ## Non-goals
 
