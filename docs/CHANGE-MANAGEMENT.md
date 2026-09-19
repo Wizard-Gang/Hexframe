@@ -1,13 +1,12 @@
 # Change management
 
-<!-- SHARED WIZARDGANG TEMPLATE. Replace Hexframe and HF per project. -->
-
 Every controlled change to Hexframe receives exactly one permanent change ID in the
 `HF-###` namespace.
 
 ## Identity rules
 
 - One change, one ID. IDs are permanent, never reused, never renumbered after publication.
+- IDs are sequential with no gaps. `npm run check:history` validates reachable controlled commits.
 - A revert keeps the original ID; the revert itself receives a new ID.
 - A corrective change references the change it corrects with a `Corrects:` line.
 
@@ -67,21 +66,19 @@ Validation:
 Evidence:
 - <paths that carry the change>
 
-Source:
-<original repository / original SHA, for reconstructed changes>
-
-Release:
-v0.x.0
+Corrects:
+<HF-###, only when this is a corrective change>
 ```
+
+Omit fields that do not apply; do not add historical provenance or release bookkeeping to a forward change merely to fill a template.
 
 A low-risk change may use the short form:
 
 ```
-[HF-062] [FIX] Correct Training menu label
+[HF-###] [DOCS] Clarify current operator guidance
 
 Risk: Low
-Validation: npm test
-Source: <original SHA>
+Validation: npm run check
 ```
 
 ## Risk classification
@@ -98,10 +95,9 @@ High-risk changes require explicit validation evidence and a documented rollback
 
 | Phase | Repository evidence |
 | --- | --- |
-| Plan | Change ID, `Reason:`, `Risk:`, `Controls:` |
+| Plan | Change ID, implementation-plan task when applicable, `Reason:`, `Risk:`, `Controls:` |
 | Do | The implementation commit |
 | Check | `Validation:`, CI run, review on the pull request |
-| Act | Release notes, `docs/history/DEPLOYMENTS.md`, rollback target, corrective changes |
+| Act | Merge, release/rollback actions when applicable, or a new corrective controlled change |
 
-These records are ordinary engineering artifacts. Do not manufacture paperwork that does
-not correspond to real activity.
+Current repository documents describe current rules and architecture. Superseded implementation and process history belongs in Git/GitHub.

@@ -1,13 +1,13 @@
 # Contributing
 
-<!-- SHARED WIZARDGANG TEMPLATE. Replace Hexframe, HF. -->
-
 ## Change flow
 
 ```
 change requirement → permanent change ID → branch → implementation → PR → CI
                    → review → merge → release → production
 ```
+
+If `implementation_plan.md` exists with open tasks, its first task is the default next controlled change.
 
 ## Branch naming
 
@@ -43,8 +43,9 @@ No green CI, no merge.
 
 ## Rules that are not negotiable
 
-- `main` is protected. No direct pushes, no force pushes, linear history only.
+- `main` accepts controlled changes through pull requests and merge commits only. No direct pushes or force pushes.
 - Published release tags are never moved or deleted.
 - No credential ever enters the repository, its history, its tests, or its documentation.
 - A reverted change keeps its ID; the revert receives a new one.
 - A corrective change names what it corrects with a `Corrects:` line.
+- Completed implementation-plan tasks are removed by the merge that delivers them; Git/GitHub retains their history.

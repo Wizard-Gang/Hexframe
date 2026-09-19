@@ -15,6 +15,19 @@ For controlled repository work, read these before editing:
 
 WG-ARCH-001 §27 is the organization repository baseline. Project-specific behavior may extend it, but a departure must be deliberate and documented rather than accidental.
 
+## Implementation plan is the work queue
+
+`implementation_plan.md` is a live current/future work queue, not a historical record.
+
+- If it exists and has open tasks, pick up the first open task before inventing or starting unrelated follow-up work unless the user explicitly overrides the queue or a prerequisite blocks it.
+- Treat task order and acceptance criteria as the scope boundary. Do not skip ahead because a later task looks easy.
+- Keep future tasks accurate as discoveries change their scope or prerequisites.
+- The merge that delivers a task must remove that task and any now-obsolete planning text from `implementation_plan.md`. Git/GitHub is the history.
+- Do not add completed-task sections, merge SHAs, release notes, retrospectives, or legacy narratives to the plan.
+- If no future tasks remain, delete `implementation_plan.md` in the final task instead of preserving an empty historical plan.
+
+`AGENTS.md` and `implementation_plan.md` describe only the current workflow and future work. Do not preserve superseded process or implementation history in either file.
+
 ## Controlled-change discipline
 
 Hexframe uses the `HF-###` namespace.
@@ -26,8 +39,6 @@ Hexframe uses the `HF-###` namespace.
 - Preserve unrelated or user-authored work. Never reset, clean, overwrite, or discard it to make the tree look clean.
 - Keep the commit and PR title in the form `[HF-###] [TYPE] Imperative summary` using exactly one type allowed by `docs/CHANGE-MANAGEMENT.md`.
 
-When `implementation_plan.md` defines the current sequence, treat its task order and acceptance criteria as the scope boundary. Do not skip ahead merely because a later task looks easy.
-
 ## Definition of done
 
 A repository-changing task is not finished at "PR ready." Complete the delivery loop:
@@ -35,17 +46,19 @@ A repository-changing task is not finished at "PR ready." Complete the delivery 
 1. Inspect all modified, deleted, and untracked files and account for them.
 2. Remove only task-created temporary artifacts.
 3. Run the relevant focused tests while working.
-4. Before committing, run:
+4. Update `implementation_plan.md` so the pending merge will leave only current/future tasks.
+5. Before committing, run:
    ```bash
    npm run check
    git diff --check
    ```
-5. Commit all intended task changes with the controlled-change title and an appropriate change record.
-6. Push the branch and open or update its pull request. Never push directly to `main`.
-7. Re-fetch the PR head and CI state after the push.
-8. If the PR's current head is green, up to date, authoritative for the current change, and mergeable, merge it with a merge commit. Do not stop merely because the next requested change is only one ID ahead.
-9. If another sequential prompt follows, start it only after the current merge is confirmed.
-10. Report the merged PR and resulting `main` commit. If a blocker prevents completion, report the exact blocker without claiming completion.
+6. Commit all intended task changes with the controlled-change title and an appropriate change record.
+7. Push the branch and open or update its pull request. Never push directly to `main`.
+8. Re-fetch the PR head and CI state after the push.
+9. If the PR's current head is green, up to date, authoritative for the current change, and mergeable, merge it with a merge commit. Do not stop merely because the next requested change is only one ID ahead.
+10. Confirm the merge landed on `main`. The merged plan must no longer list the delivered task.
+11. If another sequential prompt follows, start it only after the current merge is confirmed.
+12. Report the merged PR and resulting `main` commit. If a blocker prevents completion, report the exact blocker without claiming completion.
 
 Do not squash or rebase a controlled change into `main`.
 
