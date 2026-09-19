@@ -5,6 +5,11 @@
   "license": "MIT",
   "description": "Deterministic browser fighting-game training lab.",
   "type": "module",
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": "26.x",
+    "npm": "11.x"
+  },
   "scripts": {
     "build": "vite build && node scripts/version-stamp.mjs Hexframe dist",
     "dev": "node scripts/dev.mjs",
@@ -14,7 +19,8 @@
     "test:watch": "vitest",
     "validate:content": "vitest run tests/content",
     "secrets:push": "node scripts/sync-secrets.mjs",
-    "deploy": "node scripts/deploy.mjs"
+    "deploy": "node scripts/deploy.mjs",
+    "check": "npm run typecheck && npm run test && npm run build && npm run validate:content"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260823.1",
@@ -28,6 +34,7 @@
   "allowScripts": {
     "esbuild@0.28.2": true,
     "esbuild@0.28.1": true,
-    "workerd@1.20260820.1": true
+    "workerd@1.20260820.1": true,
+    "fsevents@2.3.3": true
   }
 }

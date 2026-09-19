@@ -25,11 +25,16 @@ One primary type per commit. Secondary consequences belong in the body, not the 
 | `FEAT` | New user-facing or system capability |
 | `FIX` | Correction of incorrect behavior |
 | `SEC` | Security control, hardening, or vulnerability correction |
-| `REFACTOR` | Structural change with no intended external behavior change |
-| `TEST` | Test coverage, test infrastructure, or verification logic |
-| `PERF` | Performance or resource-efficiency improvement |
+| `API` | API contract, endpoint, or integration-interface change |
+| `A11Y` | Accessibility behavior or conformance change |
+| `I18N` | Internationalization or localization change |
+| `AI` | AI capability, model, agent, or AI-governance change |
+| `DB` | Database schema, migration, or persistence change |
 | `OPS` | Deployment, observability, backup, incident, or runtime control |
+| `TEST` | Test coverage, test infrastructure, or verification logic |
 | `DOCS` | Material documentation or controlled-record change |
+| `REFACTOR` | Structural change with no intended external behavior change |
+| `PERF` | Performance or resource-efficiency improvement |
 | `BUILD` | Build system, release tooling, CI/CD, or packaging |
 | `REVERT` | Explicit reversal of a previous controlled change |
 | `CHORE` | Non-functional maintenance fitting no other category |

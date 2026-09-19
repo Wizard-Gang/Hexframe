@@ -23,20 +23,14 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .node-version
           cache: npm
 
       - name: Install
         run: npm ci
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
+      - name: Check
+        run: npm run check
 
   change-id:
     # Every controlled change carries exactly one permanent ID and one primary type.
@@ -48,7 +42,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
           echo "PR title: $TITLE"
-          pattern='^\[HF-[0-9]{3,}\] \[(INIT|FEAT|FIX|SEC|REFACTOR|TEST|PERF|OPS|DOCS|BUILD|REVERT|CHORE)\] .+'
+          pattern='^\[HF-[0-9]{3,}\] \[(INIT|FEAT|FIX|SEC|API|A11Y|I18N|AI|DB|OPS|TEST|DOCS|REFACTOR|PERF|BUILD|REVERT|CHORE)\] .+'
           if ! printf '%s' "$TITLE" | grep -Eq "$pattern"; then
             echo "::error::PR title must match [HF-###] [TYPE] <imperative summary>"
             exit 1

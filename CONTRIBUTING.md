@@ -12,7 +12,7 @@ change requirement → permanent change ID → branch → implementation → PR 
 ## Branch naming
 
 ```
-hf/HF-063-short-slug
+hf-063-short-slug
 ```
 
 ## Commit and PR titles
@@ -24,10 +24,19 @@ hf/HF-063-short-slug
 One primary type per change. See [docs/CHANGE-MANAGEMENT.md](docs/CHANGE-MANAGEMENT.md)
 for the full type list, body format, and risk definitions.
 
+## Toolchain
+
+Use the exact Node.js version in `.node-version` and the exact npm 11 version declared by
+`packageManager`. The engine ranges are enforced by `.npmrc`.
+
+Dependency install scripts are disabled unless the exact package version is approved in
+`package.json#allowScripts`. Keep that list limited to install scripts required by the locked
+dependency graph.
+
 ## Before opening a pull request
 
 ```bash
-npm ci && npm test && npm run typecheck && npm run build
+npm ci && npm run check && git diff --check
 ```
 
 No green CI, no merge.
