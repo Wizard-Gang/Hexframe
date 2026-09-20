@@ -44,15 +44,6 @@ plain-HTTP localhost, where the attribute would prevent the cookie from being st
 - No secret appears in tracked configuration, client code, or any built asset.
 - CI fails the build if credential material appears in the tracked tree.
 
-## Predecessor state and recovery boundary
-
-Hexframe is the only supported runtime and persistence namespace for this product.
-
-- Hexframe does not read or migrate predecessor browser-storage keys, identity cookies, or player-save records.
-- The former ShadowMoney Worker, hostname, and Durable Object namespace are absent; predecessor saves are not retained or recoverable.
-- Recreating a predecessor runtime, hostname, namespace, or importing predecessor data would be a new controlled infrastructure/data-migration change, not a rollback operation.
-- Hexframe rollback targets are valid immutable Hexframe release tags only.
-
 ## Public versus privileged surface
 
 | Route | Access |
@@ -70,4 +61,4 @@ requests are rebuilt as bare GETs so no client cookie is forwarded to the asset 
 - It does not defend against a player modifying their own local simulation. Combat is
   client-side; there is no competitive integrity claim.
 - It does not anonymise beyond using an opaque identifier: a save is still a record.
-- It makes no certification claim. See the note in `README.md` on standards positioning.
+- It makes no certification claim.

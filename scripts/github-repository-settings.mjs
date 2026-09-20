@@ -17,6 +17,12 @@ function hasAll(actual, expected) {
   return valuesOf(expected).every((value) => values.has(value));
 }
 
+function sameValues(actual, expected) {
+  const actualValues = valuesOf(actual);
+  const expectedValues = valuesOf(expected);
+  return actualValues.length === expectedValues.length && hasAll(actualValues, expectedValues);
+}
+
 function rulesByType(ruleset) {
   return new Map(valuesOf(ruleset?.rules).map((rule) => [rule.type, rule]));
 }
@@ -72,10 +78,14 @@ export function compareGithubSettings(expected, actual) {
     }
 
     const includes = actualRuleset.conditions?.ref_name?.include;
-    if (!hasAll(includes, expectedRuleset.include)) {
+    if (!sameValues(includes, expectedRuleset.include)) {
       failures.push(
-        `${expectedRuleset.name}: missing ref include ${expectedRuleset.include.join(", ")}`,
+        `${expectedRuleset.name}: expected ref includes ${expectedRuleset.include.join(", ")}`,
       );
+    }
+
+    if (!sameValues(actualRuleset.bypass_actors, expectedRuleset.bypassActors)) {
+      failures.push(`${expectedRuleset.name}: bypass actors do not match the committed contract`);
     }
 
     const ruleMap = rulesByType(actualRuleset);
@@ -96,11 +106,18 @@ export function compareGithubSettings(expected, actual) {
         failures.push(`${expectedRuleset.name}: pull request rule must allow merge commits only`);
       }
 
+      const checks = ruleMap.get("required_status_checks");
       const contexts = statusContexts(actualRuleset);
-      if (!hasAll(contexts, expected.requiredStatusChecks)) {
+      if (!sameValues(contexts, expected.requiredStatusChecks)) {
         failures.push(
-          `${expectedRuleset.name}: missing required status check ${expected.requiredStatusChecks.join(", ")}`,
+          `${expectedRuleset.name}: required status checks do not match ${expected.requiredStatusChecks.join(", ")}`,
         );
+      }
+      if (
+        expectedRuleset.requireBranchUpToDate === true
+        && checks?.parameters?.strict_required_status_checks_policy !== true
+      ) {
+        failures.push(`${expectedRuleset.name}: required status checks must be current with main`);
       }
     }
   }
@@ -129,7 +146,7 @@ export function rulesetPayload(expected, ruleset) {
         parameters: {
           do_not_enforce_on_create: true,
           required_status_checks: expected.requiredStatusChecks.map((context) => ({ context })),
-          strict_required_status_checks_policy: true,
+          strict_required_status_checks_policy: ruleset.requireBranchUpToDate === true,
         },
       };
     }
@@ -140,7 +157,7 @@ export function rulesetPayload(expected, ruleset) {
     name: ruleset.name,
     target: ruleset.target,
     enforcement: ruleset.enforcement,
-    bypass_actors: [],
+    bypass_actors: ruleset.bypassActors,
     conditions: {
       ref_name: {
         include: ruleset.include,

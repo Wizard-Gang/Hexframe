@@ -1,10 +1,10 @@
 /**
- * The single audited legacy-markup parser boundary.
+ * The single audited trusted-markup parser boundary.
  *
- * Hexframe's build-time documents are React/TSX. A few interactive lab views still
- * produce internal HTML strings while that UI remains imperative. Those strings may be
- * parsed only here. The guard rejects executable/inline-style surfaces before parsing,
- * and repository validation forbids raw DOM HTML sinks anywhere else.
+ * Hexframe's build-time documents are React/TSX. Imperative interactive views may
+ * produce internal HTML strings, and those strings may be parsed only here. The guard
+ * rejects executable/inline-style surfaces before parsing, and repository validation
+ * forbids raw DOM HTML sinks anywhere else.
  */
 const FORBIDDEN_MARKUP = [
   { label: "script element", pattern: /<script\b/i },
