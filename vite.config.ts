@@ -1,9 +1,25 @@
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
+import { renderDocument, type HexframeDocument } from "./src/documents/site-documents";
 
-// Three built pages: the legacy/public landing shell, the unified game/lab client, and
-// the authenticated developer Move Codex. Product routing remains a Worker concern.
+function documentFor(filename: string): HexframeDocument {
+  const normalized = filename.replaceAll("\\", "/");
+  if (normalized.endsWith("/lab/index.html")) return "lab";
+  if (normalized.endsWith("/codex/index.html")) return "codex";
+  return "root";
+}
+
 export default defineConfig({
+  plugins: [{
+    name: "hexframe-react-documents",
+    enforce: "pre",
+    transformIndexHtml: {
+      order: "pre",
+      handler(_html, context) {
+        return renderDocument(documentFor(context.filename));
+      },
+    },
+  }],
   build: {
     outDir: "dist",
     emptyOutDir: true,
@@ -20,12 +36,8 @@ export default defineConfig({
           return "assets/[name]-[hash].js";
         },
         assetFileNames: (asset) => {
-          if (asset.names.some((name) => name.startsWith("codex"))) {
-            return "codex/assets/[name]-[hash][extname]";
-          }
-          if (asset.names.some((name) => name.startsWith("lab"))) {
-            return "lab/assets/[name]-[hash][extname]";
-          }
+          if (asset.names.some((name) => name.startsWith("codex"))) return "codex/assets/[name]-[hash][extname]";
+          if (asset.names.some((name) => name.startsWith("lab"))) return "lab/assets/[name]-[hash][extname]";
           return "assets/[name]-[hash][extname]";
         },
       },

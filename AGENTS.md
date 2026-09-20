@@ -29,6 +29,21 @@ WG-ARCH-001 §27 is the organization repository baseline. Project-specific behav
 
 `AGENTS.md` and `implementation_plan.md` describe only the current workflow and future work. Do not preserve superseded process or implementation history in either file.
 
+## "Do needful" shorthand
+
+For this project, the user command **"do needful"** is explicit authorization to execute the next queued repository task without asking which task to take.
+
+When the user says `do needful`:
+
+1. Read current `AGENTS.md` and `implementation_plan.md`.
+2. Take the first open implementation-plan task unless the user explicitly names another task or a prerequisite blocks it.
+3. Execute that task through the complete branch → implementation → validation → PR → green current-head CI → merge-commit flow.
+4. Purge the delivered task from `implementation_plan.md` in the completing merge and keep later tasks current.
+5. Confirm merged `main` and the new first open task.
+6. End the session with the copy-paste prompt for that next open task.
+
+Do not stop at planning, local completion, a pushed branch, or "PR ready" when the task can be completed and merged.
+
 ## Controlled-change discipline
 
 Hexframe uses the `HF-###` namespace.

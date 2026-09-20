@@ -1,14 +1,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { renderDocument } from "../../src/documents/site-documents";
 
 const source = readFileSync(new URL("../../src/client/front-app.ts", import.meta.url), "utf8");
 const frontCss = readFileSync(new URL("../../src/client/styles/front.css", import.meta.url), "utf8");
 const labCss = readFileSync(new URL("../../src/client/styles/lab.css", import.meta.url), "utf8");
 const labMain = readFileSync(new URL("../../src/client/lab-main.ts", import.meta.url), "utf8");
-const rootHtml = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
-const labHtml = readFileSync(new URL("../../lab/index.html", import.meta.url), "utf8");
-const codexHtml = readFileSync(new URL("../../codex/index.html", import.meta.url), "utf8");
 const loginSource = readFileSync(new URL("../../src/worker/routes/login.ts", import.meta.url), "utf8");
+const rootHtml = renderDocument("root");
+const labHtml = renderDocument("lab");
+const codexHtml = renderDocument("codex");
 
 function relativeLuminance(hex: string): number {
   const channels = hex.match(/[\da-f]{2}/gi)?.map((value) => Number.parseInt(value, 16) / 255) ?? [];
@@ -23,41 +24,39 @@ function contrastRatio(foreground: string, background: string): number {
 }
 
 describe("public Hexframe surface", () => {
-  it("uses a project overview at the root and training at play", () => {
-    expect(source).toContain('if (path === "/") return overviewMarkup()');
-    expect(source).toContain('path === "/play/" || path === "/training/"');
-    expect(source).toContain('return shell(trainingMarkup(), "Training")');
-    expect(source).toContain("Browser fighting-game lab");
+  it("renders useful overview and training documents before JavaScript runs", () => {
+    expect(rootHtml).toContain("Browser fighting-game lab");
+    expect(rootHtml).toContain("Practice the hit.");
+    expect(rootHtml).toContain('href="/play/"');
+    expect(labHtml).toContain("One stage. One dummy. Every frame.");
+    expect(labHtml).toContain('data-tutorial="true"');
+    expect(rootHtml.indexOf("Browser fighting-game lab")).toBeLessThan(rootHtml.indexOf('<script type="module"'));
+    expect(labHtml.indexOf("One stage. One dummy. Every frame.")).toBeLessThan(labHtml.indexOf('<script type="module"'));
   });
 
-  it("keeps the public navigation focused on overview and training", () => {
-    const shell = source.match(/function shell[\s\S]*?\n}/)?.[0] ?? "";
-    expect(shell).toContain('href="/">OVERVIEW');
-    expect(shell).toContain('href="/play/" aria-current="page">TRAINING');
-    expect(shell).not.toContain("CAMPAIGN");
-    expect(shell).not.toContain("LOADOUTS");
-    expect(shell).not.toContain("CODEX");
+  it("keeps public navigation focused on overview and training", () => {
+    expect(rootHtml).toContain('aria-label="Primary"');
+    expect(rootHtml).toContain('aria-current="page">Overview');
+    expect(labHtml).toContain('aria-current="page">TRAINING');
+    expect(rootHtml).not.toContain(">CAMPAIGN<");
+    expect(rootHtml).not.toContain(">LOADOUTS<");
   });
 
-  it("uses the current WizardGang mark and wordmark across public entry points", () => {
-    expect(source).toContain('<span class="wizardgang-mark" aria-hidden="true"></span>');
-    expect(source).toContain('<strong>WIZARDGANG</strong><small>Hexframe</small>');
-    expect(source.match(/\$\{WIZARDGANG_BRAND\}/g)).toHaveLength(3);
-    expect(frontCss).toContain("background: #d9ff43; box-shadow: .5rem -.5rem 0 #a489ff;");
+  it("uses the WizardGang mark and favicon across build-time documents", () => {
+    expect(rootHtml).toContain('class="wizardgang-mark"');
+    expect(labHtml).toContain('class="wizardgang-mark"');
     for (const document of [rootHtml, labHtml, codexHtml, loginSource]) {
       expect(document).toContain('rel="icon"');
       expect(document).toContain("%23d9ff43");
       expect(document).toContain("%23a489ff");
     }
+    expect(frontCss).toContain("background: #d9ff43; box-shadow: .5rem -.5rem 0 #a489ff;");
   });
 
-  it("makes the tutorial the primary training action", () => {
-    const training = source.match(/function trainingMarkup[\s\S]*?\n}/)?.[0] ?? "";
-    expect(training).toContain('data-tutorial="true">Start tutorial');
-    expect(training).toContain('data-launch-training="true">Free practice');
-    expect(training).toContain("One stage. One dummy. Every frame.");
-    expect(training).not.toContain("LOADOUT");
-    expect(training).not.toContain("pick-slot");
+  it("keeps the tutorial as the primary training action", () => {
+    expect(labHtml).toContain('data-tutorial="true">Start tutorial');
+    expect(labHtml).toContain('data-launch-training="true">Free practice');
+    expect(labHtml).toContain("One stage. One dummy. Every frame.");
   });
 
   it("gates coarse-pointer visitors with the desktop-only support policy", () => {
@@ -71,11 +70,10 @@ describe("public Hexframe surface", () => {
     expect(frontCss).toContain(".desktop-only-gate");
   });
 
-  it("uses the real training renderer on the refreshed overview", () => {
-    const overview = source.match(/function overviewMarkup[\s\S]*?\n}/)?.[0] ?? "";
-    expect(overview).toContain("Practice the hit.");
-    expect(overview).toContain("data-training-stage");
-    expect(overview).toContain("Pause on contact");
+  it("uses the real training renderer as progressive enhancement", () => {
+    expect(rootHtml).toContain("data-training-stage");
+    expect(labHtml).toContain("data-training-stage");
+    expect(source).toContain("mountTrainingStages(mount)");
   });
 
   it("keeps compact footer and control labels above AA text contrast", () => {
@@ -86,10 +84,9 @@ describe("public Hexframe surface", () => {
     expect(contrastRatio("#758089", "#0d1115")).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("does not paint fallback copy before either JavaScript app mounts", () => {
-    expect(rootHtml).toContain('<div id="app" aria-busy="true"></div>');
-    expect(labHtml).toContain('<div id="lab" aria-busy="true"></div>');
-    expect(rootHtml).toContain("<noscript>");
-    expect(labHtml).toContain("<noscript>");
+  it("provides Codex fallback content before the interactive demonstration mounts", () => {
+    expect(codexHtml).toContain("Authoritative move demonstrations");
+    expect(codexHtml).toContain("animated frame demonstrations require JavaScript");
+    expect(codexHtml.indexOf("Authoritative move demonstrations")).toBeLessThan(codexHtml.indexOf('<script type="module"'));
   });
 });

@@ -61,6 +61,19 @@ contain no `Math.random`, `Date.now`, `performance.now` or `crypto.getRandomValu
 | Player save | document `version` | Normalization accepts an older document and returns a current one |
 | Authored content | JSON Schema under `schemas/` | Validated by test before it can reach the simulation |
 
+## Document and interactive-client boundary
+
+Hexframe has two presentation modes with deliberately different responsibilities:
+
+- The root overview, public Training entry document, and authenticated Move Codex document are HTML documents rendered from React 19 TSX during the Vite build. Their useful headings, navigation, explanatory copy, and fallback content exist in the built HTML before browser JavaScript runs.
+- Combat, simulation, training controls, animation, developer inspection, and interactive Codex demonstrations are a browser client application. Those capabilities intentionally require JavaScript because they execute and inspect the deterministic game runtime rather than decorate an otherwise complete document.
+
+React is the document-presentation authority, not the combat authority. The build-time document components do not own game state, hit resolution, input parsing, persistence, or routing. They are rendered with `react-dom/server` and are not hydrated merely to satisfy a React architecture.
+
+The Worker remains the routing, authentication, and persistence boundary. Workers Static Assets serves the Vite output. Authoritative combat remains in the browser simulation exactly as described above; moving document rendering to React does not move simulation authority into React or the Worker.
+
+This client-application boundary is Hexframe's explicit WG-ARCH-001 exception to the normal expectation that a product document remain fully operable without JavaScript: the documents remain useful without JavaScript, while the game itself necessarily requires the browser client.
+
 ## What is deliberately not here
 
 - **No server authority over combat.** Networked play, when it arrives, relays inputs.

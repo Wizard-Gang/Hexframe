@@ -18,14 +18,21 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:content": "vitest run tests/content",
+    "validate:documents": "node scripts/validate-rendered-documents.mjs",
     "check:history": "node scripts/check-history.mjs",
     "secrets:push": "node scripts/sync-secrets.mjs",
     "deploy": "node scripts/deploy.mjs",
-    "check": "npm run check:history && npm run typecheck && npm run test && npm run build && npm run validate:content"
+    "check": "npm run check:history && npm run typecheck && npm run test && npm run build && npm run validate:documents && npm run validate:content"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260823.1",
     "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "ajv": "^8.20.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
