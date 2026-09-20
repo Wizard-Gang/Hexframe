@@ -10,6 +10,7 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 ## Execution rules
 
 - Pick up the first open task unless the user explicitly overrides the queue or a prerequisite blocks it.
+- `do needful` means execute that first open task through implementation, validation, PR, successful merge, purge, and next-task handoff without asking which task to take.
 - One task equals one controlled change and one PR.
 - Do not begin a later task while its prerequisite PR is open.
 - Preserve product behavior unless the task explicitly changes a platform or presentation contract.
@@ -21,19 +22,6 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 - After a successful merge/purge, the session must end with a copy-paste prompt to implement and land the next open task under these same rules. If no task remains, no follow-up prompt is required.
 
 ## Planned controlled changes
-
-### [ ] HF-119 — REFACTOR — Establish React document rendering and the game client boundary
-
-Adopt React 19 for document presentation while explicitly preserving Hexframe as an interactive browser game.
-
-Acceptance:
-- add React 19 and React DOM;
-- render HTML documents from TSX at build time or on the server rather than maintaining hand-authored application shells as the presentation authority;
-- make the public overview useful without JavaScript;
-- keep interactive combat/training as an explicit client-application exception rather than pretending the game can operate without JavaScript;
-- do not introduce client hydration or a client-side router merely for document rendering;
-- record the document/client boundary in `docs/ARCHITECTURE.md`;
-- keep styles as Vite-processed CSS files.
 
 ### [ ] HF-120 — SEC — Remove unsafe presentation injection
 

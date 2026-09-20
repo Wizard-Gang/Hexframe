@@ -11,6 +11,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "jsx": "react-jsx",
     "types": ["@cloudflare/workers-types", "vite/client"]
   },
   "include": ["src/**/*", "tests/**/*", "vite.config.ts", "vitest.config.ts"]
