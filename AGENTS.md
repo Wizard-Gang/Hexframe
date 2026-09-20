@@ -25,6 +25,7 @@ WG-ARCH-001 §27 is the organization repository baseline. Project-specific behav
 - The merge that delivers a task must remove that task and any now-obsolete planning text from `implementation_plan.md`. Git/GitHub is the history.
 - Do not add completed-task sections, merge SHAs, release notes, retrospectives, or legacy narratives to the plan.
 - If no future tasks remain, delete `implementation_plan.md` in the final task instead of preserving an empty historical plan.
+- After a task merges successfully and is purged from the plan, end the session with a copy-paste prompt for the next open task. That prompt must start from current `main`, read `AGENTS.md` and `implementation_plan.md`, implement only the first open task, purge it in the completing merge, run required validation, merge when green/current/authoritative, and end with the next handoff prompt. If no task remains, state that the plan was deleted and no follow-up prompt is needed.
 
 `AGENTS.md` and `implementation_plan.md` describe only the current workflow and future work. Do not preserve superseded process or implementation history in either file.
 
@@ -59,6 +60,7 @@ A repository-changing task is not finished at "PR ready." Complete the delivery 
 10. Confirm the merge landed on `main`. The merged plan must no longer list the delivered task.
 11. If another sequential prompt follows, start it only after the current merge is confirmed.
 12. Report the merged PR and resulting `main` commit. If a blocker prevents completion, report the exact blocker without claiming completion.
+13. After a successful merge/purge, finish the session with the copy-paste handoff prompt for the next open implementation-plan task.
 
 Do not squash or rebase a controlled change into `main`.
 

@@ -18,21 +18,9 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 - Merge the current PR when its current head is green, up to date, authoritative for the task, and mergeable.
 - The merge that completes a task removes that task from this file. Do not keep completed tasks or legacy narrative here.
 - Delete this file when no future planned tasks remain.
+- After a successful merge/purge, the session must end with a copy-paste prompt to implement and land the next open task under these same rules. If no task remains, no follow-up prompt is required.
 
 ## Planned controlled changes
-
-### [ ] HF-118 — BUILD — Complete the baseline toolchain majors
-
-Move the executable toolchain to the §27 major versions as one dependency-controlled change.
-
-Acceptance:
-- TypeScript 7 in strict mode;
-- Vite 8;
-- Vitest 5;
-- align Node typings/tooling with Node 26 where required;
-- retain Wrangler 4 and Workers Static Assets;
-- update the lockfile and exact `allowScripts` entries to the locked dependency graph;
-- `typecheck` covers every TypeScript program and no repository tooling depends on the TypeScript compiler API.
 
 ### [ ] HF-119 — REFACTOR — Establish React document rendering and the game client boundary
 
