@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -33,6 +33,10 @@ assert.doesNotMatch(release, /workflow_dispatch:/, "release workflow must not be
 assert.match(release, /git cat-file -t/);
 assert.match(release, /package_version=.*package\.json/);
 assert.match(release, /GITHUB_REF_NAME.*v\$package_version|v\$package_version.*GITHUB_REF_NAME/s);
+assert.match(release, /gh release create/);
+assert.match(release, /--generate-notes/, "GitHub must generate human-readable release notes from repository state");
+assert.match(release, /--verify-tag/);
+assert.doesNotMatch(release, /docs\/releases|CHANGELOG\.md|--notes-file/, "release workflow must not depend on checked-in release history");
 assert.match(release, /uses:\s*\.\/\.github\/workflows\/deploy\.yml/);
 assert.match(release, /tag:\s*\$\{\{ github\.ref_name \}\}/);
 
@@ -51,4 +55,24 @@ const workflows = readdirSync(join(root, ".github/workflows")).filter((name) => 
 const deployCallers = workflows.filter((name) => name !== "deploy.yml" && read(`.github/workflows/${name}`).includes("uses: ./.github/workflows/deploy.yml"));
 assert.deepEqual(deployCallers, ["release.yml"], "only the release workflow may call the production deploy workflow");
 
-console.log("Validated immutable release-only production mutation boundary.");
+assert.equal(existsSync(join(root, "CHANGELOG.md")), false, "checked-in CHANGELOG.md is not a release-history authority");
+assert.equal(existsSync(join(root, "docs/releases")), false, "per-version Markdown release archive is not maintained");
+
+const releasePolicy = read("docs/RELEASE-MANAGEMENT.md");
+assert.match(releasePolicy, /GitHub Releases are the human-readable release-history authority/i);
+assert.match(releasePolicy, /Actions runs carry release validation evidence/i);
+assert.match(releasePolicy, /provider deployment history carries runtime deployment evidence/i);
+assert.match(releasePolicy, /CHANGELOG\.md.*not maintained|not maintained.*CHANGELOG\.md/is);
+
+const docsToCheck = [
+  "README.md",
+  "CONTRIBUTING.md",
+  "AGENTS.md",
+  "docs/RELEASE-MANAGEMENT.md",
+];
+for (const path of docsToCheck) {
+  const source = read(path);
+  assert.doesNotMatch(source, /\]\([^)]*(?:docs\/releases\/|CHANGELOG\.md)[^)]*\)/, `${path} links to retired checked-in release history`);
+}
+
+console.log("Validated immutable release-only production mutation and GitHub release-history authority.");
