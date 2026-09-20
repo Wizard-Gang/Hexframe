@@ -23,19 +23,6 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 
 ## Planned controlled changes
 
-### [ ] HF-124 — OPS — Codify and apply GitHub repository settings
-
-Make GitHub configuration match §27 and make expected settings reviewable in the repository.
-
-Acceptance:
-- add `config/github-repository-settings.json` (or equivalent) as the expected configuration;
-- add a documented verifier that reads provider state without making `npm run check` require credentials;
-- create a `main` ruleset requiring PRs and current CI checks and blocking force pushes/deletion;
-- create an immutable `v*` tag ruleset;
-- allow merge commits only; disable squash and rebase merges;
-- enable deletion of merged head branches;
-- verify `main` remains the default branch.
-
 ### [ ] HF-125 — TEST — Complete organization-baseline acceptance
 
 Perform the final repository-wide acceptance pass against WG-ARCH-001 §27.
