@@ -23,18 +23,6 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 
 ## Planned controlled changes
 
-### [ ] HF-121 — BUILD — Restrict production mutation to releases
-
-Make the tag-driven workflow the only supported production mutation path.
-
-Acceptance:
-- remove or convert local production-deploy helpers to dry-run/read-only behavior;
-- remove local production-secret push behavior from normal package commands;
-- require annotated `v*` tags and verify the tag version equals `package.json#version`;
-- keep production deployment behind the protected `production` environment;
-- ensure deploy jobs operate only on the exact release tag/commit;
-- remove manual paths that can deploy an arbitrary branch or unverified production state.
-
 ### [ ] HF-122 — BUILD — Make GitHub Releases the release-history authority
 
 Retire checked-in parallel release history and generate releases from Git/GitHub state.

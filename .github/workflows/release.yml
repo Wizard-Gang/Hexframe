@@ -1,5 +1,5 @@
 # SHARED WIZARDGANG TEMPLATE.
-# A tag may only become a release if that exact tag reproduces the product state.
+# A tag may only become a release if that exact annotated tag reproduces the product state.
 name: Release
 
 on:
@@ -22,6 +22,26 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
+      - name: Validate immutable release identity
+        run: |
+          set -euo pipefail
+          [ "$GITHUB_REF_TYPE" = "tag" ] || { echo "::error::release must run from a tag"; exit 1; }
+          case "$GITHUB_REF_NAME" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::$GITHUB_REF_NAME is not a semantic-version release tag"; exit 1 ;;
+          esac
+
+          tag_ref="refs/tags/$GITHUB_REF_NAME"
+          git fetch --force --no-tags origin "$tag_ref:$tag_ref"
+          [ "$(git cat-file -t "$tag_ref")" = "tag" ]             || { echo "::error::$GITHUB_REF_NAME is not an annotated tag"; exit 1; }
+
+          package_version="$(node -p "require('./package.json').version")"
+          [ "$GITHUB_REF_NAME" = "v$package_version" ]             || { echo "::error::tag $GITHUB_REF_NAME does not match package version v$package_version"; exit 1; }
+
+          tagged_commit="$(git rev-parse "$tag_ref^{}")"
+          checked_out_commit="$(git rev-parse HEAD)"
+          [ "$tagged_commit" = "$checked_out_commit" ]             || { echo "::error::checked out commit $checked_out_commit is not tagged commit $tagged_commit"; exit 1; }
+
       - name: Reproduce the tagged state
         run: |
           npm ci
@@ -29,25 +49,12 @@ jobs:
           npm test
           npm run build
 
-      - name: Require an annotated tag
-        run: |
-          # actions/checkout resolves a tag event to its commit. Fetch the tag ref itself
-          # before inspecting its object type so an annotated tag is not misread as the
-          # peeled commit it names.
-          tag_ref="refs/tags/$GITHUB_REF_NAME"
-          git fetch --force --no-tags origin "$tag_ref:$tag_ref"
-          if [ "$(git cat-file -t "$tag_ref")" != "tag" ]; then
-            echo "::error::$GITHUB_REF_NAME is not an annotated tag"
-            exit 1
-          fi
-
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Release notes live on the default branch. Reconstructed tags predate the
-          # docs/releases/ directory, so reading them from the tagged tree would fail for
-          # exactly the historical releases the record exists to describe.
+          # HF-122 will retire checked-in per-version notes. Until then, release notes
+          # remain read from the default branch without affecting deployed code identity.
           git fetch --quiet origin main
           notes=$(mktemp)
           git show "origin/main:docs/releases/$GITHUB_REF_NAME.md" > "$notes"
@@ -56,11 +63,8 @@ jobs:
             --notes-file "$notes" \
             --verify-tag
 
-  # Release calls Deploy rather than letting Deploy listen for `release: published`,
-  # because a release published with GITHUB_TOKEN raises no event a workflow may act on.
   deploy:
     needs: reproduce
     uses: ./.github/workflows/deploy.yml
     with:
       tag: ${{ github.ref_name }}
-    secrets: inherit
