@@ -26,7 +26,7 @@ const APP_CONTENT_SECURITY_POLICY = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "script-src 'self' https://static.cloudflareinsights.com",
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self'",
   "img-src 'self' data:",
   "connect-src 'self' https://cloudflareinsights.com",
   "font-src 'self'",

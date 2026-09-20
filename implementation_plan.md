@@ -23,18 +23,6 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 
 ## Planned controlled changes
 
-### [ ] HF-120 — SEC — Remove unsafe presentation injection
-
-Bring the presentation security boundary into compliance after the React document foundation exists.
-
-Acceptance:
-- remove scattered application `innerHTML`/HTML-string rendering from public, Codex, and lab presentation paths;
-- if raw HTML insertion remains technically necessary, confine it to one named, audited boundary with tests;
-- remove `'unsafe-inline'` from the application CSP;
-- prohibit inline event-handler attributes and uncontrolled inline styles/scripts;
-- add regression tests for CSP and built-document restrictions;
-- preserve keyboard, reduced-motion, semantic, and screen-reader behavior while refactoring.
-
 ### [ ] HF-121 — BUILD — Restrict production mutation to releases
 
 Make the tag-driven workflow the only supported production mutation path.

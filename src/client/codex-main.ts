@@ -16,6 +16,7 @@ import {
 } from "../lab/move-presentation";
 import { moveTimelineMarkup } from "../lab/inspector";
 import { attachVersionBadge } from "./version-badge";
+import { replaceTrustedMarkup } from "./trusted-markup";
 import "./styles/codex.css";
 
 const mountNode = document.querySelector<HTMLElement>("#codex");
@@ -26,7 +27,7 @@ const character = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
 const initialId = moveIdFromPath(window.location.pathname);
 let selected = character.moves.find((move) => move.id === initialId) ?? character.moves[0];
 
-mount.innerHTML = `<a class="skip-link" href="#codex-content">Skip to move Codex</a>
+replaceTrustedMarkup(mount, `<a class="skip-link" href="#codex-content">Skip to move Codex</a>
 <main class="lab-shell codex-standalone" id="codex-content">
   <header class="lab-header debugger-header">
     <div class="brand"><p class="eyebrow">HEXFRAME / DEVELOPER / MOVE CODEX</p><h1>Authoritative move demonstrations.</h1><p>Every frame is rendered from the same authored move data and deterministic simulation used by the lab.</p></div>
@@ -64,7 +65,7 @@ mount.innerHTML = `<a class="skip-link" href="#codex-content">Skip to move Codex
       </section>
     </div>
   </section>
-</main>`;
+</main>`);
 
 const stage = required("codex-move-stage");
 const demonstration = new MoveDemonstration(stage, character, {
@@ -136,8 +137,8 @@ function selectMove(id: number, autoplay: boolean): void {
   if (!move) return;
   selected = move;
   demonstration.select(move.id, autoplay);
-  required("codex-move-timeline").innerHTML = moveTimelineMarkup(move);
-  required("codex-move-detail").innerHTML = codexMoveDetailMarkup(move, character, DEFAULT_MOVE_LOADOUT);
+  replaceTrustedMarkup(required("codex-move-timeline"), moveTimelineMarkup(move));
+  replaceTrustedMarkup(required("codex-move-detail"), codexMoveDetailMarkup(move, character, DEFAULT_MOVE_LOADOUT));
   for (const button of mount.querySelectorAll<HTMLButtonElement>("[data-codex-move]")) {
     const active = Number(button.dataset.codexMove) === move.id;
     button.classList.toggle("active", active);

@@ -1,4 +1,5 @@
 import type { GameSession } from "../game/session";
+import { replaceTrustedMarkup } from "./trusted-markup";
 
 /**
  * Campaign pause is a checkpoint menu, not a second copy of the Loadouts application.
@@ -22,7 +23,7 @@ export function collapseCampaignLoadoutMenu(mount: HTMLElement, session: GameSes
 
   page.classList.remove("armory-page");
   page.classList.add("campaign-loadout-pause");
-  page.innerHTML = `<div class="page-intro"><div><p class="eyebrow">CURRENT LOADOUT</p><h2>${escapeHtml(name)}</h2><p>${assigned} / 16 techniques equipped. Deep editing lives in Loadouts so the pause menu stays focused on the current stage.</p><a class="campaign-loadout-route" href="/loadouts/${encodeURIComponent(loadoutId)}/">Manage loadout →</a></div></div>`;
+  replaceTrustedMarkup(page, `<div class="page-intro"><div><p class="eyebrow">CURRENT LOADOUT</p><h2>${escapeHtml(name)}</h2><p>${assigned} / 16 techniques equipped. Deep editing lives in Loadouts so the pause menu stays focused on the current stage.</p><a class="campaign-loadout-route" href="/loadouts/${encodeURIComponent(loadoutId)}/">Manage loadout →</a></div></div>`);
 }
 
 function escapeHtml(value: string): string {

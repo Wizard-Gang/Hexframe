@@ -74,6 +74,8 @@ The Worker remains the routing, authentication, and persistence boundary. Worker
 
 This client-application boundary is Hexframe's explicit WG-ARCH-001 exception to the normal expectation that a product document remain fully operable without JavaScript: the documents remain useful without JavaScript, while the game itself necessarily requires the browser client.
 
+Interactive legacy lab fragments that are not yet componentized may cross exactly one raw-markup parser boundary: `src/client/trusted-markup.ts`. That boundary rejects script elements, style elements, inline style attributes, inline event handlers, and JavaScript URLs before parsing. Direct HTML parser sinks elsewhere in application source are prohibited by `npm run validate:presentation-security`.
+
 ## What is deliberately not here
 
 - **No server authority over combat.** Networked play, when it arrives, relays inputs.

@@ -2,6 +2,7 @@ import type { CharacterDef, FrameReport, SimState, StateIdValue } from "../../co
 import { ContactKind, StateId } from "../../combat/types";
 import { toPixels } from "../../combat/constants";
 import { hashToHex } from "../../rollback/hashing/fnv";
+import { replaceTrustedMarkup } from "../../client/trusted-markup";
 
 const STATE_NAMES = new Map<number, string>(
   Object.entries(StateId).map(([name, value]) => [value, name]),
@@ -55,12 +56,12 @@ export class DebugPanel {
           .join("<br>")
       : "No contact this frame";
 
-    this.mount.innerHTML = `<div class="debug-summary">
+    replaceTrustedMarkup(this.mount, `<div class="debug-summary">
       <span>frame <strong>${state.frame}</strong></span>
       <span>hash <code>${hashToHex(hash)}</code></span>
       <span>entities <strong>${state.entities.length}</strong></span>
     </div>
     <div class="debug-fighters">${fighterCards.join("")}</div>
-    <p class="debug-contact">${contacts}</p>`;
+    <p class="debug-contact">${contacts}</p>`);
   }
 }
