@@ -44,9 +44,11 @@ for (const path of tracked) {
 }
 
 const securityModel = readFileSync(join(root, "docs/SECURITY-MODEL.md"), "utf8");
-assert.match(securityModel, /Predecessor state and recovery boundary/);
-assert.match(securityModel, /predecessor saves are not retained or recoverable/i);
-assert.match(securityModel, /rollback targets are valid immutable Hexframe release tags only/i);
+assert.doesNotMatch(securityModel, /Predecessor state and recovery boundary/i);
+assert.doesNotMatch(securityModel, /ShadowMoney|predecessor saves/i);
+
+const architecture = readFileSync(join(root, "docs/ARCHITECTURE.md"), "utf8");
+assert.doesNotMatch(architecture, /legacy lab fragments|not yet componentized/i);
 
 const ai = readFileSync(join(root, "docs/AI-APPLICABILITY.md"), "utf8");
 assert.doesNotMatch(ai, /no runtime dependencies at all/i);

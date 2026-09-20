@@ -21,6 +21,7 @@ function actual() {
       name: ruleset.name,
       target: ruleset.target,
       enforcement: ruleset.enforcement,
+      bypass_actors: structuredClone(ruleset.bypassActors),
       conditions: { ref_name: { include: ruleset.include, exclude: [] } },
       rules: ruleset.rules.map((type) => {
         if (type === "pull_request") {
@@ -31,6 +32,7 @@ function actual() {
             type,
             parameters: {
               required_status_checks: expected.requiredStatusChecks.map((context) => ({ context })),
+              strict_required_status_checks_policy: ruleset.requireBranchUpToDate === true,
             },
           };
         }
@@ -69,7 +71,28 @@ test("missing required CI check fails", () => {
       const checks = branch.rules.find((rule) => rule.type === "required_status_checks");
       checks.parameters.required_status_checks = checks.parameters.required_status_checks.slice(1);
     }),
-    /missing required status check/,
+    /required status checks do not match/,
+  );
+});
+
+test("unexpected ruleset bypass actor fails", () => {
+  assert.match(
+    failuresFor((state) => {
+      const branch = state.rulesets.find((ruleset) => ruleset.target === "branch");
+      branch.bypass_actors = [{ actor_id: 1, actor_type: "OrganizationAdmin", bypass_mode: "always" }];
+    }),
+    /bypass actors do not match/,
+  );
+});
+
+test("main protection requires the branch to be current with main", () => {
+  assert.match(
+    failuresFor((state) => {
+      const branch = state.rulesets.find((ruleset) => ruleset.target === "branch");
+      const checks = branch.rules.find((rule) => rule.type === "required_status_checks");
+      checks.parameters.strict_required_status_checks_policy = false;
+    }),
+    /must be current with main/,
   );
 });
 
@@ -78,7 +101,8 @@ test("main ruleset payload requires PRs, merge commits, CI, and no bypass actors
   const payload = rulesetPayload(expected, main);
   const pull = payload.rules.find((rule) => rule.type === "pull_request");
   const checks = payload.rules.find((rule) => rule.type === "required_status_checks");
-  assert.deepEqual(payload.bypass_actors, []);
+  assert.deepEqual(payload.bypass_actors, main.bypassActors);
+  assert.equal(checks.parameters.strict_required_status_checks_policy, true);
   assert.deepEqual(pull.parameters.allowed_merge_methods, ["merge"]);
   assert.deepEqual(
     checks.parameters.required_status_checks,

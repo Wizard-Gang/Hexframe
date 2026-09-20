@@ -39,11 +39,11 @@ dependency graph.
 merge policy and branch/tag rulesets. `npm run check` validates the comparison logic without
 provider credentials; it never reads or mutates live GitHub settings.
 
-Verify live provider state separately with a fine-grained token that has **Repository
-Administration: read** access:
+Verify live provider state separately with a token that has **Repository Administration: read**
+access. With GitHub CLI authentication:
 
 ```bash
-GH_ADMIN_TOKEN=... npm run verify:github-settings
+GH_ADMIN_TOKEN=$(gh auth token) npm run verify:github-settings
 ```
 
 Repository administrators may apply the committed contract with **Repository Administration:
@@ -66,7 +66,7 @@ No green CI, no merge.
 
 ## Rules that are not negotiable
 
-- `main` accepts controlled changes through pull requests and merge commits only. No direct pushes or force pushes.
+- `main` accepts controlled changes through pull requests and merge commits only, has no bypass actors, and requires `verify`, `change-id`, and `secrets` on a branch current with `main`. No direct pushes or force pushes.
 - Published release tags are never moved or deleted.
 - Local commands and ordinary CI do not mutate production. Production deploys only from the validated annotated release tag through the protected `production` workflow.
 - No credential ever enters the repository, its history, its tests, or its documentation.
