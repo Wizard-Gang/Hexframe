@@ -109,7 +109,7 @@ export function moveTimelineMarkup(move: MoveDef): string {
   const numberCells = frames.map((frame) => `<span class="timeline-cell frame-number" data-frame="${frame}">${frame + 1}</span>`).join("");
 
   return `<header class="move-timeline-header"><div><p>MOVE TIMELINE / EVENT-DERIVED</p><h2>${escapeHtml(move.key)}</h2></div><dl><div><dt>STARTUP</dt><dd>${data.startup}f</dd></div><div><dt>ACTIVE</dt><dd>${data.active}f</dd></div><div><dt>RECOVERY</dt><dd>${data.recovery}f</dd></div><div><dt>TOTAL</dt><dd>${move.duration}f</dd></div></dl></header>
-    <div class="move-timeline-scroll"><div class="move-timeline" style="--move-frames:${move.duration}">
+    <div class="move-timeline-scroll"><div class="move-timeline" data-move-frames="${move.duration}">
       ${timelineRow("FRAME", numberCells)}
       ${timelineRow("PHASE", phaseCells)}
       ${timelineRow("POSE", fullCells)}

@@ -10,6 +10,7 @@ import {
 import { defaultSession, sessionUrl, STAGE_CATALOG } from "../game/session";
 import type { DebugToggles } from "../renderer/svg/debug-overlay";
 import { Renderer } from "../renderer/svg/renderer";
+import { replaceTrustedMarkup } from "./trusted-markup";
 
 const PREVIEW_TOGGLES: DebugToggles = {
   hitboxes: false,
@@ -34,7 +35,7 @@ export function desktopOnlyMarkup(): string {
 
 /** Enhances the build-time React document with game previews and launch behavior. */
 export async function startFrontApp(mount: HTMLElement): Promise<() => void> {
-  if (isUnsupportedMobileDevice()) mount.innerHTML = desktopOnlyMarkup();
+  if (isUnsupportedMobileDevice()) replaceTrustedMarkup(mount, desktopOnlyMarkup());
   mount.removeAttribute("aria-busy");
 
   const previewRenderers = mountTrainingStages(mount);

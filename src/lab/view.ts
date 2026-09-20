@@ -100,7 +100,7 @@ export function buildLabView({ character, buildState, preferences, dummyOptions,
   const skills = armorSkillPoints(preset.equipment);
   const presets = presetSwitcher(buildState);
   const hud = session ? fighterHudMarkup(session, save, character.health, character.stamina, bossMode) : "";
-  const statusLanes = session ? Array.from({ length: session.party.length + 1 }, (_, player) => `<div class="status-lane ${player === 0 ? "status-lane-you" : player < session.party.length ? "status-lane-party" : "status-lane-dummy"}" style="--party-row:${player}" id="debuff-p${player + 1}" aria-label="Fighter ${player + 1} active debuffs"></div>`).join("") : "";
+  const statusLanes = session ? Array.from({ length: session.party.length + 1 }, (_, player) => `<div class="status-lane ${player === 0 ? "status-lane-you" : player < session.party.length ? "status-lane-party" : "status-lane-dummy"}" data-party-row="${player}" id="debuff-p${player + 1}" aria-label="Fighter ${player + 1} active debuffs"></div>`).join("") : "";
 
   return `<a class="skip-link" href="#game-content">Skip to ${developerTools ? "training developer tools" : "game content"}</a>
   <main class="lab-shell${publicPlay ? " public-play" : ""}" id="game-content">

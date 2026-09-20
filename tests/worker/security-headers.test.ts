@@ -39,9 +39,12 @@ describe("worker response hardening", () => {
       );
       expect(response.headers.get("content-security-policy")).toContain("default-src 'self'");
       expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
-      expect(response.headers.get("content-security-policy")).toContain(
+      const policy = response.headers.get("content-security-policy") ?? "";
+      expect(policy).toContain(
         "script-src 'self' https://static.cloudflareinsights.com",
       );
+      expect(policy).toContain("style-src 'self'");
+      expect(policy).not.toContain("'unsafe-inline'");
     },
   );
 
@@ -53,9 +56,10 @@ describe("worker response hardening", () => {
 
     expect(response.status).toBe(503);
     expect(response.headers.get("content-security-policy")).toContain("default-src 'none'");
-    expect(response.headers.get("content-security-policy")).not.toContain(
-      "static.cloudflareinsights.com",
-    );
+    const policy = response.headers.get("content-security-policy") ?? "";
+    expect(policy).not.toContain("static.cloudflareinsights.com");
+    expect(policy).toContain("style-src 'none'");
+    expect(policy).not.toContain("'unsafe-inline'");
     expect(response.headers.get("x-frame-options")).toBe("DENY");
   });
 });

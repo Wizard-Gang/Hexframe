@@ -3,8 +3,8 @@
  *
  * The page is rendered here rather than built as a static asset so that it cannot pick up
  * a stylesheet, a script or an analytics tag by accident: a credential form should have
- * exactly one job and no third-party surface at all. It is plain HTML with an inline
- * stylesheet, and it carries no JavaScript.
+ * exactly one job and no third-party surface at all. It is plain semantic HTML with no
+ * stylesheet and no JavaScript.
  */
 import type { Env } from "../env";
 import { missingCredentialBindings } from "../env";
@@ -92,7 +92,7 @@ function authHeaders(contentType: string): Headers {
     "referrer-policy": "no-referrer",
     "x-robots-tag": "noindex, nofollow",
     "content-security-policy":
-      "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+      "default-src 'none'; style-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
   });
 }
 
@@ -119,35 +119,6 @@ export function loginPage(error: string | null, next: string): Response {
 <meta name="robots" content="noindex, nofollow">
 <title>Hexframe — developer tools sign in</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%2308080b%22%2F%3E%3Crect%20x%3D%225%22%20y%3D%2215%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23d9ff43%22%2F%3E%3Crect%20x%3D%2215%22%20y%3D%225%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23a489ff%22%2F%3E%3C%2Fsvg%3E">
-<style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: #0b0d10; color: #e6e8ea; padding: 24px;
-    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
-  main { width: 100%; max-width: 22rem; }
-  h1 { margin: 0 0 4px; font-size: 1.25rem; letter-spacing: 0.01em; }
-  .lede { margin: 0 0 20px; color: #98a0a8; font-size: 0.875rem; }
-  form { display: grid; gap: 14px; }
-  label { display: grid; gap: 6px; font-size: 0.8125rem; color: #b9c0c7; }
-  input {
-    width: 100%; padding: 10px 12px; border-radius: 6px; font-size: 0.9375rem;
-    border: 1px solid #2a3138; background: #14181c; color: #e6e8ea;
-  }
-  input:focus-visible { outline: 2px solid #4c8dff; outline-offset: 1px; border-color: #4c8dff; }
-  button {
-    padding: 10px 12px; border: 0; border-radius: 6px; font-size: 0.9375rem; font-weight: 600;
-    background: #4c8dff; color: #0b0d10; cursor: pointer;
-  }
-  button:hover { background: #6ba0ff; }
-  .error {
-    margin: 0; padding: 10px 12px; border-radius: 6px; font-size: 0.875rem;
-    border: 1px solid #7a2a2a; background: #241416; color: #ffb4b4;
-  }
-  footer { margin-top: 20px; color: #6d757d; font-size: 0.75rem; }
-</style>
 </head>
 <body>
 <main>

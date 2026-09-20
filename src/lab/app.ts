@@ -1,3 +1,4 @@
+import { appendTrustedMarkup, replaceElementWithTrustedMarkup, replaceTrustedMarkup } from "../client/trusted-markup";
 import { px } from "../combat/constants";
 import type { FighterState, FrameReport, MoveDef, SimConfig } from "../combat/types";
 import { actionBit, ContactKind, DebuffEventKind, DebuffKind, EntityEventKind, EntityKind, HitLevel, InputBit, InteractableKind } from "../combat/types";
@@ -136,7 +137,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const preferences = loadPreferences();
   applyPreferences(preferences);
 
-  mount.innerHTML = buildLabView({
+  replaceTrustedMarkup(mount, buildLabView({
     character: playerCharacter,
     buildState,
     preferences,
@@ -148,7 +149,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     developerTools,
     unlockedMoveIds: playerSave.unlocks.moves,
     unlockedRecipeIds: playerSave.unlocks.recipes,
-  });
+  }));
   mount.removeAttribute("aria-busy");
 
   // The Training reset is a canonical contact setup: standing light reaches the dummy without
@@ -324,7 +325,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     required("active-tags").textContent = move?.tags.join(" · ") ?? "Move, strike, and inspect the result";
     for (const pause of mount.querySelectorAll<HTMLButtonElement>("[data-action='pause']")) pause.textContent = timeline.paused ? "Play" : "Pause";
     const frameInspector = mount.querySelector<HTMLElement>("#frame-inspector");
-    if (frameInspector) frameInspector.innerHTML = frameInspectorMarkup(state, sim.characters(), lastReport ?? timeline.lastReport, stateHash);
+    if (frameInspector) replaceTrustedMarkup(frameInspector, frameInspectorMarkup(state, sim.characters(), lastReport ?? timeline.lastReport, stateHash));
     renderFrameTimeline(state.fighters[0].moveId, state.fighters[0].moveFrame);
     renderInteractionHistory();
     if (menuOpen() && activeTab === "loadout") moveShowcase?.render(now);
@@ -784,13 +785,13 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (!item) return;
     selectedCraftArmorId = item.id;
     for (const button of mount.querySelectorAll<HTMLElement>("[data-craft-item]")) button.classList.toggle("selected", button.dataset.craftItem === item.id);
-    required("craft-detail").innerHTML = craftDetailMarkup(
+    replaceTrustedMarkup(required("craft-detail"), craftDetailMarkup(
       item,
       buildState.inventory,
       armorById(activeBuild.equipment[item.slot]),
       activeBuild.equipment,
       playerSave.unlocks.recipes.includes(item.id),
-    );
+    ));
   }
 
   async function craftSelectedArmor(equip = false): Promise<void> {
@@ -806,7 +807,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       markBuildChanged();
     }
     persistProgress();
-    if (!mount.querySelector(`[data-armor-item='${item.id}']`)) required("armor-inventory-grid").insertAdjacentHTML("beforeend", armorInventoryButton(item));
+    if (!mount.querySelector(`[data-armor-item='${item.id}']`)) appendTrustedMarkup(required("armor-inventory-grid"), armorInventoryButton(item));
     syncInventoryUi();
     if (equip) rebuildActiveBuild();
     selectCraftArmor(item.id);
@@ -878,7 +879,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     setText("stat-resist-frost", String(playerCharacter.resistances.frost));
     setText("stat-resist-shock", String(playerCharacter.resistances.shock));
     const skillBoard = mount.querySelector<HTMLElement>("#skill-board");
-    if (skillBoard) skillBoard.innerHTML = skillBoardMarkup(armorSkillPoints(activeBuild.equipment));
+    if (skillBoard) replaceTrustedMarkup(skillBoard, skillBoardMarkup(armorSkillPoints(activeBuild.equipment)));
     for (const slot of ARMOR_SLOTS) {
       const item = armorById(activeBuild.equipment[slot]);
       const button = mount.querySelector<HTMLButtonElement>(`[data-armor-slot='${slot}']`);
@@ -900,7 +901,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     const move = playerCharacter.moves.find((candidate) => candidate.id === activeBuild.loadout[armedSlot]);
     const bank = ACTION_BANKS[Math.trunc(armedSlot / 4)];
     const family = ["FIRE", "POISON", "FREEZE", "SHOCK"][armedSlot % 4];
-    panel.innerHTML = `<span>${family} ROUTE</span><strong>${actionSlotInput(armedSlot)}</strong><em>${bank.input.toUpperCase()} / ${["STARTER", "LINK", "CASHOUT", "UTILITY"][Math.trunc(armedSlot / 4)]}</em><small>CURRENTLY: ${move ? moveName(move).toUpperCase() : "UNASSIGNED"}</small>`;
+    replaceTrustedMarkup(panel, `<span>${family} ROUTE</span><strong>${actionSlotInput(armedSlot)}</strong><em>${bank.input.toUpperCase()} / ${["STARTER", "LINK", "CASHOUT", "UTILITY"][Math.trunc(armedSlot / 4)]}</em><small>CURRENTLY: ${move ? moveName(move).toUpperCase() : "UNASSIGNED"}</small>`);
   }
 
   function markBuildChanged(amount = 1): void {
@@ -1115,11 +1116,11 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }
     for (const button of [...mount.querySelectorAll<HTMLButtonElement>("[data-craft-item]")]) {
       const item = armorById(button.dataset.craftItem ?? "");
-      if (item) button.outerHTML = craftRecipeButton(
+      if (item) replaceElementWithTrustedMarkup(button, craftRecipeButton(
         item,
         buildState.inventory,
         playerSave.unlocks.recipes.includes(item.id),
-      );
+      ));
     }
     setCraftFilter(craftFilter);
   }
@@ -1128,18 +1129,18 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     const item = armorById(itemId);
     const detail = mount.querySelector<HTMLElement>("#gear-detail");
     if (!item || !detail) return;
-    detail.innerHTML = armorDetailMarkup(
+    replaceTrustedMarkup(detail, armorDetailMarkup(
       item,
       armorById(activeBuild.equipment[item.slot]),
       activeBuild.equipment,
-    );
+    ));
   }
 
   function renderMaterialDetail(materialId: string): void {
     const material = materialById(materialId);
     const detail = mount.querySelector<HTMLElement>("#gear-detail");
     if (!material || !detail) return;
-    detail.innerHTML = materialDetailMarkup(material, buildState.inventory);
+    replaceTrustedMarkup(detail, materialDetailMarkup(material, buildState.inventory));
   }
 
   function showMovePreview(moveId: number, force = false): void {
@@ -1154,9 +1155,9 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     const codexTimeline = mount.querySelector<HTMLElement>("#codex-move-timeline");
     const codexDetail = mount.querySelector<HTMLElement>("#codex-move-detail");
     const routeTopology = mount.querySelector<HTMLElement>("#move-route-topology");
-    if (codexTimeline) codexTimeline.innerHTML = moveTimelineMarkup(move);
-    if (codexDetail) codexDetail.innerHTML = codexMoveDetailMarkup(move, playerCharacter, activeBuild.loadout);
-    if (routeTopology) routeTopology.innerHTML = routeTopologyMarkup(move, playerCharacter, activeBuild.loadout);
+    if (codexTimeline) replaceTrustedMarkup(codexTimeline, moveTimelineMarkup(move));
+    if (codexDetail) replaceTrustedMarkup(codexDetail, codexMoveDetailMarkup(move, playerCharacter, activeBuild.loadout));
+    if (routeTopology) replaceTrustedMarkup(routeTopology, routeTopologyMarkup(move, playerCharacter, activeBuild.loadout));
     decorateCodexTimeline(move);
     codexDemonstration?.select(move.id, autoplay);
     const hitbox = move.hitboxes[0];
@@ -1172,7 +1173,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     setText("move-stat-hitstun", `${hitbox?.hitstun ?? 0}f`);
     setText("move-stat-blockstun", `${hitbox?.blockstun ?? 0}f`);
     const showcaseTags = mount.querySelector<HTMLElement>("#move-showcase-tags");
-    if (showcaseTags) showcaseTags.innerHTML = move.tags.map((tag) => `<li>${tag}</li>`).join("");
+    if (showcaseTags) replaceTrustedMarkup(showcaseTags, move.tags.map((tag) => `<li>${tag}</li>`).join(""));
     const showcaseEquipped = mount.querySelector<HTMLElement>(".showcase-equipped");
     if (showcaseEquipped) {
       showcaseEquipped.dataset.equippedMove = String(move.id);
@@ -1236,7 +1237,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (!move) return;
 
     if (renderedTimelineMoveId !== move.id) {
-      console.innerHTML = moveTimelineMarkup(move);
+      replaceTrustedMarkup(console, moveTimelineMarkup(move));
       renderedTimelineMoveId = move.id;
       renderedTimelinePlayhead = -2;
     }
@@ -1256,7 +1257,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     const key = `${reports.map((report) => `${report.frame}:${report.contacts.length}`).join(",")}|${selectedInteraction?.frame ?? "latest"}:${selectedInteraction?.index ?? 0}`;
     if (key === interactionRenderKey) return;
     interactionRenderKey = key;
-    interactionHistory.innerHTML = interactionHistoryMarkup(reports, sim.characters(), selectedInteraction);
+    replaceTrustedMarkup(interactionHistory, interactionHistoryMarkup(reports, sim.characters(), selectedInteraction));
   }
 
   function inspectInteraction(frame: number, index: number): void {
@@ -1478,7 +1479,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       }
     }
     const summary = mount.querySelector<HTMLElement>("#tutorial-progress-summary");
-    if (summary) summary.innerHTML = TUTORIAL_LESSONS.map((lesson, index) => `<article class="${snapshot.completedLessons.includes(lesson.id) ? "complete" : ""}"><span>${String(index + 1).padStart(2, "0")}</span><strong>${lesson.title}</strong><em>${snapshot.completedLessons.includes(lesson.id) ? "COMPLETE" : "READY"}</em></article>`).join("");
+    if (summary) replaceTrustedMarkup(summary, TUTORIAL_LESSONS.map((lesson, index) => `<article class="${snapshot.completedLessons.includes(lesson.id) ? "complete" : ""}"><span>${String(index + 1).padStart(2, "0")}</span><strong>${lesson.title}</strong><em>${snapshot.completedLessons.includes(lesson.id) ? "COMPLETE" : "READY"}</em></article>`).join(""));
   }
 
   function textIn(root: HTMLElement, selector: string, value: string): void {
@@ -1572,7 +1573,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     ] as const;
     const active = statuses.filter(([, stacks, frames]) => stacks > 0 && frames > 0);
     const lane = required(`debuff-p${player + 1}`);
-    lane.innerHTML = active.map(([tag, stacks, frames]) => `<span class="debuff-chip status-${tag}"><i aria-hidden="true">${STATUS_RULES.find((rule) => rule.tag === tag)?.glyph ?? "?"}</i><b>${tag}</b><em>×${stacks}</em><small>${Math.ceil(frames / 60)}s</small></span>`).join("");
+    replaceTrustedMarkup(lane, active.map(([tag, stacks, frames]) => `<span class="debuff-chip status-${tag}"><i aria-hidden="true">${STATUS_RULES.find((rule) => rule.tag === tag)?.glyph ?? "?"}</i><b>${tag}</b><em>×${stacks}</em><small>${Math.ceil(frames / 60)}s</small></span>`).join(""));
     lane.setAttribute("aria-label", active.length > 0 ? active.map(([tag, stacks]) => `${tag}, ${stacks} stacks`).join("; ") : "No active debuffs");
   }
 

@@ -32,6 +32,13 @@ jobs:
       - name: Check
         run: npm run check
 
+      - name: Whitespace
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: git diff --check "$BASE_SHA..$HEAD_SHA"
+
   change-id:
     # Every controlled change carries exactly one permanent ID and one primary type.
     runs-on: ubuntu-latest
