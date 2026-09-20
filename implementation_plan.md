@@ -23,17 +23,6 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 
 ## Planned controlled changes
 
-### [ ] HF-122 — BUILD — Make GitHub Releases the release-history authority
-
-Retire checked-in parallel release history and generate releases from Git/GitHub state.
-
-Acceptance:
-- stop reading `docs/releases/v*.md` in `release.yml`;
-- publish one GitHub Release for each annotated semantic-version tag using generated/current release information;
-- delete `CHANGELOG.md` and `docs/releases/**`;
-- rewrite `docs/RELEASE-MANAGEMENT.md` so tags and GitHub Releases are the release-history authority;
-- update all references/tests that assume checked-in per-version Markdown.
-
 ### [ ] HF-123 — DOCS — Retire superseded historical repository records
 
 Reduce repository documentation to current architecture/policy plus operating material that is still genuinely authoritative.

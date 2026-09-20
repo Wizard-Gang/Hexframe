@@ -49,19 +49,11 @@ jobs:
           npm test
           npm run build
 
-      - name: Publish release
+      - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # HF-122 will retire checked-in per-version notes. Until then, release notes
-          # remain read from the default branch without affecting deployed code identity.
-          git fetch --quiet origin main
-          notes=$(mktemp)
-          git show "origin/main:docs/releases/$GITHUB_REF_NAME.md" > "$notes"
-          gh release create "$GITHUB_REF_NAME" \
-            --title "$GITHUB_REF_NAME" \
-            --notes-file "$notes" \
-            --verify-tag
+          gh release create "$GITHUB_REF_NAME"             --title "$GITHUB_REF_NAME"             --generate-notes             --verify-tag
 
   deploy:
     needs: reproduce

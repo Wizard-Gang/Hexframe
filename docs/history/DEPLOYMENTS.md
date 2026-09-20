@@ -24,7 +24,7 @@ player save API, login boundary, and developer API authorization.
 different Worker on a different origin and is not a rollback target for this one.
 
 **Note:** this is a clean-cut migration. Player saves held by the previous deployment are
-not transferred; see [docs/releases/v0.7.0.md](../releases/v0.7.0.md).
+not transferred; the corresponding human-readable release record is the GitHub Release for v0.7.0.
 
 ---
 
