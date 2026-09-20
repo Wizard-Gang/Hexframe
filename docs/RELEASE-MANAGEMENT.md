@@ -31,6 +31,7 @@ The release workflow verifies that:
 - the exact same tag ref is the only state eligible for production deployment.
 
 Published release tags are never moved, rewritten, or deleted.
+The committed GitHub-settings contract requires an active `v*` tag ruleset that blocks tag updates and deletion; live provider state is checked with `npm run verify:github-settings`.
 
 ## Release authority
 

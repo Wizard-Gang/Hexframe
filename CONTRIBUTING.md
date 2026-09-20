@@ -33,6 +33,29 @@ Dependency install scripts are disabled unless the exact package version is appr
 `package.json#allowScripts`. Keep that list limited to install scripts required by the locked
 dependency graph.
 
+## GitHub repository settings
+
+`config/github-repository-settings.json` is the reviewable authority for the intended GitHub
+merge policy and branch/tag rulesets. `npm run check` validates the comparison logic without
+provider credentials; it never reads or mutates live GitHub settings.
+
+Verify live provider state separately with a fine-grained token that has **Repository
+Administration: read** access:
+
+```bash
+GH_ADMIN_TOKEN=... npm run verify:github-settings
+```
+
+Repository administrators may apply the committed contract with **Repository Administration:
+write** access, then must immediately re-run the read-only verifier:
+
+```bash
+GH_ADMIN_TOKEN=... npm run apply:github-settings
+GH_ADMIN_TOKEN=... npm run verify:github-settings
+```
+
+Tokens stay in the caller's environment. Never commit or print them.
+
 ## Before opening a pull request
 
 ```bash
