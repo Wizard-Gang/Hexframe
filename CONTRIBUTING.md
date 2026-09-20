@@ -45,6 +45,7 @@ No green CI, no merge.
 
 - `main` accepts controlled changes through pull requests and merge commits only. No direct pushes or force pushes.
 - Published release tags are never moved or deleted.
+- Local commands and ordinary CI do not mutate production. Production deploys only from the validated annotated release tag through the protected `production` workflow.
 - No credential ever enters the repository, its history, its tests, or its documentation.
 - A reverted change keeps its ID; the revert receives a new one.
 - A corrective change names what it corrects with a `Corrects:` line.
