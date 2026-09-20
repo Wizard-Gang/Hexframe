@@ -1,4 +1,3 @@
-# SHARED WIZARDGANG TEMPLATE.
 # Production deploys only the immutable tag event validated by the Release workflow.
 name: Deploy
 

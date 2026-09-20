@@ -20,10 +20,11 @@
     "validate:content": "vitest run tests/content",
     "validate:documents": "node scripts/validate-rendered-documents.mjs",
     "check:history": "node scripts/check-history.mjs",
-    "check": "npm run check:history && npm run typecheck && npm run test && npm run build && npm run validate:documents && npm run validate:presentation-security && npm run validate:release-boundary && npm run validate:content",
+    "check": "npm run check:history && npm run typecheck && npm run test && npm run build && npm run validate:documents && npm run validate:presentation-security && npm run validate:release-boundary && npm run validate:documentation-authority && npm run validate:content",
     "validate:presentation-security": "node scripts/validate-presentation-security.mjs",
     "deploy:dry-run": "node scripts/deploy.mjs",
-    "validate:release-boundary": "node scripts/validate-release-boundary.mjs"
+    "validate:release-boundary": "node scripts/validate-release-boundary.mjs",
+    "validate:documentation-authority": "node scripts/validate-documentation-authority.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",

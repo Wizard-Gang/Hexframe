@@ -1,4 +1,3 @@
-# SHARED WIZARDGANG TEMPLATE. Replace HF with the project change-ID namespace.
 name: CI
 
 on:
@@ -56,7 +55,7 @@ jobs:
           fi
 
   secrets:
-    # A repository that is going public must never carry a credential, in any commit.
+    # A public repository must never carry a credential in any commit.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

@@ -3,7 +3,7 @@
 ## Scope
 
 **Hexframe contains no machine learning.** No model is trained, bundled, downloaded, or
-called, at build time or at run time. The project has no runtime dependencies at all.
+called, at build time or at run time. The runtime dependencies are presentation libraries; none is a model, inference runtime, or machine-learning package.
 
 The word "AI" in this repository refers to one thing: `LoadoutAIController`, a
 deterministic rule system that plays a party slot. It is not a learned model and must not
@@ -53,7 +53,7 @@ grep -rniE 'tensorflow|onnx|openai|anthropic|inference|neural' src/
 npm test   # includes tests/game/loadout-ai-controller.test.ts
 ```
 
-The six uses of a clock or system randomness in `src/` are all outside the simulation:
+The uses of a clock or system randomness listed below are all outside the simulation:
 
 | Location | Use |
 | --- | --- |

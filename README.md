@@ -17,9 +17,7 @@ The root route serves the project overview. `/play/` opens the training setup, a
 ## Verify
 
 ```bash
-npm run typecheck
-npm test
-npm run build
+npm run check
 ```
 
 ## Structure
@@ -33,7 +31,6 @@ npm run build
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
-- [Contracts](docs/CONTRACTS.md)
 - [Security model](docs/SECURITY-MODEL.md)
 - [Release management](docs/RELEASE-MANAGEMENT.md)
 

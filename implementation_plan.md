@@ -23,17 +23,6 @@ Normalize Hexframe to the WizardGang product-repository baseline through small s
 
 ## Planned controlled changes
 
-### [ ] HF-123 — DOCS — Retire superseded historical repository records
-
-Reduce repository documentation to current architecture/policy plus operating material that is still genuinely authoritative.
-
-Acceptance:
-- review and retire `docs/RECONSTRUCTION.md`, `docs/SHADOWMONEY-RETIREMENT.md`, and `docs/history/**` unless a surviving record is required by a current executable/operational contract;
-- move no historical narrative into replacement Markdown;
-- preserve any still-current security, architecture, migration, or data-retention fact in the correct current-state document before deleting its historical carrier;
-- remove concrete obsolete change IDs, SHAs, retired-route narratives, and former implementation descriptions from current docs and workflow comments;
-- repair all links and documentation tests.
-
 ### [ ] HF-124 — OPS — Codify and apply GitHub repository settings
 
 Make GitHub configuration match §27 and make expected settings reviewable in the repository.

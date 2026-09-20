@@ -44,6 +44,15 @@ plain-HTTP localhost, where the attribute would prevent the cookie from being st
 - No secret appears in tracked configuration, client code, or any built asset.
 - CI fails the build if credential material appears in the tracked tree.
 
+## Predecessor state and recovery boundary
+
+Hexframe is the only supported runtime and persistence namespace for this product.
+
+- Hexframe does not read or migrate predecessor browser-storage keys, identity cookies, or player-save records.
+- The former ShadowMoney Worker, hostname, and Durable Object namespace are absent; predecessor saves are not retained or recoverable.
+- Recreating a predecessor runtime, hostname, namespace, or importing predecessor data would be a new controlled infrastructure/data-migration change, not a rollback operation.
+- Hexframe rollback targets are valid immutable Hexframe release tags only.
+
 ## Public versus privileged surface
 
 | Route | Access |
