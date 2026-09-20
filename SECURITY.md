@@ -1,7 +1,5 @@
 # Security policy
 
-<!-- SHARED WIZARDGANG TEMPLATE. Replace Hexframe, HF, . -->
-
 ## Reporting a vulnerability
 
 Report suspected vulnerabilities privately through GitHub's **Report a vulnerability**
@@ -18,7 +16,7 @@ Include the affected release or commit, what you observed, and the steps to repr
 4. A patch release is published.
 
 Published releases are never rewritten to conceal a vulnerability. The release that
-contained the defect remains historically intact and the correction moves forward:
+contained the defect remains immutable and the correction moves forward:
 
 ```
 v0.6.0 → issue → [HF-###] [SEC] → tests → v0.6.1
