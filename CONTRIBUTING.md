@@ -66,8 +66,10 @@ Tokens stay in the caller's environment. Never commit or print them.
 ## Before opening a pull request
 
 ```bash
-npm ci && npm run check && git diff --check
+npm ci && npm run check && npm run audit:dependencies && git diff --check
 ```
+
+`npm run audit:dependencies` requires registry network access and fails closed when the advisory query cannot be completed or trusted; it is deliberately separate from credential-free `npm run check`.
 
 No green CI, no merge.
 

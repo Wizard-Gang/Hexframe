@@ -2,19 +2,9 @@
 
 This is Hexframe's current/future process-parity wave under WG-ARCH-001 §27. On `do needful`, refresh `main`, open PRs, exact-head CI and settings; finish a green/current authoritative PR first, then deliver only the first open task. A blocked first task is not bypassed without owner direction. The delivering merge removes its own block and updates later blocks. Delete this file in the last delivery; Git/GitHub retain history. Keep the repository's merge-commit policy and strong tag-only release, protected production deployment, provider-version confirmation, settings tests, content/document security, and no checked-in changelog.
 
-The next parity gap is CI dependency-advisory enforcement: keep the credential-free local `check` honest while adding a named network-dependent high-severity advisory gate. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
+The next parity gap is release acceptance parity: make the immutable tag workflow reproduce canonical credential-free `check` before publication. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
 
 ## Open tasks
-
-### HF-132 — [BUILD] Add an explicit network-advisory CI gate
-
-- Dependency: HF-131 merged.
-- Why: `check` covers source, content, release boundary and pure settings, but CI has no dependency-advisory query.
-- Scope: Add a named high-severity lockfile advisory command in CI and local docs; distinguish findings from unavailable registry network, without making cloud-offline `check` claim a query occurred.
-- Non-goals: No dependency upgrades or runtime network requirement.
-- Acceptance: CI fails on high-severity advisories; unavailable network is reported honestly.
-- Validation: Audit command with network; `npm run check`; `git diff --check`.
-- Authorities: `package.json`, `.github/workflows/ci.yml`, `SECURITY.md`.
 
 ### HF-133 — [BUILD] Reproduce the release with canonical `check`
 
