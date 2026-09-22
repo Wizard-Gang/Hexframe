@@ -33,6 +33,13 @@ Dependency install scripts are disabled unless the exact package version is appr
 `package.json#allowScripts`. Keep that list limited to install scripts required by the locked
 dependency graph.
 
+## Command and capability map
+
+Use the [README command and capability map](README.md#command-and-capability-map) as the
+single overview of local validation, local development, provider verification/mutation,
+dry-run deployment, pull-request CI, release publication, and production deployment.
+The provider-specific authorization details below supplement that map.
+
 ## GitHub repository settings
 
 `config/github-repository-settings.json` is the reviewable authority for the intended GitHub
