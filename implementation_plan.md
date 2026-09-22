@@ -2,23 +2,13 @@
 
 This is Hexframe's current/future process-parity wave under WG-ARCH-001 §27. On `do needful`, refresh `main`, open PRs, exact-head CI and settings; finish a green/current authoritative PR first, then deliver only the first open task. A blocked first task is not bypassed without owner direction. The delivering merge removes its own block and updates later blocks. Delete this file in the last delivery; Git/GitHub retain history. Keep the repository's merge-commit policy and strong tag-only release, protected production deployment, provider-version confirmation, settings tests, content/document security, and no checked-in changelog.
 
-The current local `dev` path loads admin credentials from `.env` and passes their values to Wrangler as command-line `--var` arguments. Fix that exposure before broadening the local lifecycle. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
+The current dependency graph has high-severity advisories in the Wrangler/Miniflare chain. Resolve those advisories before broadening the local lifecycle. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
 
 ## Open tasks
 
-### HF-127 — [SEC] Keep local admin secrets out of process arguments
-
-- Dependency: HF-126 merged on `main`.
-- Why: `scripts/dev.mjs` passes `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET` as Wrangler argv values, visible to process inspection.
-- Scope: Give local Wrangler the required values through an ignored, access-restricted local secret channel; retain missing-value preflight and never echo values. Add a test that inspects the spawned argument vector.
-- Non-goals: No provider secret mutation, production config change, or full dev-lifecycle redesign.
-- Acceptance: No local admin secret value appears in process arguments or logs; `dev` still starts with valid local configuration.
-- Validation: Focused dev-secret tests; `npm run check`; local smoke with test-only values; `git diff --check`.
-- Authorities: `scripts/dev.mjs`, `scripts/env.mjs`, `.gitignore`, `SECURITY.md`.
-
 ### HF-128 — [SEC] Resolve the current high-severity dependency advisories
 
-- Dependency: HF-127 merged.
+- Dependency: HF-127 merged on `main`.
 - Why: A fresh `npm ci`/`npm audit` reports high-severity `sharp` through Miniflare/Wrangler; an open dependency PR is not current/green under the controlled title gate.
 - Scope: Update only the affected dependency/lockfile chain to a reviewed non-vulnerable compatible version, considering the open dependency PR as evidence rather than assuming it can merge; retain install-script policy.
 - Non-goals: No app feature, provider mutation or unrelated dependency sweep.

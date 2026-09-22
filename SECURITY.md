@@ -30,8 +30,10 @@ tokens, passwords, private keys, SSH material, certificates, account identifiers
 infrastructure hostnames, and private administrative URLs.
 
 Local credentials live in an untracked repository-root `.env`, templated by `.env.example`
-with empty values. Production values are held as platform secrets and are readable only by
-the server runtime — never by the browser and never by a built asset.
+with empty values. `npm run dev` copies only the required local admin bindings into the ignored
+`.dev.vars` file with owner-only permissions before Wrangler starts; secret values must not be
+placed in process arguments or logs. Production values are held as platform secrets and are
+readable only by the server runtime — never by the browser and never by a built asset.
 
 ## Supported versions
 
