@@ -5,7 +5,7 @@ dist/
 .DS_Store
 
 # Credentials. None of these may ever be committed: the repository-root .env is the
-# local source of truth and the deploy script copies its admin values into production.
+# local source of truth. `.dev.vars` is the owner-only local Wrangler secret handoff.
 .env
 .env.*
 !.env.example
