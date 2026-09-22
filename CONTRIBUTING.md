@@ -69,6 +69,12 @@ Tokens stay in the caller's environment. Never commit or print them.
 npm ci && npm run check && npm run audit:dependencies && git diff --check
 ```
 
+`npm run check` owns committed-range patch integrity through `PATCH_BASE_SHA` and
+`PATCH_HEAD_SHA`. Pull-request CI supplies both from the exact event base/head commits. To
+reproduce that check locally, supply both commit SHAs before running `npm run check`; outside
+pull-request context the command never guesses or fetches a base and skips only the committed-range
+portion. The plain `git diff --check` above remains the working-tree pre-commit check.
+
 `npm run audit:dependencies` requires registry network access and fails closed when the advisory query cannot be completed or trusted; it is deliberately separate from credential-free `npm run check`.
 
 No green CI, no merge.
