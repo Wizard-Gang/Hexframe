@@ -35,6 +35,12 @@ with empty values. `npm run dev` copies only the required local admin bindings i
 placed in process arguments or logs. Production values are held as platform secrets and are
 readable only by the server runtime — never by the browser and never by a built asset.
 
+## Dependency advisories
+
+`npm run audit:dependencies` is the explicit registry-backed dependency security gate. It runs a read-only `npm audit --json --audit-level=high` against the current dependency graph and committed lockfile. A completed query with no high or critical findings succeeds; high/critical findings fail; and an unavailable, malformed, or otherwise untrustworthy registry response also fails while being reported as an unavailable advisory query rather than as a clean result.
+
+This network-dependent command is intentionally separate from credential-free `npm run check`. Pull-request CI runs both as separately named steps so repository acceptance, advisory findings, and registry/query failures remain distinguishable.
+
 ## Supported versions
 
 The most recent minor release receives security fixes. Older `0.x` lines are not
