@@ -22,21 +22,24 @@ live provider settings and it does not perform a network dependency-advisory que
 | Capability | Invocation | Prerequisite / access | Credentials and network | Mutation boundary | Production? | Ordinary local/PR validation? |
 | --- | --- | --- | --- | --- | --- | --- |
 | Clean dependency install | `npm ci` | Exact Node/npm versions and committed lockfile | npm registry network; no provider credentials | Replaces local `node_modules`; only version-approved install scripts may run | No | Yes; standard clean-install preparation |
-| Repository acceptance | `npm run check` | Dependencies already installed | No provider credentials or provider access required | Runs history, types, tests, build, document/content/security/release-boundary checks; build output is local/ignored | No | Yes; canonical credential-free acceptance |
+| Repository acceptance | `npm run check` | Dependencies already installed | No provider credentials or provider access required | Runs history, patch-integrity fixtures and any explicitly supplied committed range, types, tests, build, and document/content/security/release-boundary checks; build output is local/ignored | No | Yes; canonical credential-free acceptance |
 | Local development | `npm run dev` | Root `.env` with `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` | Local app credentials only; no provider credentials required | Builds locally, writes ignored `.dev.vars` with owner-only permissions, then starts owned local Wrangler on port 8788 and cleans its proven process group on wrapper interrupt/termination | No | Local development, not an acceptance gate |
 | Dependency advisory | `npm run audit:dependencies` | Committed lockfile; normally run after `npm ci` | npm registry network required; no provider credentials | Runs a read-only `npm audit --json --audit-level=high`; fails on high/critical findings or an unavailable/untrustworthy query | No | Yes; explicit network-backed security gate, separate from `check` |
 | Live GitHub settings verification | `GH_ADMIN_TOKEN=$(gh auth token) npm run verify:github-settings` | Repository Administration read access | GitHub token and network required | Reads live repository settings/rulesets and compares them with `config/github-repository-settings.json` | No | Separate read-only provider verification; not ordinary credential-free validation |
 | Apply GitHub settings contract | `GH_ADMIN_TOKEN=... npm run apply:github-settings` | Repository Administration write access | GitHub token and network required | Mutates GitHub merge settings/rulesets to the committed contract, then re-reads them | No app deploy | No; privileged provider mutation |
 | Production-config dry run | `npm run deploy:dry-run` | Dependencies installed | No provider credentials required | Builds locally and runs `wrangler deploy --env production --dry-run`; nothing is published | No | Yes when production-config validation is relevant |
-| Pull-request CI | Automatic on `pull_request` | PR branch current with `main` for merge | GitHub Actions/npm registry access; no production credentials | Runs `npm ci`, canonical `npm run check`, the named network advisory gate, a test-only real local dev start/stop smoke, PR-range `git diff --check`, controlled-title validation, and tracked-secret scanning | No | Yes; required PR validation |
+| Pull-request CI | Automatic on `pull_request` | PR branch current with `main` for merge | GitHub Actions/npm registry access; no production credentials | Runs `npm ci`, canonical `npm run check` with the exact PR base/head supplied to its patch-integrity owner, the named network advisory gate, a test-only real local dev start/stop smoke, controlled-title validation, and tracked-secret scanning | No | Yes; required PR validation |
 | Release publication | Push an annotated `v<package.json version>` tag | Exact semantic-version tag on the intended commit | GitHub Actions access; workflow uses its GitHub token | Release workflow validates the exact tag, runs `npm ci` and canonical `npm run check` on that tagged checkout, then publishes the GitHub Release and calls the protected deploy workflow | Yes, through the protected deploy stage | No; this is a release action |
 | Production deployment | Only the Release workflow calling `.github/workflows/deploy.yml` | Validated immutable release tag and protected `production` environment | Cloudflare production secrets and provider network | Runs real `wrangler deploy --env production`, verifies the live version, and is the only supported production mutation path | Yes | No; protected production mutation only |
 
-Plain local `npm run check` does **not** reproduce every PR-context gate: CI additionally validates
-the real local lifecycle smoke, exact PR patch range, the controlled PR title, and the tracked tree
-for credential material. Dependency advisory enforcement is intentionally separate from `check` and
-runs as the explicit network-backed `npm run audit:dependencies` gate; do not treat `check` itself as
-an `npm audit` query.
+Canonical `npm run check` owns committed patch integrity. PR CI supplies `PATCH_BASE_SHA` and
+`PATCH_HEAD_SHA` from the pull-request event, so the helper checks exactly that committed range.
+Outside PR context, `check` does not guess or fetch a base; it skips the committed-range portion.
+To reproduce a committed range locally, supply both commit SHAs before running `npm run check`.
+CI still additionally validates the real local lifecycle smoke, the controlled PR title, and the
+tracked tree for credential material. Dependency advisory enforcement is intentionally separate
+from `check` and runs as the explicit network-backed `npm run audit:dependencies` gate; do not
+treat `check` itself as an `npm audit` query.
 
 For release identity and rollback rules, see [Release management](docs/RELEASE-MANAGEMENT.md).
 
