@@ -2,19 +2,9 @@
 
 This is Hexframe's current/future process-parity wave under WG-ARCH-001 §27. On `do needful`, refresh `main`, open PRs, exact-head CI and settings; finish a green/current authoritative PR first, then deliver only the first open task. A blocked first task is not bypassed without owner direction. The delivering merge removes its own block and updates later blocks. Delete this file in the last delivery; Git/GitHub retain history. Keep the repository's merge-commit policy and strong tag-only release, protected production deployment, provider-version confirmation, settings tests, content/document security, and no checked-in changelog.
 
-The next parity gap is reproducible build identity: eliminate wall-clock and nearest-tag ambiguity so identical immutable inputs produce byte-identical identity artifacts without mislabeling dirty local builds. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
+The next parity gap is PR patch-integrity ownership: make the exact committed PR range reproducible through one base-aware acceptance owner without duplicating CI execution. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
 
 ## Open tasks
-
-### HF-134 — [BUILD] Make build identity reproducible from immutable inputs
-
-- Dependency: HF-133 merged.
-- Why: `scripts/version-stamp.mjs` writes wall-clock `builtAt` and falls back to the nearest tag, so identical source builds can produce different identity files.
-- Scope: Derive build metadata from the exact commit/tag or a documented deterministic source epoch; retain a truthful dirty local identity and current public version shape where required.
-- Non-goals: No release publication, version bump or deployment.
-- Acceptance: Two clean builds of the same checkout produce byte-identical identity artifacts; a dirty checkout is not labeled as the exact release.
-- Validation: Focused stamp test; `npm run build` twice with comparison; `npm run check`; `git diff --check`.
-- Authorities: `scripts/version-stamp.mjs`, build/version tests.
 
 ### HF-135 — [TEST] Give PR patch integrity one acceptance owner
 

@@ -31,6 +31,9 @@ The release workflow verifies that:
 - the exact same tag ref is the only state eligible for production deployment.
 
 Published release tags are never moved, rewritten, or deleted.
+
+Build output follows the same evidence boundary. `version.json` derives `commit` from the exact checkout and `builtAt` from that commit's immutable timestamp. A release label is used only when an annotated semantic-version tag points exactly at that commit, or when an explicitly supplied `RELEASE` names that same exact annotated tag. Descendants of a release tag remain development identities, and a dirty checkout receives a `+dirty` release suffix.
+
 The committed GitHub-settings contract requires an active `v*` tag ruleset that blocks tag updates and deletion; live provider state is checked with `npm run verify:github-settings`.
 
 ## Release authority
