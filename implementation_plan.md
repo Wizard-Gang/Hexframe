@@ -2,23 +2,13 @@
 
 This is Hexframe's current/future process-parity wave under WG-ARCH-001 §27. On `do needful`, refresh `main`, open PRs, exact-head CI and settings; finish a green/current authoritative PR first, then deliver only the first open task. A blocked first task is not bypassed without owner direction. The delivering merge removes its own block and updates later blocks. Delete this file in the last delivery; Git/GitHub retain history. Keep the repository's merge-commit policy and strong tag-only release, protected production deployment, provider-version confirmation, settings tests, content/document security, and no checked-in changelog.
 
-The current dependency graph has high-severity advisories in the Wrangler/Miniflare chain. Resolve those advisories before broadening the local lifecycle. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
+The next parity gap is command and capability guidance: contributors need a clear distinction among credential-free acceptance, live settings checks, local development, dry-run deployment, and immutable release/deployment. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
 
 ## Open tasks
 
-### HF-128 — [SEC] Resolve the current high-severity dependency advisories
-
-- Dependency: HF-127 merged on `main`.
-- Why: A fresh `npm ci`/`npm audit` reports high-severity `sharp` through Miniflare/Wrangler; an open dependency PR is not current/green under the controlled title gate.
-- Scope: Update only the affected dependency/lockfile chain to a reviewed non-vulnerable compatible version, considering the open dependency PR as evidence rather than assuming it can merge; retain install-script policy.
-- Non-goals: No app feature, provider mutation or unrelated dependency sweep.
-- Acceptance: `npm audit --audit-level=high` is clear, and existing `check`/Worker dry run still pass.
-- Validation: `npm ci`; `npm audit --audit-level=high`; `npm run check`; `git diff --check`.
-- Authorities: `package.json`, package lock, `.npmrc`.
-
 ### HF-129 — [DOCS] Document Hexframe's command and capability map
 
-- Dependency: HF-128 merged.
+- Dependency: HF-128 merged on `main`.
 - Why: README/CONTRIBUTING give commands but not a clear distinction among credential-free `check`, live settings verification, local `dev`, dry-run deploy, and immutable release/deploy.
 - Scope: Add a concise command table with actual prerequisites and side effects, including current extra CI whitespace/secret gates and the local secret channel.
 - Non-goals: No script or workflow behavior change.
