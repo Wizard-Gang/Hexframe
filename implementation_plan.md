@@ -2,23 +2,13 @@
 
 This is Hexframe's current/future process-parity wave under WG-ARCH-001 §27. On `do needful`, refresh `main`, open PRs, exact-head CI and settings; finish a green/current authoritative PR first, then deliver only the first open task. A blocked first task is not bypassed without owner direction. The delivering merge removes its own block and updates later blocks. Delete this file in the last delivery; Git/GitHub retain history. Keep the repository's merge-commit policy and strong tag-only release, protected production deployment, provider-version confirmation, settings tests, content/document security, and no checked-in changelog.
 
-The next parity gap is command and capability guidance: contributors need a clear distinction among credential-free acceptance, live settings checks, local development, dry-run deployment, and immutable release/deployment. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
+The next parity gap is local process ownership: prove which Wrangler process belongs to this checkout before adding cleanup behavior. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
 
 ## Open tasks
 
-### HF-129 — [DOCS] Document Hexframe's command and capability map
-
-- Dependency: HF-128 merged on `main`.
-- Why: README/CONTRIBUTING give commands but not a clear distinction among credential-free `check`, live settings verification, local `dev`, dry-run deploy, and immutable release/deploy.
-- Scope: Add a concise command table with actual prerequisites and side effects, including current extra CI whitespace/secret gates and the local secret channel.
-- Non-goals: No script or workflow behavior change.
-- Acceptance: A fresh agent can choose the correct local, acceptance, provider and release command without treating dry-run as production mutation.
-- Validation: Compare docs with `package.json`/workflows; `npm run check`; `git diff --check`.
-- Authorities: `README.md`, `CONTRIBUTING.md`, WG-ARCH-001 §27.
-
 ### HF-130 — [TEST] Prove checkout ownership for local dev cleanup
 
-- Dependency: HF-129 merged.
+- Dependency: HF-129 merged on `main`.
 - Why: Current `dev` is a blocking build-plus-Wrangler command with no testable process ownership boundary.
 - Scope: Add a pure ownership decision and focused cases for this checkout's Wrangler child, stale PID and foreign process; do not change live cleanup yet.
 - Non-goals: No port killing, reset, browser opening or production action.
