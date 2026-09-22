@@ -29,6 +29,19 @@ test("accepts a live Wrangler dev child tied to this checkout", () => {
   assert.equal(isOwnedLocalWrangler(expected, owned), true);
 });
 
+test("accepts the direct Wrangler CLI child used by the lifecycle wrapper", () => {
+  assert.equal(isOwnedLocalWrangler(expected, {
+    ...owned,
+    argv: [
+      "/opt/node/bin/node",
+      "/work/Hexframe/node_modules/wrangler/bin/wrangler.js",
+      "dev",
+      "--port",
+      "8788",
+    ],
+  }), true);
+});
+
 test("rejects a stale process observation even when the recorded PID matches", () => {
   assert.equal(isOwnedLocalWrangler(expected, { ...owned, alive: false }), false);
 });

@@ -8,7 +8,7 @@ function isPositivePid(value) {
 
 function isWranglerToken(value) {
   if (typeof value !== "string") return false;
-  const normalized = value.replaceAll("\\", "/").toLowerCase();
+  const normalized = value.replaceAll("\\", "/").replace(/^["']|["']$/g, "").toLowerCase();
   return normalized === "wrangler"
     || normalized.endsWith("/wrangler")
     || normalized.endsWith("/wrangler.js");
