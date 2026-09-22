@@ -30,13 +30,30 @@ assert.doesNotMatch(localSecrets, /wrangler|secret\s+put|loadRootEnv|CLOUDFLARE/
 const release = read(".github/workflows/release.yml");
 assert.match(release, /push:\s*\n\s+tags:\s*\['v\*'\]/);
 assert.doesNotMatch(release, /workflow_dispatch:/, "release workflow must not be manually dispatchable");
+assert.match(release, /GITHUB_REF_TYPE.*tag/, "release identity preflight must require a tag event");
+assert.match(release, /git fetch --force --no-tags origin "\$tag_ref:\$tag_ref"/, "release must fetch the exact tag ref");
 assert.match(release, /git cat-file -t/);
 assert.match(release, /package_version=.*package\.json/);
 assert.match(release, /GITHUB_REF_NAME.*v\$package_version|v\$package_version.*GITHUB_REF_NAME/s);
+assert.match(release, /tagged_commit=.*git rev-parse/);
+assert.match(release, /checked_out_commit=.*git rev-parse HEAD/);
+assert.match(release, /tagged_commit.*checked_out_commit|checked_out_commit.*tagged_commit/s);
+
+const releaseInstall = release.indexOf("npm ci");
+const releaseCheck = release.indexOf("npm run check");
+const releasePublish = release.indexOf("gh release create");
+assert.ok(releaseInstall >= 0, "release reproduction must perform a clean npm ci install");
+assert.ok(releaseCheck > releaseInstall, "canonical npm run check must follow npm ci");
+assert.ok(releasePublish > releaseCheck, "GitHub Release publication must follow successful canonical check");
+assert.doesNotMatch(release, /^\s*npm run typecheck\s*$/m, "release workflow must not duplicate canonical typecheck ownership");
+assert.doesNotMatch(release, /^\s*npm test\s*$/m, "release workflow must not duplicate canonical test ownership");
+assert.doesNotMatch(release, /^\s*npm run build\s*$/m, "release workflow must not duplicate canonical build ownership");
+
 assert.match(release, /gh release create/);
 assert.match(release, /--generate-notes/, "GitHub must generate human-readable release notes from repository state");
 assert.match(release, /--verify-tag/);
 assert.doesNotMatch(release, /docs\/releases|CHANGELOG\.md|--notes-file/, "release workflow must not depend on checked-in release history");
+assert.match(release, /deploy:\s*\n\s+needs:\s*reproduce/, "production deploy must remain downstream of successful release reproduction");
 assert.match(release, /uses:\s*\.\/\.github\/workflows\/deploy\.yml/);
 assert.match(release, /tag:\s*\$\{\{ github\.ref_name \}\}/);
 

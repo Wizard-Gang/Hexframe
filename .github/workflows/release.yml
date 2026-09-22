@@ -44,9 +44,7 @@ jobs:
       - name: Reproduce the tagged state
         run: |
           npm ci
-          npm run typecheck
-          npm test
-          npm run build
+          npm run check
 
       - name: Publish GitHub Release
         env:
