@@ -2,19 +2,9 @@
 
 This is Hexframe's current/future process-parity wave under WG-ARCH-001 §27. On `do needful`, refresh `main`, open PRs, exact-head CI and settings; finish a green/current authoritative PR first, then deliver only the first open task. A blocked first task is not bypassed without owner direction. The delivering merge removes its own block and updates later blocks. Delete this file in the last delivery; Git/GitHub retain history. Keep the repository's merge-commit policy and strong tag-only release, protected production deployment, provider-version confirmation, settings tests, content/document security, and no checked-in changelog.
 
-The next parity gap is release acceptance parity: make the immutable tag workflow reproduce canonical credential-free `check` before publication. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
+The next parity gap is reproducible build identity: eliminate wall-clock and nearest-tag ambiguity so identical immutable inputs produce byte-identical identity artifacts without mislabeling dirty local builds. A normal task never deploys production. Each task has one primary outcome sized for a short web implementation turn.
 
 ## Open tasks
-
-### HF-133 — [BUILD] Reproduce the release with canonical `check`
-
-- Dependency: HF-132 merged.
-- Why: Tag workflow manually runs typecheck/test/build instead of the full `check` that also guards documents, content, security and release boundaries.
-- Scope: Run `npm run check` on the exact annotated tag after `npm ci`, replacing only the duplicate subset; preserve identity preflight, GitHub Release publication and tag-only deploy caller.
-- Non-goals: No release or deploy in this task.
-- Acceptance: A tagged state must pass the same credential-free acceptance gate as a PR before publication.
-- Validation: Focused workflow test; `npm run check`; `git diff --check`.
-- Authorities: `.github/workflows/release.yml`, `scripts/validate-release-boundary.mjs`.
 
 ### HF-134 — [BUILD] Make build identity reproducible from immutable inputs
 

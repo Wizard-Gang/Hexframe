@@ -57,10 +57,12 @@ merge to main
 → CI
 → set package version
 → create annotated v* tag
-→ Release workflow validates and reproduces that exact tag
+→ Release workflow validates that exact tag, runs npm ci, and reproduces it through canonical npm run check
 → GitHub Release is published with generated notes
 → protected production workflow deploys that exact tag
 ```
+
+Release reproduction has one credential-free acceptance owner: after the clean install, the exact tagged checkout must pass canonical `npm run check` before publication. The release workflow does not maintain a separate typecheck/test/build subset.
 
 A successful merge, pull request, branch push, or arbitrary `main` commit does not deploy production.
 
