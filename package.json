@@ -20,7 +20,7 @@
     "validate:content": "vitest run tests/content",
     "validate:documents": "node scripts/validate-rendered-documents.mjs",
     "check:history": "node scripts/check-history.mjs",
-    "check": "npm run check:history && npm run typecheck && npm run test && npm run test:dev-secrets && npm run test:github-settings && npm run build && npm run validate:documents && npm run validate:presentation-security && npm run validate:release-boundary && npm run validate:documentation-authority && npm run validate:content",
+    "check": "npm run check:history && npm run typecheck && npm run test && npm run test:dev-secrets && npm run test:dev-process-ownership && npm run test:github-settings && npm run build && npm run validate:documents && npm run validate:presentation-security && npm run validate:release-boundary && npm run validate:documentation-authority && npm run validate:content",
     "validate:presentation-security": "node scripts/validate-presentation-security.mjs",
     "deploy:dry-run": "node scripts/deploy.mjs",
     "validate:release-boundary": "node scripts/validate-release-boundary.mjs",
@@ -28,7 +28,8 @@
     "test:github-settings": "node --test scripts/github-repository-settings-cases.mjs",
     "verify:github-settings": "node scripts/verify-github-repository-settings.mjs",
     "apply:github-settings": "node scripts/apply-github-repository-settings.mjs",
-    "test:dev-secrets": "node --test scripts/dev-secret-cases.mjs"
+    "test:dev-secrets": "node --test scripts/dev-secret-cases.mjs",
+    "test:dev-process-ownership": "node --test scripts/dev-process-ownership-cases.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",
