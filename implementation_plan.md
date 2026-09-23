@@ -2,19 +2,9 @@
 
 This is Hexframe's current/future process-convergence queue under WG-ARCH-001 §27. The previous implementation wave is complete; this queue covers only remaining cross-repository normalization work. On `do needful`, re-fetch authoritative `main`, open PRs, exact-head CI, repository settings, rulesets, tags, releases, deployment state and the current organization baseline before editing. Take only the first open task unless the owner explicitly changes priority. Each delivering merge removes its own task and keeps later scope current. Delete this file in the final delivery; Git/GitHub retain completed history.
 
-Hexframe already has canonical `npm run check`, protected `main`, required CI, repository-settings verify/apply commands, immutable `v*` tag rules, annotated-tag release validation, GitHub Release publication and protected Cloudflare production deployment. This wave must preserve those controls while converging the remaining Node/npm, merge, CLI, tagging, release and deploy differences with the other active repositories. Do not rebuild working infrastructure merely for cosmetic sameness.
+Hexframe already has the shared Node/npm baseline, canonical `npm run check`, protected/current `main`, required CI, squash-only controlled merges, automatic completed-branch deletion, repository-settings verify/apply commands, immutable `v*` tag rules, annotated-tag release validation, GitHub Release publication and protected Cloudflare production deployment. This wave must preserve those controls while converging the remaining release-identity CLI, tagging, publication and deploy differences with the other active repositories. Do not rebuild working infrastructure merely for cosmetic sameness.
 
 ## Open tasks
-
-### HF-138 — [OPS] Converge controlled merges to squash-only
-
-- Dependency: HF-137.
-- Why: Hexframe is currently merge-commit-only while the organization target is one controlled commit on `main` via squash merge. Live repository state and `config/github-repository-settings.json` currently agree on merge commits only.
-- Scope: Update the repository merge-policy authority, pure settings cases, `AGENTS.md`, contribution/change-management guidance and any controlled-history assumptions to require squash-only controlled merges while preserving protected/current `main`, required `verify` / `change-id` / `secrets`, branch deletion after merge, no bypass actors and immutable release tags. After exact-head CI is green under the pre-change provider state, deliberately apply and verify the new live settings, then squash-merge this task itself.
-- Non-goals: No release, tag creation or production deployment.
-- Acceptance: Repository authority and live GitHub state both allow squash merges only; merge commit and rebase are disabled; the active PR can be squash-merged without bypassing required checks; resulting `main` retains one controlled HF commit for the task.
-- Validation: settings unit cases; `npm run check`; `npm run verify:github-settings`; exact provider reads before/after apply; exact-head CI; post-merge history check.
-- Authorities: `config/github-repository-settings.json`, settings CLI/tests, `AGENTS.md`, `CONTRIBUTING.md`, change-management docs, live GitHub settings/rulesets.
 
 ### HF-139 — [REFACTOR] Give release identity one reusable CLI owner
 
