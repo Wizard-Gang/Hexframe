@@ -6,16 +6,6 @@ Hexframe already has canonical `npm run check`, protected `main`, required CI, r
 
 ## Open tasks
 
-### HF-137 — [BUILD] Align Node and npm with the shared baseline
-
-- Dependency: none; first open task.
-- Why: Hexframe currently pins Node 26.7.0 and npm 11.19.0 while newer normalized repositories have moved further on the same Node 26/npm 11 line. Cross-repository execution should resolve one current organization pair.
-- Scope: Re-fetch the current shared baseline before editing, then align `.node-version`, `packageManager`, engine policy, lockfile metadata if required, CI and current-state documentation so local, CI, release and deploy jobs all resolve the same pair. At planning time SharkTank and YarReader are on Node 26.9.0 / npm 11.19.1; treat that as evidence, not a permanent hard-coded authority.
-- Non-goals: No dependency-upgrade wave, merge-policy change, release or deployment.
-- Acceptance: `npm ci`, canonical acceptance, Release and Deploy all resolve the same current organization-standard Node/npm pair and fail clearly on incompatible tooling.
-- Validation: `npm ci`; `npm run check`; `npm run audit:dependencies`; `git diff --check`; exact-head CI.
-- Authorities: current organization baseline, `.node-version`, `package.json`, `.npmrc`, workflows and toolchain docs.
-
 ### HF-138 — [OPS] Converge controlled merges to squash-only
 
 - Dependency: HF-137.
