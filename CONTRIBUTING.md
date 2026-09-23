@@ -26,8 +26,9 @@ for the full type list, body format, and risk definitions.
 
 ## Toolchain
 
-Use the exact Node.js version in `.node-version` and the exact npm 11 version declared by
-`packageManager`. The engine ranges are enforced by `.npmrc`.
+Use Node.js 26.9.0 from `.node-version` and npm 11.19.1 from `packageManager`.
+Node 26.9.0 ships that npm release; the Node 26/npm 11 engine policy remains enforced by
+`.npmrc`, and CI, Release, and Deploy all resolve Node from `.node-version` before running npm.
 
 Dependency install scripts are disabled unless the exact package version is approved in
 `package.json#allowScripts`. Keep that list limited to install scripts required by the locked
