@@ -9,6 +9,10 @@ const read = (path) => readFileSync(join(root, path), "utf8");
 const pkg = JSON.parse(read("package.json"));
 const scripts = pkg.scripts ?? {};
 
+assert.equal(scripts["verify:release-identity"], "node scripts/release-identity.mjs");
+assert.equal(scripts["test:release-identity"], "node --test scripts/release-identity-cases.mjs");
+assert.match(String(scripts.check), /npm run test:release-identity/, "canonical check must exercise release identity cases");
+
 assert.equal(scripts.deploy, undefined, "normal package scripts must not expose a production deploy");
 assert.equal(scripts["secrets:push"], undefined, "normal package scripts must not expose production secret mutation");
 assert.equal(scripts["deploy:dry-run"], "node scripts/deploy.mjs");
@@ -24,20 +28,29 @@ assert.match(localDeploy, /"--dry-run"/, "local deploy helper must be dry-run on
 assert.doesNotMatch(localDeploy, /sync-secrets|CLOUDFLARE_API_TOKEN|ADMIN_PASSWORD|ADMIN_SESSION_SECRET/);
 assert.match(localDeploy, /"production"/, "dry run should validate production configuration");
 
+const releaseIdentity = read("scripts/release-identity.mjs");
+assert.doesNotMatch(
+  releaseIdentity,
+  /GH_TOKEN|GITHUB_TOKEN|CLOUDFLARE_API_TOKEN|wrangler\s+deploy|gh\s+release\s+create/i,
+  "release identity verifier must remain credential-free and non-mutating",
+);
+
 const localSecrets = read("scripts/sync-secrets.mjs");
 assert.doesNotMatch(localSecrets, /wrangler|secret\s+put|loadRootEnv|CLOUDFLARE/i, "local secret helper must not mutate provider state");
 
 const release = read(".github/workflows/release.yml");
 assert.match(release, /push:\s*\n\s+tags:\s*\['v\*'\]/);
 assert.doesNotMatch(release, /workflow_dispatch:/, "release workflow must not be manually dispatchable");
-assert.match(release, /GITHUB_REF_TYPE.*tag/, "release identity preflight must require a tag event");
-assert.match(release, /git fetch --force --no-tags origin "\$tag_ref:\$tag_ref"/, "release must fetch the exact tag ref");
-assert.match(release, /git cat-file -t/);
-assert.match(release, /package_version=.*package\.json/);
-assert.match(release, /GITHUB_REF_NAME.*v\$package_version|v\$package_version.*GITHUB_REF_NAME/s);
-assert.match(release, /tagged_commit=.*git rev-parse/);
-assert.match(release, /checked_out_commit=.*git rev-parse HEAD/);
-assert.match(release, /tagged_commit.*checked_out_commit|checked_out_commit.*tagged_commit/s);
+assert.match(
+  release,
+  /npm run verify:release-identity -- --tag "\$GITHUB_REF_NAME" --ref-type "\$GITHUB_REF_TYPE" --fetch-origin/,
+  "release workflow must delegate release identity to the repository CLI",
+);
+assert.doesNotMatch(
+  release,
+  /git cat-file|package_version=|tagged_commit=|checked_out_commit=/,
+  "release workflow must not reimplement release identity",
+);
 
 const releaseInstall = release.indexOf("npm ci");
 const releaseCheck = release.indexOf("npm run check");
@@ -62,10 +75,16 @@ assert.match(deploy, /workflow_call:/);
 assert.doesNotMatch(deploy, /workflow_dispatch:/, "production deploy must not be manually dispatchable");
 assert.match(deploy, /environment:\s*production/);
 assert.match(deploy, /ref:\s*\$\{\{ github\.ref \}\}/, "deploy must checkout the caller's immutable tag ref");
-assert.match(deploy, /GITHUB_REF_TYPE.*tag/);
-assert.match(deploy, /GITHUB_REF_NAME.*EXPECTED_TAG/);
-assert.match(deploy, /git cat-file -t/);
-assert.match(deploy, /package_version=.*package\.json/);
+assert.match(
+  deploy,
+  /npm run verify:release-identity -- --tag "\$GITHUB_REF_NAME" --expected-tag "\$EXPECTED_TAG" --ref-type "\$GITHUB_REF_TYPE" --fetch-origin/,
+  "deploy workflow must reuse the repository release identity CLI and bind the caller tag",
+);
+assert.doesNotMatch(
+  deploy,
+  /git cat-file|package_version=|tagged_commit=|checked_out_commit=/,
+  "deploy workflow must not reimplement release identity",
+);
 assert.match(deploy, /wrangler deploy --env production/);
 
 const workflows = readdirSync(join(root, ".github/workflows")).filter((name) => name.endsWith(".yml"));

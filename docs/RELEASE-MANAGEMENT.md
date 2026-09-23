@@ -22,13 +22,15 @@ The tag must be exactly:
 v<package.json version>
 ```
 
-The release workflow verifies that:
+The Release and Deploy workflows call the same repository-owned release-identity CLI. It verifies that:
 
 - the workflow was triggered by a `v*` tag;
 - the tag is annotated;
 - the tag version equals `package.json#version`;
 - the tagged commit is the commit checked out and reproduced;
 - the exact same tag ref is the only state eligible for production deployment.
+
+The verifier is exposed as `npm run verify:release-identity`; a caller supplies the candidate with `-- --tag v1.2.3`. It is credential-free and does not create, move, publish, or deploy a tag. Actions also supplies the event ref type and fetches the exact origin tag through the same CLI; Deploy additionally binds the candidate to the tag received from the Release workflow.
 
 Published release tags are never moved, rewritten, or deleted.
 
