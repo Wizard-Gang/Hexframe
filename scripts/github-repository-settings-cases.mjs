@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   compareGithubSettings,
+  configuredMergeMethods,
   loadExpectedSettings,
   rulesetPayload,
 } from "./github-repository-settings.mjs";
@@ -25,7 +26,7 @@ function actual() {
       conditions: { ref_name: { include: ruleset.include, exclude: [] } },
       rules: ruleset.rules.map((type) => {
         if (type === "pull_request") {
-          return { type, parameters: { allowed_merge_methods: ["merge"] } };
+          return { type, parameters: { allowed_merge_methods: configuredMergeMethods(expected) } };
         }
         if (type === "required_status_checks") {
           return {
@@ -52,9 +53,21 @@ test("matching configuration passes", () => {
   assert.deepEqual(compareGithubSettings(expected, actual()), []);
 });
 
-test("unexpected squash or rebase merge support fails", () => {
-  assert.match(failuresFor((state) => { state.repository.allow_squash_merge = true; }), /squash merges/);
+test("disabled squash or unexpected merge/rebase support fails", () => {
+  assert.match(failuresFor((state) => { state.repository.allow_squash_merge = false; }), /squash merges/);
+  assert.match(failuresFor((state) => { state.repository.allow_merge_commit = true; }), /merge commits/);
   assert.match(failuresFor((state) => { state.repository.allow_rebase_merge = true; }), /rebase merges/);
+});
+
+test("ruleset merge methods must match squash-only authority", () => {
+  assert.match(
+    failuresFor((state) => {
+      const branch = state.rulesets.find((ruleset) => ruleset.target === "branch");
+      const pull = branch.rules.find((rule) => rule.type === "pull_request");
+      pull.parameters.allowed_merge_methods = ["merge"];
+    }),
+    /pull request merge methods must match the committed contract/,
+  );
 });
 
 test("missing main protection ruleset fails", () => {
@@ -96,14 +109,14 @@ test("main protection requires the branch to be current with main", () => {
   );
 });
 
-test("main ruleset payload requires PRs, merge commits, CI, and no bypass actors", () => {
+test("main ruleset payload requires PRs, squash-only merges, CI, and no bypass actors", () => {
   const main = expected.rulesets.find((ruleset) => ruleset.target === "branch");
   const payload = rulesetPayload(expected, main);
   const pull = payload.rules.find((rule) => rule.type === "pull_request");
   const checks = payload.rules.find((rule) => rule.type === "required_status_checks");
   assert.deepEqual(payload.bypass_actors, main.bypassActors);
   assert.equal(checks.parameters.strict_required_status_checks_policy, true);
-  assert.deepEqual(pull.parameters.allowed_merge_methods, ["merge"]);
+  assert.deepEqual(pull.parameters.allowed_merge_methods, ["squash"]);
   assert.deepEqual(
     checks.parameters.required_status_checks,
     expected.requiredStatusChecks.map((context) => ({ context })),

@@ -2,8 +2,8 @@
   "repository": "Wizard-Gang/Hexframe",
   "defaultBranch": "main",
   "mergeMethods": {
-    "mergeCommit": true,
-    "squash": false,
+    "mergeCommit": false,
+    "squash": true,
     "rebase": false
   },
   "deleteBranchOnMerge": true,

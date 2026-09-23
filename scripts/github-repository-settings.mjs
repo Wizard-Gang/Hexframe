@@ -32,6 +32,14 @@ function statusContexts(ruleset) {
   return valuesOf(rule?.parameters?.required_status_checks).map((check) => check.context);
 }
 
+export function configuredMergeMethods(expected) {
+  const methods = [];
+  if (expected.mergeMethods.mergeCommit) methods.push("merge");
+  if (expected.mergeMethods.squash) methods.push("squash");
+  if (expected.mergeMethods.rebase) methods.push("rebase");
+  return methods;
+}
+
 export function compareGithubSettings(expected, actual) {
   const failures = [];
   const repository = actual?.repository;
@@ -58,6 +66,8 @@ export function compareGithubSettings(expected, actual) {
     failures.push("repository rulesets are inaccessible or missing");
     return failures;
   }
+
+  const expectedMergeMethods = configuredMergeMethods(expected);
 
   for (const expectedRuleset of expected.rulesets) {
     const actualRuleset = rulesets.find((ruleset) => ruleset.name === expectedRuleset.name);
@@ -98,12 +108,10 @@ export function compareGithubSettings(expected, actual) {
     if (expectedRuleset.target === "branch") {
       const pullRequest = ruleMap.get("pull_request");
       const allowedMergeMethods = pullRequest?.parameters?.allowed_merge_methods;
-      if (
-        !Array.isArray(allowedMergeMethods)
-        || allowedMergeMethods.length !== 1
-        || allowedMergeMethods[0] !== "merge"
-      ) {
-        failures.push(`${expectedRuleset.name}: pull request rule must allow merge commits only`);
+      if (!sameValues(allowedMergeMethods, expectedMergeMethods)) {
+        failures.push(
+          `${expectedRuleset.name}: pull request merge methods must match the committed contract (${expectedMergeMethods.join(", ")})`,
+        );
       }
 
       const checks = ruleMap.get("required_status_checks");
@@ -131,7 +139,7 @@ export function rulesetPayload(expected, ruleset) {
       return {
         type,
         parameters: {
-          allowed_merge_methods: ["merge"],
+          allowed_merge_methods: configuredMergeMethods(expected),
           dismiss_stale_reviews_on_push: false,
           require_code_owner_review: false,
           require_last_push_approval: false,

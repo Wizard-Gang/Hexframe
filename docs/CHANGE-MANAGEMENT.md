@@ -7,6 +7,7 @@ Every controlled change to Hexframe receives exactly one permanent change ID in 
 
 - One change, one ID. IDs are permanent, never reused, never renumbered after publication.
 - IDs are sequential with no gaps. `npm run check:history` validates reachable controlled commits.
+- Controlled pull requests land through squash-only merge. The squash commit retained on `main` is the permanent controlled record for the change ID; merge commits and rebase merges are not permitted.
 - A revert keeps the original ID; the revert itself receives a new ID.
 - A corrective change references the change it corrects with a `Corrects:` line.
 
@@ -96,7 +97,7 @@ High-risk changes require explicit validation evidence and a documented rollback
 | Phase | Repository evidence |
 | --- | --- |
 | Plan | Change ID, implementation-plan task when applicable, `Reason:`, `Risk:`, `Controls:` |
-| Do | The implementation commit |
+| Do | The implementation branch and squash commit retained on `main` |
 | Check | `Validation:`, CI run, review on the pull request |
 | Act | Merge, release/rollback actions when applicable, or a new corrective controlled change |
 

@@ -37,7 +37,7 @@ When the user says `do needful`:
 
 1. Read current `AGENTS.md` and `implementation_plan.md`.
 2. Take the first open implementation-plan task unless the user explicitly names another task or a prerequisite blocks it.
-3. Execute that task through the complete branch → implementation → validation → PR → green current-head CI → merge-commit flow.
+3. Execute that task through the complete branch → implementation → validation → PR → green current-head CI → squash-merge flow.
 4. Purge the delivered task from `implementation_plan.md` in the completing merge and keep later tasks current.
 5. Confirm merged `main` and the new first open task.
 6. End the session with the copy-paste prompt for that next open task.
@@ -71,13 +71,13 @@ A repository-changing task is not finished at "PR ready." Complete the delivery 
 6. Commit all intended task changes with the controlled-change title and an appropriate change record.
 7. Push the branch and open or update its pull request. Never push directly to `main`.
 8. Re-fetch the PR head and CI state after the push.
-9. If the PR's current head is green, up to date, authoritative for the current change, and mergeable, merge it with a merge commit. Do not stop merely because the next requested change is only one ID ahead.
+9. If the PR's current head is green, up to date, authoritative for the current change, and mergeable, squash-merge that exact validated head. Do not stop merely because the next requested change is only one ID ahead.
 10. Confirm the merge landed on `main`. The merged plan must no longer list the delivered task.
 11. If another sequential prompt follows, start it only after the current merge is confirmed.
 12. Report the merged PR and resulting `main` commit. If a blocker prevents completion, report the exact blocker without claiming completion.
 13. After a successful merge/purge, finish the session with the copy-paste handoff prompt for the next open implementation-plan task.
 
-Do not squash or rebase a controlled change into `main`.
+Do not use merge commits or rebase merges for controlled changes. Squash the exact validated PR head so `main` retains one controlled commit for the change ID.
 
 ## Validation and CI
 
