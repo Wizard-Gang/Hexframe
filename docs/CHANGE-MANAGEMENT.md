@@ -6,7 +6,7 @@ Every controlled change to Hexframe receives exactly one permanent change ID in 
 ## Identity rules
 
 - One change, one ID. IDs are permanent, never reused, never renumbered after publication.
-- IDs are sequential with no gaps. `npm run check:history` validates reachable controlled commits.
+- The controlled ID set is gapless, but commit time is not an ordering guarantee. An active implementation plan may reserve earlier IDs while an owner-directed portfolio plan maintenance change uses the first unassigned ID after the queue. `npm run check:history` validates reachable controlled commits together with reserved plan IDs and rejects unreserved gaps.
 - Controlled pull requests land through squash-only merge. The squash commit retained on `main` is the permanent controlled record for the change ID; merge commits and rebase merges are not permitted.
 - A revert keeps the original ID; the revert itself receives a new ID.
 - A corrective change references the change it corrects with a `Corrects:` line.
