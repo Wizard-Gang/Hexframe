@@ -2,22 +2,13 @@
 
 This is Hexframe's current/future process-convergence queue under WG-ARCH-001 §27. The previous implementation wave is complete; this queue covers only remaining cross-repository normalization work. On `do needful`, re-fetch authoritative `main`, open PRs, exact-head CI, repository settings, rulesets, tags, releases, deployment state and the current organization baseline before editing. Take only the first open task unless the owner explicitly changes priority. Each delivering merge removes its own task and keeps later scope current. Delete this file in the final delivery; Git/GitHub retain completed history.
 
-Hexframe already has the shared Node/npm baseline, canonical `npm run check`, protected/current `main`, required CI, squash-only controlled merges, automatic completed-branch deletion, repository-settings verify/apply commands, immutable `v*` tag rules, annotated-tag release validation, GitHub Release publication and protected Cloudflare production deployment, plus one tested release-identity CLI shared by Release and Deploy and credential-free release-workflow contract cases. This wave must preserve those controls while converging the remaining production-deploy differences with the other active repositories. Do not rebuild working infrastructure merely for cosmetic sameness.
+Hexframe already has the shared Node/npm baseline, canonical `npm run check`, protected/current `main`, required CI, squash-only controlled merges, automatic completed-branch deletion, repository-settings verify/apply commands, immutable `v*` tag rules, annotated-tag release validation, GitHub Release publication and protected Cloudflare production deployment, plus one tested release-identity CLI, a guarded repository-owned production deploy CLI, and credential-free release-workflow contract cases. This wave must preserve those controls while completing end-to-end release/deploy evidence and final parity acceptance. Do not rebuild working infrastructure merely for cosmetic sameness.
 
 ## Open tasks
 
-### HF-141 — [BUILD] Put production deployment behind one guarded npm CLI
-
-- Why: The current protected deploy workflow invokes Wrangler production mutation inline while local `deploy:dry-run` uses repository code. Cross-repo CLI parity should give production deployment one repository-owned command without making local arbitrary production mutation possible.
-- Scope: Extend the existing deploy implementation so the workflow invokes one npm-owned production command that fails closed unless it is running in the validated GitHub release/tag context with the expected release identity and credentials. Keep `deploy:dry-run` non-mutating. Move only deployment mechanics into the script; GitHub environment protection, secrets and workflow ordering remain provider controls.
-- Non-goals: No manual/local production escape hatch, no deployment from branches or arbitrary `main`, no secret relocation.
-- Acceptance: Production mutation is reachable only through the protected release workflow and exact release tag; the workflow no longer owns an independent inline Wrangler-deploy implementation.
-- Validation: deploy CLI unit/case coverage; dry run; `npm run check`; exact workflow tests; `git diff --check`.
-- Authorities: deploy script/package commands, Release/Deploy workflows, production environment policy.
-
 ### HF-142 — [TEST] Prove release-to-deploy identity end to end
 
-- Dependency: HF-141.
+- Dependency: The guarded production deploy CLI remains authoritative.
 - Why: The final deploy contract should be guarded as a chain, not merely as individually plausible workflow steps.
 - Scope: Add credential-free workflow/contract tests proving production deploy depends on successful GitHub Release publication, uses the same immutable tag and commit, runs in the protected production environment, confirms the uploaded Cloudflare Version ID is serving 100% of traffic, and checks public `version.json` identity when the edge permits it. Preserve the authenticated provider check as authoritative when a Cloudflare challenge blocks public evidence.
 - Non-goals: No WAF change and no requirement to perform a live production deploy in ordinary PR acceptance.

@@ -14,21 +14,32 @@ assert.equal(scripts["test:release-workflow"], "node --test scripts/release-work
 assert.equal(scripts["test:release-identity"], "node --test scripts/release-identity-cases.mjs");
 assert.match(String(scripts.check), /npm run test:release-workflow/, "canonical check must exercise release workflow cases");
 assert.match(String(scripts.check), /npm run test:release-identity/, "canonical check must exercise release identity cases");
+assert.match(String(scripts.check), /npm run test:deploy/, "canonical check must exercise guarded deploy cases");
 
-assert.equal(scripts.deploy, undefined, "normal package scripts must not expose a production deploy");
+assert.equal(scripts.deploy, undefined, "generic package scripts must not expose an unguarded production deploy");
 assert.equal(scripts["secrets:push"], undefined, "normal package scripts must not expose production secret mutation");
-assert.equal(scripts["deploy:dry-run"], "node scripts/deploy.mjs");
+assert.equal(scripts["deploy:dry-run"], "node scripts/deploy.mjs --dry-run");
+assert.equal(scripts["deploy:production"], "node scripts/deploy.mjs --production");
+assert.equal(scripts["test:deploy"], "node --test scripts/deploy-cases.mjs");
 for (const [name, command] of Object.entries(scripts)) {
   assert.doesNotMatch(String(command), /wrangler\s+secret\s+put/i, `${name} mutates production secrets`);
-  if (name !== "deploy:dry-run") {
-    assert.doesNotMatch(String(command), /wrangler\s+deploy/i, `${name} deploys directly`);
-  }
+  assert.doesNotMatch(String(command), /(?:^|\s)(?:npx\s+)?wrangler\s+deploy/i, `${name} bypasses the repository deploy CLI`);
 }
 
 const localDeploy = read("scripts/deploy.mjs");
-assert.match(localDeploy, /"--dry-run"/, "local deploy helper must be dry-run only");
-assert.doesNotMatch(localDeploy, /sync-secrets|CLOUDFLARE_API_TOKEN|ADMIN_PASSWORD|ADMIN_SESSION_SECRET/);
-assert.match(localDeploy, /"production"/, "dry run should validate production configuration");
+assert.match(localDeploy, /"--dry-run"/, "deploy CLI must preserve an explicit non-mutating dry-run mode");
+assert.match(localDeploy, /"--production"/, "deploy CLI must require an explicit production mode");
+assert.match(localDeploy, /GITHUB_ACTIONS/, "production deploy must require GitHub Actions context");
+assert.match(localDeploy, /GITHUB_EVENT_NAME/, "production deploy must require the release tag event");
+assert.match(localDeploy, /GITHUB_REPOSITORY/, "production deploy must bind to this repository");
+assert.match(localDeploy, /EXPECTED_TAG/, "production deploy must bind to the caller's expected tag");
+assert.match(localDeploy, /CLOUDFLARE_API_TOKEN/, "production deploy must require protected provider credentials");
+assert.match(localDeploy, /CLOUDFLARE_ACCOUNT_ID/, "production deploy must require protected provider credentials");
+assert.match(localDeploy, /verify:release-identity/, "production deploy must reuse the repository release identity CLI");
+assert.match(localDeploy, /"wrangler", "deploy"/, "production deploy mechanics must live in the repository CLI");
+assert.match(localDeploy, /"deployments", "list"/, "authenticated live-version verification must live in the repository CLI");
+assert.match(localDeploy, /"--dry-run"/, "dry run should validate production configuration");
+assert.doesNotMatch(localDeploy, /sync-secrets|ADMIN_PASSWORD|ADMIN_SESSION_SECRET/);
 
 const releaseIdentity = read("scripts/release-identity.mjs");
 assert.doesNotMatch(
@@ -77,17 +88,16 @@ assert.match(deploy, /workflow_call:/);
 assert.doesNotMatch(deploy, /workflow_dispatch:/, "production deploy must not be manually dispatchable");
 assert.match(deploy, /environment:\s*production/);
 assert.match(deploy, /ref:\s*\$\{\{ github\.ref \}\}/, "deploy must checkout the caller's immutable tag ref");
-assert.match(
-  deploy,
-  /npm run verify:release-identity -- --tag "\$GITHUB_REF_NAME" --expected-tag "\$EXPECTED_TAG" --ref-type "\$GITHUB_REF_TYPE" --fetch-origin/,
-  "deploy workflow must reuse the repository release identity CLI and bind the caller tag",
-);
+assert.match(deploy, /EXPECTED_TAG:\s*\$\{\{ inputs\.tag \}\}/, "deploy workflow must pass the exact caller tag to the guarded CLI");
+assert.match(deploy, /CLOUDFLARE_API_TOKEN:\s*\$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/);
+assert.match(deploy, /CLOUDFLARE_ACCOUNT_ID:\s*\$\{\{ secrets\.CLOUDFLARE_ACCOUNT_ID \}\}/);
+assert.match(deploy, /run:\s*npm run deploy:production/, "deploy workflow must delegate production mutation to the guarded npm CLI");
 assert.doesNotMatch(
   deploy,
-  /git cat-file|package_version=|tagged_commit=|checked_out_commit=/,
-  "deploy workflow must not reimplement release identity",
+  /git cat-file|package_version=|tagged_commit=|checked_out_commit=|npm run verify:release-identity/,
+  "deploy workflow must not reimplement guarded deployment identity",
 );
-assert.match(deploy, /wrangler deploy --env production/);
+assert.doesNotMatch(deploy, /(?:npx\s+)?wrangler\s+(?:deploy|deployments)/, "deploy workflow must not own Wrangler production mechanics");
 
 const workflows = readdirSync(join(root, ".github/workflows")).filter((name) => name.endsWith(".yml"));
 const deployCallers = workflows.filter((name) => name !== "deploy.yml" && read(`.github/workflows/${name}`).includes("uses: ./.github/workflows/deploy.yml"));
