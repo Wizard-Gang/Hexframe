@@ -24,7 +24,7 @@ v<package.json version>
 
 The Release and Deploy workflows call the same repository-owned release-identity CLI. It verifies that:
 
-- the workflow was triggered by a `v*` tag;
+- the workflow was triggered by an exact semantic-version `vX.Y.Z` tag;
 - the tag is annotated;
 - the tag version equals `package.json#version`;
 - the tagged commit is the commit checked out and reproduced;
@@ -67,7 +67,7 @@ merge to main
 → protected production workflow deploys that exact tag
 ```
 
-Release reproduction has one credential-free acceptance owner: after the clean install, the exact tagged checkout must pass canonical `npm run check` before publication. The release workflow does not maintain a separate typecheck/test/build subset.
+Release reproduction has one credential-free acceptance owner: after the clean install, the exact tagged checkout must pass canonical `npm run check` before publication. The release workflow does not maintain a separate typecheck/test/build subset. Canonical acceptance also runs deterministic release-workflow cases that guard the semantic-tag trigger, full tag history, release-identity preflight, clean install, canonical check, `gh release create --verify-tag`, and the downstream deploy handoff.
 
 A successful merge, pull request, branch push, or arbitrary `main` commit does not deploy production.
 

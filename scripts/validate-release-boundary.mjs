@@ -10,7 +10,9 @@ const pkg = JSON.parse(read("package.json"));
 const scripts = pkg.scripts ?? {};
 
 assert.equal(scripts["verify:release-identity"], "node scripts/release-identity.mjs");
+assert.equal(scripts["test:release-workflow"], "node --test scripts/release-workflow-cases.mjs");
 assert.equal(scripts["test:release-identity"], "node --test scripts/release-identity-cases.mjs");
+assert.match(String(scripts.check), /npm run test:release-workflow/, "canonical check must exercise release workflow cases");
 assert.match(String(scripts.check), /npm run test:release-identity/, "canonical check must exercise release identity cases");
 
 assert.equal(scripts.deploy, undefined, "normal package scripts must not expose a production deploy");
@@ -39,7 +41,7 @@ const localSecrets = read("scripts/sync-secrets.mjs");
 assert.doesNotMatch(localSecrets, /wrangler|secret\s+put|loadRootEnv|CLOUDFLARE/i, "local secret helper must not mutate provider state");
 
 const release = read(".github/workflows/release.yml");
-assert.match(release, /push:\s*\n\s+tags:\s*\['v\*'\]/);
+assert.match(release, /push:\s*\n\s+tags:\s*\n\s+- "v\[0-9\]\+\.\[0-9\]\+\.\[0-9\]\+"/);
 assert.doesNotMatch(release, /workflow_dispatch:/, "release workflow must not be manually dispatchable");
 assert.match(
   release,
