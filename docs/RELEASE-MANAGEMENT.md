@@ -78,9 +78,10 @@ Production mutation is supported only by the tag-driven GitHub Actions release p
 - `.github/workflows/deploy.yml` is callable only from the Release workflow.
 - The deploy job runs inside the protected `production` GitHub environment.
 - The deployment checkout is the caller's immutable tag ref.
-- The tag, package version, and checked-out commit are verified again before deployment.
-- `npm run deploy:dry-run` may build and validate the production Wrangler configuration with `--dry-run`; it cannot publish.
-- Production secret values remain in protected GitHub/provider state. Local repository scripts do not push them.
+- The deploy workflow invokes the repository-owned `npm run deploy:production` command inside the protected environment. That command fails closed unless it is running in GitHub Actions for this repository's exact semantic release tag, receives the same expected tag from the Release workflow, has the protected Cloudflare credentials, and passes the shared release-identity CLI again before mutation.
+- The guarded production command builds with the validated tag, performs the Wrangler production deployment, and verifies the uploaded Version ID is the live deployment serving 100% of traffic. The workflow retains provider protection, secret injection, sequencing, and public `version.json` evidence.
+- `npm run deploy:dry-run` uses the same repository deploy CLI in explicit non-mutating mode to build and validate the production Wrangler configuration with `--dry-run`; it cannot publish.
+- Production secret values remain in protected GitHub/provider state. Local repository scripts do not push them, and the repository does not provide a supported local production mutation path.
 
 ## Corrections and rollback
 
