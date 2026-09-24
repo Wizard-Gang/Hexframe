@@ -64,5 +64,6 @@ jobs:
           elif grep -qi '^cf-mitigated: *challenge' /tmp/headers.txt; then
             echo "::warning::$HOST issued a Cloudflare managed challenge to this runner (HTTP $code); authenticated deployment verification already passed."
           else
-            echo "::warning::could not read https://$HOST/version.json (HTTP $code); authenticated deployment verification already passed"
+            echo "::error::could not read https://$HOST/version.json (HTTP $code)"
+            exit 1
           fi
