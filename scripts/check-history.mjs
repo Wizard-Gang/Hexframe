@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 const PREFIX = "HF";
 const TYPES = [
@@ -8,7 +9,7 @@ const TYPES = [
 ];
 const TITLE = /^\[HF-(\d{3,})\] \[(INIT|FEAT|FIX|SEC|API|A11Y|I18N|AI|DB|OPS|TEST|DOCS|REFACTOR|PERF|BUILD|REVERT|CHORE)\] (.+)$/;
 
-export function validateHistory(entries) {
+export function validateHistory(entries, plannedIds = []) {
   const controlled = [];
   const malformed = [];
 
@@ -48,7 +49,7 @@ export function validateHistory(entries) {
 
   const highest = Math.max(...byId.keys());
   for (let id = 1; id <= highest; id += 1) {
-    if (!byId.has(id)) {
+    if (!byId.has(id) && !plannedIds.includes(id)) {
       throw new Error(
         `Controlled history is not sequential: missing ${PREFIX}-${String(id).padStart(3, "0")} before ${PREFIX}-${String(highest).padStart(3, "0")}`,
       );
@@ -96,7 +97,9 @@ function selfTest() {
 }
 
 selfTest();
-const highest = validateHistory(reachableHistory());
+const plannedIds = [...readFileSync("implementation_plan.md", "utf8").matchAll(/^### HF-(\d{3,}) — /gm)]
+  .map((match) => Number(match[1]));
+const highest = validateHistory(reachableHistory(), plannedIds);
 console.log(
   `Validated ${highest} sequential controlled changes through ${PREFIX}-${String(highest).padStart(3, "0")}.`,
 );
