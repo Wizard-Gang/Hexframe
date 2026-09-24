@@ -15,12 +15,14 @@ assert.equal(scripts["test:release-identity"], "node --test scripts/release-iden
 assert.match(String(scripts.check), /npm run test:release-workflow/, "canonical check must exercise release workflow cases");
 assert.match(String(scripts.check), /npm run test:release-identity/, "canonical check must exercise release identity cases");
 assert.match(String(scripts.check), /npm run test:deploy/, "canonical check must exercise guarded deploy cases");
+assert.match(String(scripts.check), /npm run test:release-deploy-contract/, "canonical check must exercise release-to-deploy contract cases");
 
 assert.equal(scripts.deploy, undefined, "generic package scripts must not expose an unguarded production deploy");
 assert.equal(scripts["secrets:push"], undefined, "normal package scripts must not expose production secret mutation");
 assert.equal(scripts["deploy:dry-run"], "node scripts/deploy.mjs --dry-run");
 assert.equal(scripts["deploy:production"], "node scripts/deploy.mjs --production");
 assert.equal(scripts["test:deploy"], "node --test scripts/deploy-cases.mjs");
+assert.equal(scripts["test:release-deploy-contract"], "node --test scripts/release-deploy-contract-cases.mjs");
 for (const [name, command] of Object.entries(scripts)) {
   assert.doesNotMatch(String(command), /wrangler\s+secret\s+put/i, `${name} mutates production secrets`);
   assert.doesNotMatch(String(command), /(?:^|\s)(?:npx\s+)?wrangler\s+deploy/i, `${name} bypasses the repository deploy CLI`);
