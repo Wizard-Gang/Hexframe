@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const PREFIX = "HF";
 const TYPES = [
@@ -97,7 +97,8 @@ function selfTest() {
 }
 
 selfTest();
-const plannedIds = [...readFileSync("implementation_plan.md", "utf8").matchAll(/^### HF-(\d{3,}) — /gm)]
+const plan = existsSync("implementation_plan.md") ? readFileSync("implementation_plan.md", "utf8") : "";
+const plannedIds = [...plan.matchAll(/^### HF-(\d{3,}) — /gm)]
   .map((match) => Number(match[1]));
 const highest = validateHistory(reachableHistory(), plannedIds);
 console.log(

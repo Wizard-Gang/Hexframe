@@ -33,6 +33,7 @@ const forbiddenReferences = [
 for (const path of tracked) {
   if (path === "scripts/validate-documentation-authority.mjs") continue;
   if (!textExtensions.has(extname(path)) && path !== "package.json") continue;
+  if (!existsSync(join(root, path))) continue;
   const source = readFileSync(join(root, path), "utf8");
   for (const retiredReference of forbiddenReferences) {
     assert.equal(
