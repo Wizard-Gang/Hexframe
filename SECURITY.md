@@ -35,6 +35,12 @@ with empty values. `npm run dev` copies only the required local admin bindings i
 placed in process arguments or logs. Production values are held as platform secrets and are
 readable only by the server runtime — never by the browser and never by a built asset.
 
+`npm run check` includes a bounded scan of tracked files and reachable Git history.
+It reports credential patterns by path and object ID without printing values. The
+scanner permits the empty `.env.example` template, explicit `test-`/`fake-`/
+`example` placeholders, and source identifiers or regex syntax that are not
+credential values. Its pure cases cover current and historical findings.
+
 ## Dependency advisories
 
 `npm run audit:dependencies` is the explicit registry-backed dependency security gate. It runs a read-only `npm audit --json --audit-level=high` against the current dependency graph and committed lockfile. A completed query with no high or critical findings succeeds; high/critical findings fail; and an unavailable, malformed, or otherwise untrustworthy registry response also fails while being reported as an unavailable advisory query rather than as a clean result.
