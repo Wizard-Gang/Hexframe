@@ -2,6 +2,8 @@
 
 Hexframe is a browser-based fighting-game training lab. It combines fixed-step combat, authored frame data, replayable state, keyboard and gamepad controls, and integrated training tools.
 
+Controlled changes use the `HF-###` namespace and the title/body format in [Change management](docs/CHANGE-MANAGEMENT.md). Required PR checks are `verify`, `change-id` and `secrets` on the exact head; the committed [GitHub settings](config/github-repository-settings.json) require current-with-main status, squash-only merges, automatic completed-branch deletion, zero bypass actors and immutable `v*` tags. The permanent [implementation plan](implementation_plan.md) is empty when no task is queued; the next instruction first fills it through a controlled plan-only change. [AGENTS.md](AGENTS.md) carries the shared work protocol.
+
 **[Overview](https://hexframe.wizardgang.ai)** · **[Training](https://hexframe.wizardgang.ai/play/)** · **[Case study](https://wizardgang.ai/projects/hexframe/)**
 
 ## Run locally
