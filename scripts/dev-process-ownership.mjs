@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 
 export const LOCAL_WRANGLER_PORT = "8788";
@@ -45,6 +46,14 @@ export function isOwnedLocalWrangler(expected, observed) {
     return false;
   }
 
-  if (resolve(observed.cwd) !== resolve(expected.rootDir)) return false;
+  const observedDir = resolve(observed.cwd);
+  const expectedDir = resolve(expected.rootDir);
+  if (observedDir !== expectedDir) {
+    try {
+      if (realpathSync(observedDir) !== realpathSync(expectedDir)) return false;
+    } catch {
+      return false;
+    }
+  }
   return hasExpectedWranglerCommand(observed.argv);
 }

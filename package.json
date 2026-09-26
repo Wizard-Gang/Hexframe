@@ -5,10 +5,10 @@
   "license": "MIT",
   "description": "Deterministic browser fighting-game training lab.",
   "type": "module",
-  "packageManager": "npm@11.19.1",
+  "packageManager": "npm@12.1.0",
   "engines": {
     "node": "26.x",
-    "npm": "11.x"
+    "npm": "12.x"
   },
   "scripts": {
     "build": "vite build && node scripts/version-stamp.mjs Hexframe dist",
@@ -37,6 +37,7 @@
     "test:dev-smoke": "node scripts/dev-smoke.mjs",
     "test:dependency-advisory": "node --test scripts/dependency-advisory-cases.mjs",
     "audit:dependencies": "node scripts/dependency-advisory.mjs",
+    "security:dependency-advisories": "npm run audit:dependencies",
     "test:release-workflow": "node --test scripts/release-workflow-cases.mjs",
     "test:release-identity": "node --test scripts/release-identity-cases.mjs",
     "verify:release-identity": "node scripts/release-identity.mjs",
@@ -46,23 +47,23 @@
     "check:patch-integrity": "node scripts/check-patch-integrity.mjs"
   },
   "dependencies": {
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260823.1",
-    "@types/node": "^26.6.2",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "ajv": "^8.20.0",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1",
-    "wrangler": "^4.136.1"
+    "@cloudflare/workers-types": "5.20260925.2",
+    "@types/node": "26.6.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "ajv": "8.20.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.1",
+    "vitest": "5.0.2",
+    "wrangler": "4.141.0"
   },
   "allowScripts": {
     "esbuild@0.28.1": true,
     "fsevents@2.3.3": true,
-    "workerd@1.20260921.1": true
+    "workerd@1.20260925.1": true
   }
 }
