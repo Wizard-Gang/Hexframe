@@ -4,6 +4,8 @@ Hexframe is a browser-based fighting-game training lab. It combines fixed-step c
 
 Controlled changes use the `HF-###` namespace and the title/body format in [Change management](docs/CHANGE-MANAGEMENT.md). Required PR checks are `verify`, `change-id` and `secrets` on the exact head; the committed [GitHub settings](config/github-repository-settings.json) require current-with-main status, squash-only merges, automatic completed-branch deletion, zero bypass actors and immutable `v*` tags. The permanent [implementation plan](implementation_plan.md) is empty when no task is queued; the next instruction first fills it through a controlled plan-only change. [AGENTS.md](AGENTS.md) carries the shared work protocol.
 
+GitHub auto-merge is available for an individually configured PR. Enabling it for the repository does not enroll PRs automatically; any enrolled controlled PR still uses squash and must satisfy the required exact-head, current-with-main checks and controlled commit record.
+
 **[Overview](https://hexframe.wizardgang.ai)** · **[Training](https://hexframe.wizardgang.ai/play/)** · **[Case study](https://wizardgang.ai/projects/hexframe/)**
 
 ## Run locally
