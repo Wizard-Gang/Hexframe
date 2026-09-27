@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_MOVE_LOADOUT, testFighterWithBuild } from "../../src/content/test-fighter";
-import { createDefaultBuildState } from "../../src/lab/build-state";
+import { DEFAULT_MOVE_LOADOUT, testFighterWithLoadout } from "../../src/content/test-fighter";
 import { DEFAULT_PREFERENCES } from "../../src/lab/preferences";
 import { buildLabView } from "../../src/lab/view";
 
 function view(publicPlay = true, developerTools = false): string {
-  const buildState = createDefaultBuildState();
   return buildLabView({
-    character: testFighterWithBuild(DEFAULT_MOVE_LOADOUT, buildState.presets[0].equipment),
-    buildState,
+    character: testFighterWithLoadout(DEFAULT_MOVE_LOADOUT),
     preferences: DEFAULT_PREFERENCES,
     dummyOptions: [[0, "Stand"]],
     publicPlay,

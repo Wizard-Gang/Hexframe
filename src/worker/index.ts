@@ -2,13 +2,11 @@
  * The Hexframe Worker.
  *
  * `run_worker_first` is on, so every request in the deployment arrives here — including
- * ones for static files. That lets the Worker validate Training's developer flag, route
- * player saves, and preserve compatibility redirects before an asset is handed out.
+ * ones for static files. That lets the Worker validate Training's developer flag and keep
+ * API routing explicit before an asset is handed out.
  *
- * This file is a router and nothing else. It holds no combat logic, and it never will:
- * the simulation is deterministic and runs in the browser, so the server has no opinion
- * about whether an attack hit. When networked matches arrive in 0.2 they arrive as a
- * Durable Object relaying inputs, not as authority moving here.
+ * This file is a router and nothing else. It holds no combat logic and no player state:
+ * the deterministic simulation and Training state live in the browser.
  */
 import type { Env } from "./env";
 import { handleLogin, handleLogout } from "./routes/login";
@@ -16,8 +14,6 @@ import { handleLab } from "./routes/lab";
 import { handleLabApi } from "./routes/api-lab";
 import { handleCodex } from "./routes/codex";
 import { handleTraining } from "./routes/play";
-import { handleSaveApi } from "./routes/api-save";
-export { PlayerSaveObject } from "./player-save-object";
 
 const APP_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -112,15 +108,10 @@ async function route(request: Request, env: Env, url: URL): Promise<Response> {
 
   if (path === "/codex" || path.startsWith("/codex/")) return handleCodex(request, env, url);
 
-
   if (path === "/lab" || path.startsWith("/lab/")) return handleLab(request, env, url);
 
   if (path === "/api/lab" || path.startsWith("/api/lab/")) {
     return handleLabApi(request, env, url);
-  }
-
-  if (path === "/api/save" || path.startsWith("/api/save/")) {
-    return handleSaveApi(request, env, url);
   }
 
   if (path === "/api" || path.startsWith("/api/")) {

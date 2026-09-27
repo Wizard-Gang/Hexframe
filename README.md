@@ -53,7 +53,7 @@ For release identity and rollback rules, see [Release management](docs/RELEASE-M
 - `src/game/` and `src/rollback/` contain sessions, snapshots, and replay contracts.
 - `src/lab/` contains the training interface and simulation tools.
 - `src/client/` contains browser entry points and presentation.
-- `src/worker/` contains routing, authentication, and player-save APIs.
+- `src/worker/` contains routing, developer authentication, and static/API request boundaries.
 
 ## Documentation
 

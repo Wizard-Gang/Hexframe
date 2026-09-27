@@ -1,7 +1,6 @@
 {
-  // Hexframe Worker. Game routing, player saves, developer authentication, static
-  // assets and (from 0.2) match transport. It never decides whether an attack hits:
-  // combat is deterministic simulation inside the browser.
+  // Hexframe Worker. Game routing, developer authentication and static assets. It never
+  // decides whether an attack hits: combat is deterministic simulation in the browser.
   "name": "hexframe",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-06-28",
@@ -10,14 +9,14 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    // Every request passes through the Worker first so save APIs and authenticated
-    // Training developer flags are handled before static asset delivery.
+    // Every request passes through the Worker first so authenticated Training developer
+    // flags and API boundaries are handled before static asset delivery.
     "run_worker_first": true
   },
-  "durable_objects": {
-    "bindings": [{ "name": "PLAYER_SAVES", "class_name": "PlayerSaveObject" }]
-  },
-  "migrations": [{ "tag": "player-saves-v1", "new_sqlite_classes": ["PlayerSaveObject"] }],
+  "migrations": [
+    { "tag": "player-saves-v1", "new_sqlite_classes": ["PlayerSaveObject"] },
+    { "tag": "player-saves-v2-delete", "deleted_classes": ["PlayerSaveObject"] }
+  ],
   "observability": { "enabled": true },
   "env": {
     "production": {
@@ -32,9 +31,6 @@
         "directory": "./dist",
         "binding": "ASSETS",
         "run_worker_first": true
-      },
-      "durable_objects": {
-        "bindings": [{ "name": "PLAYER_SAVES", "class_name": "PlayerSaveObject" }]
       }
     }
   }

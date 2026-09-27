@@ -8,12 +8,10 @@ import { Simulation } from "../../src/combat/simulation/simulation";
 import { applyTaggedDebuffs } from "../../src/combat/status/debuffs";
 import type { CharacterDef, FrameReport } from "../../src/combat/types";
 import { InputBit, InvulKind, StateId } from "../../src/combat/types";
-import { equipmentForSet } from "../../src/content/armor";
 import {
   DEFAULT_MOVE_LOADOUT,
   MoveId,
   TEST_FIGHTER,
-  testFighterWithBuild,
   testFighterWithLoadout,
 } from "../../src/content/test-fighter";
 import { createSim, placeFighters, runFrames } from "../helpers/harness";
@@ -24,6 +22,10 @@ function report(): FrameReport {
 
 function config(player: CharacterDef, dummy = TEST_FIGHTER): ConstructorParameters<typeof Simulation>[0] {
   return { characters: [player, dummy], startX: [px(-18), px(18)], seed: 0x5eed };
+}
+
+function withPerks(character: CharacterDef, perks: Partial<CharacterDef["perks"]>): CharacterDef {
+  return { ...character, perks: { ...character.perks, ...perks } };
 }
 
 describe("stamina economy", () => {
@@ -44,9 +46,9 @@ describe("stamina economy", () => {
   });
 
   it("gates techniques by current stamina and applies poison and air discounts", () => {
-    const base = testFighterWithBuild(DEFAULT_MOVE_LOADOUT, {});
-    const venom = testFighterWithBuild(DEFAULT_MOVE_LOADOUT, equipmentForSet("briarbone"));
-    const voidBuild = testFighterWithBuild(DEFAULT_MOVE_LOADOUT, equipmentForSet("voidwarden"));
+    const base = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
+    const venom = withPerks(base, { venomEdge: true });
+    const voidBuild = withPerks(base, { voidChannel: true });
     const poisonMove = moveOf(base, MoveId.VenomFang)!;
     const airMove = moveOf(base, MoveId.AstralJab)!;
 
@@ -135,24 +137,12 @@ describe("true hyper armor", () => {
   });
 });
 
-describe("behavioral armor perks", () => {
-  it("activates each three-piece set behavior in deterministic match data", () => {
-    const graveSet = equipmentForSet("gravecloth");
-    const grave = testFighterWithBuild(DEFAULT_MOVE_LOADOUT, {
-      head: graveSet.head,
-      chest: graveSet.chest,
-      arms: graveSet.arms,
-    });
-    const twoPieceGrave = testFighterWithBuild(DEFAULT_MOVE_LOADOUT, {
-      head: graveSet.head,
-      chest: graveSet.chest,
-    });
-    const storm = testFighterWithBuild(DEFAULT_MOVE_LOADOUT, equipmentForSet("stormglass"));
-    const crown = testFighterWithBuild(DEFAULT_MOVE_LOADOUT, equipmentForSet("crownfire"));
-    expect(grave.perks.graveStep).toBe(true);
-    expect(twoPieceGrave.perks.graveStep).toBe(false);
-    expect(storm.perks.staticConductor).toBe(true);
-    expect(crown.perks.burningBrand).toBe(true);
+describe("retained engine perk flags", () => {
+  it("applies perk behavior from immutable deterministic match data", () => {
+    const base = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
+    const grave = withPerks(base, { graveStep: true });
+    const storm = withPerks(base, { staticConductor: true });
+    const crown = withPerks(base, { burningBrand: true });
 
     const dash = new Simulation(config(grave)).getState().fighters[0];
     dash.state = StateId.Dash;
