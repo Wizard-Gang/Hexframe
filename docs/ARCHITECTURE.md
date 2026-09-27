@@ -11,7 +11,6 @@ rendering, tooling, the server, the AI — is downstream of that.
 | What happened in a frame | `src/combat/simulation/simulation.ts` | Reads `FrameReport`; cannot change the outcome |
 | What a fighter looks like | Derived from authoritative state | The renderer draws it; it never decides it |
 | Whether an attack hit | The browser simulation | The Worker has no opinion and never has |
-| What a party member does | `LoadoutAIController`, from state and seed | Emits input frames like a controller does |
 | What the player owns | The versioned player save | The device holds a cache, not the record |
 
 The Worker is a router. It authenticates, routes and persists; it holds no combat logic.

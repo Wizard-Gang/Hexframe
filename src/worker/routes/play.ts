@@ -22,7 +22,7 @@ export async function handlePlay(request: Request, env: Env, url: URL): Promise<
     });
   }
 
-  const routePrefix = url.pathname.startsWith("/training") ? "/training" : "/play";
+  const routePrefix = "/play";
   const assetPrefix = `${routePrefix}/assets/`;
   const lastSegment = url.pathname.slice(url.pathname.lastIndexOf("/") + 1);
   const wantsFile = lastSegment.includes(".");

@@ -8,7 +8,6 @@ import { EntityEventKind, InputBit, InteractableKind, StateId } from "../../src/
 import { writeInput } from "../../src/input/buffer/history";
 import { serializeState, deserializeState } from "../../src/rollback/snapshots/snapshot";
 import { BLACK_BELFRY } from "../../src/content/black-belfry";
-import { BELL_WARDEN } from "../../src/content/bell-warden";
 import { DEFAULT_MOVE_LOADOUT, MoveId, TEST_FIGHTER, testFighterWithLoadout } from "../../src/content/test-fighter";
 import { createSim, placeFighters } from "../helpers/harness";
 
@@ -96,10 +95,10 @@ describe("guard stamina and perfect guard", () => {
 });
 
 describe("Black Belfry deterministic entities", () => {
-  function campaignSim(): Simulation {
+  function stageSim(): Simulation {
     const player = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
     return new Simulation({
-      characters: [player, BELL_WARDEN],
+      characters: [player, TEST_FIGHTER],
       startX: [BLACK_BELFRY.spawnX, px(1130)],
       seed: 0x5eed,
       stage: BLACK_BELFRY,
@@ -107,7 +106,7 @@ describe("Black Belfry deterministic entities", () => {
   }
 
   it("records E/RB interaction and locks the boss arena from the stage definition", () => {
-    const sim = campaignSim();
+    const sim = stageSim();
     const state = sim.getState();
     state.fighters[0].x = BLACK_BELFRY.bossArena.gateX - px(30);
     const report = sim.step([InputBit.Interact, 0]);
@@ -123,7 +122,7 @@ describe("Black Belfry deterministic entities", () => {
   });
 
   it("breaks stage junk into a seeded pickup and spawns the boss reward only on boss defeat", () => {
-    const sim = campaignSim();
+    const sim = stageSim();
     const state = sim.getState();
     const breakable = state.entities.find((entity) => entity.id === 101)!;
     state.fighters[0].x = breakable.x - px(20);

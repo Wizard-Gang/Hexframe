@@ -14,16 +14,6 @@ Wave rules:
 
 ## Open tasks
 
-### HF-153 — [REFACTOR] Make Training the only game mode
-
-- Dependency: HF-152 queue merged.
-- Why: Training is the only mode the product reaches, yet the game client still carries campaign, fight, boss, party, armory and loadout-editor code, links into retired routes, and pause-menu pages that can never render.
-- Scope: Reduce `GameSession` to Training with its tutorial and developer-tools options; drop the campaign and fight modes, party slots and AI profiles, and the encounter, stage, loadout and friendly-fire URL parameters. Delete the Black Belfry campaign, Bell Warden, boss controller and party AI from the client, plus every pause-menu page Training cannot reach (Arsenal and loadout editor, Armor, Craft, Move Codex, Status, Equipment, Stages, Enemies, Tutorial, Profile, Credits) with their handlers and styles, and the campaign reward and objective HUD. Delete the unrendered first-launch dialog code, `campaign-menu-cleanup.ts`, the orphan `shell.css`, `regression-scene.ts` and `input-buffer.ts`, and the save client's campaign, reward and crafting calls. Delete the Worker redirects for `/training`, `/campaign`, `/fight`, `/loadouts`, `/forge` and `/settings` so those paths return 404. Delete `docs/AI-APPLICABILITY.md` with the party AI and update the documentation validator.
-- Non-goals: Do not change Training's controls, dummy, frame tools or tutorial behavior. Black Belfry stage data may remain only for the server save store and engine tests until HF-154 and HF-155 remove them.
-- Acceptance: No client or Worker source or test references campaign, fight, Bell Warden, party AI or the removed routes; each removed route returns 404 while `/`, `/play` and `/play/` behave as before; Training with and without `?tutorial=1` plays as it did.
-- Validation: Standard validation plus route tests for every removed path and a browser check of Training and the tutorial.
-- Authorities: `src/game/session.ts`, `src/lab/app.ts`, `src/lab/view.ts`, `src/client/lab-main.ts`, `src/worker/index.ts`, `scripts/validate-documentation-authority.mjs`.
-
 ### HF-154 — [DB] Delete server-side saves, loadout presets and armor
 
 - Dependency: HF-153 delivered.

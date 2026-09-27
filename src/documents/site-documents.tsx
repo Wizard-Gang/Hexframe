@@ -19,7 +19,7 @@ function Overview() {
       <div className="overview-copy">
         <p className="overview-kicker">Browser fighting-game lab</p>
         <h1>Practice the hit.<br/><span>Inspect the result.</span></h1>
-        <p>Fight a training dummy, pause on contact, and step through the exact frames that decided the hit.</p>
+        <p>Practice against a training dummy, pause on contact, and step through the exact frames that decided the hit.</p>
         <div className="overview-actions"><a className="overview-primary" href="/play/">Open training →</a><a href="https://github.com/Wizard-Gang/Hexframe" target="_blank" rel="noopener noreferrer">View source ↗</a></div>
       </div>
       <figure className="overview-demo"><figcaption><span>TRAINING GRID</span><strong>PLAYER + DUMMY</strong></figcaption><div className="overview-training-stage" data-training-stage role="img" aria-label="Hexframe's training stage with the player facing a practice dummy"></div><footer><span>60 HZ COMBAT</span><span>ACTUAL GAME RENDERER</span></footer></figure>

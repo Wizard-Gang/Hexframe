@@ -110,20 +110,8 @@ async function route(request: Request, env: Env, url: URL): Promise<Response> {
   if (path === "/play") return redirect(`/play/${url.search}`);
   if (path.startsWith("/play/")) return handleTraining(request, env, url);
 
-  if (path === "/training" || path.startsWith("/training/")) {
-    const suffix = path.replace(/^\/training/, "");
-    return redirect(`/play${suffix || "/"}${url.search}`);
-  }
-
   if (path === "/codex" || path.startsWith("/codex/")) return handleCodex(request, env, url);
 
-  if (
-    path === "/campaign" || path.startsWith("/campaign/") ||
-    path === "/fight" || path.startsWith("/fight/") ||
-    path === "/loadouts" || path.startsWith("/loadouts/") ||
-    path === "/forge" || path.startsWith("/forge/") ||
-    path === "/settings" || path.startsWith("/settings/")
-  ) return redirect(`/play/${url.search}`);
 
   if (path === "/lab" || path.startsWith("/lab/")) return handleLab(request, env, url);
 

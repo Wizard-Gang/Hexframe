@@ -5,7 +5,6 @@ import { resolveContacts } from "../../src/combat/hit-resolution/resolve";
 import { Simulation } from "../../src/combat/simulation/simulation";
 import type { FrameReport } from "../../src/combat/types";
 import { ContactKind, InputBit, StateId } from "../../src/combat/types";
-import { BELL_WARDEN, BellWardenMoveId } from "../../src/content/bell-warden";
 import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import { Timeline } from "../../src/lab/timeline/timeline";
 
@@ -60,15 +59,15 @@ describe("multi-fighter team combat", () => {
     expect(events.contacts.map((contact) => contact.defender)).toEqual([1, 2]);
   });
 
-  it("lets one boss hitbox connect once with every overlapping hostile", () => {
+  it("lets one attacker hitbox connect once with every overlapping hostile", () => {
     const sim = new Simulation({
-      characters: [TEST_FIGHTER, TEST_FIGHTER, BELL_WARDEN],
+      characters: [TEST_FIGHTER, TEST_FIGHTER, TEST_FIGHTER],
       startX: [px(-20), px(-20), px(20)],
       teams: [0, 0, 1],
       seed: 7,
     });
     const state = sim.getState();
-    const hook = BELL_WARDEN.moves.find((move) => move.id === BellWardenMoveId.ChainHook)!;
+    const hook = TEST_FIGHTER.moves.find((move) => move.id === MoveId.StandingLight)!;
     Object.assign(state.fighters[2], {
       state: StateId.Attack,
       moveId: hook.id,
@@ -93,15 +92,15 @@ describe("multi-fighter team combat", () => {
     expect([state.fighters[0].health, state.fighters[1].health]).toEqual(health);
   });
 
-  it("preserves held-away blocking when a boss attacks a three-fighter party", () => {
+  it("preserves held-away blocking against a three-fighter team", () => {
     const sim = new Simulation({
-      characters: [TEST_FIGHTER, TEST_FIGHTER, BELL_WARDEN],
+      characters: [TEST_FIGHTER, TEST_FIGHTER, TEST_FIGHTER],
       startX: [px(-20), px(-160), px(20)],
       teams: [0, 0, 1],
       seed: 7,
     });
     const state = sim.getState();
-    const hook = BELL_WARDEN.moves.find((move) => move.id === BellWardenMoveId.ChainHook)!;
+    const hook = TEST_FIGHTER.moves.find((move) => move.id === MoveId.StandingLight)!;
     Object.assign(state.fighters[2], {
       state: StateId.Attack,
       moveId: hook.id,
