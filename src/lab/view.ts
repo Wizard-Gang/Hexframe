@@ -1,20 +1,17 @@
 import type { CharacterDef } from "../combat/types";
-import type { BuildState } from "./build-state";
 import { moveTimelineMarkup } from "./inspector";
 import type { LabPreferences } from "./preferences";
 
 interface LabViewOptions {
   character: CharacterDef;
-  buildState: BuildState;
   preferences: LabPreferences;
   dummyOptions: readonly [number, string][];
   publicPlay?: boolean;
   developerTools?: boolean;
 }
 
-export function buildLabView({ character, buildState, preferences, dummyOptions, publicPlay = false, developerTools = !publicPlay }: LabViewOptions): string {
-  const preset = buildState.presets[buildState.activePreset];
-  const initialMove = character.moves.find((move) => move.id === preset.loadout[0]) ?? character.moves[0];
+export function buildLabView({ character, preferences, dummyOptions, publicPlay = false, developerTools = !publicPlay }: LabViewOptions): string {
+  const initialMove = character.moves.find((move) => move.id === character.commands[0]?.moveId) ?? character.moves[0];
   const hud = fighterHudMarkup(character.health, character.stamina);
   const statusLanes = [0, 1].map((player) => `<div class="status-lane ${player === 0 ? "status-lane-you" : "status-lane-dummy"}" data-party-row="${player}" id="debuff-p${player + 1}" aria-label="Fighter ${player + 1} active debuffs"></div>`).join("");
 

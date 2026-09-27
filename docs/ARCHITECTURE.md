@@ -11,9 +11,9 @@ rendering, tooling, the server, the AI — is downstream of that.
 | What happened in a frame | `src/combat/simulation/simulation.ts` | Reads `FrameReport`; cannot change the outcome |
 | What a fighter looks like | Derived from authoritative state | The renderer draws it; it never decides it |
 | Whether an attack hit | The browser simulation | The Worker has no opinion and never has |
-| What the player owns | The versioned player save | The device holds a cache, not the record |
+| Preferences and tutorial progress | Browser device storage | The Worker holds no player record |
 
-The Worker is a router. It authenticates, routes and persists; it holds no combat logic.
+The Worker is a router. It authenticates private developer surfaces and routes requests; it holds no combat logic and no player persistence.
 
 ## Module layers
 
@@ -57,7 +57,6 @@ contain no `Math.random`, `Date.now`, `performance.now` or `crypto.getRandomValu
 | Contract | Version tag | Why it matters |
 | --- | --- | --- |
 | Snapshot format | `SNAPSHOT_VERSION` | Readers reject other versions rather than misread them |
-| Player save | document `version` | Normalization accepts an older document and returns a current one |
 | Authored content | JSON Schema under `schemas/` | Validated by test before it can reach the simulation |
 
 ## Document and interactive-client boundary
@@ -69,7 +68,7 @@ Hexframe has two presentation modes with deliberately different responsibilities
 
 React is the document-presentation authority, not the combat authority. The build-time document components do not own game state, hit resolution, input parsing, persistence, or routing. They are rendered with `react-dom/server` and are not hydrated merely to satisfy a React architecture.
 
-The Worker remains the routing, authentication, and persistence boundary. Workers Static Assets serves the Vite output. Authoritative combat remains in the browser simulation exactly as described above; moving document rendering to React does not move simulation authority into React or the Worker.
+The Worker remains the routing and developer-authentication boundary. Workers Static Assets serves the Vite output. Training constructs the Test Fighter from the authored default loadout with no equipment, while preferences and tutorial progress remain device-local. Authoritative combat remains in the browser simulation exactly as described above; moving document rendering to React does not move simulation authority into React or the Worker.
 
 This client-application boundary is Hexframe's explicit WG-ARCH-001 exception to the normal expectation that a product document remain fully operable without JavaScript: the documents remain useful without JavaScript, while the game itself necessarily requires the browser client.
 

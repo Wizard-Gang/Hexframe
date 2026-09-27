@@ -128,8 +128,8 @@ export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
   },
   {
     id: "arsenal",
-    title: "Buildcraft",
-    hint: "Your preset is protected; the tutorial build is temporary.",
+    title: "Arsenal",
+    hint: "Follow the lesson steps in order.",
     steps: [
       { objective: "Open Arsenal", success: "Arsenal opened" },
       { objective: "Replace one technique", success: "Technique replaced" },

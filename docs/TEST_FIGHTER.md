@@ -114,10 +114,10 @@ pushbackBlockAttacker -1.4     pushbackBlockDefender 1.8
 
 ## Commands
 
-The lab builds 16 commands from the active loadout. Slots map directly to `Action1`
+Training builds 16 commands from `DEFAULT_MOVE_LOADOUT`. Slots map directly to `Action1`
 through `Action16`; their default move ids are 1 through 16. Commands have no motion,
 inherit the move's stance requirement, and receive descending priority by slot. The
-chosen assignment is client configuration and does not change move definitions.
+current 16-slot assignment remains authored game data and does not change move definitions.
 
 Keyboard arrows and gamepad Y/X/B/A form the same spatial diamond. Shift/LT and Space/RT
 select the other three banks, yielding 16 independently assignable inputs.
@@ -143,14 +143,6 @@ Every move has an on-hit cancel window into the other 23 moves. That makes the c
 route-construction prototype while keeping actual combat resolution deterministic and
 data-driven.
 
-## Equipment and loadouts
-
-The lab stores three local presets. Each preset contains a 16-move assignment and one
-item in each of six slots: focus, ward, sigil, mantle, charm and relic. The 12-item
-prototype inventory applies deterministic health, tagged-damage or tagged-hitstun
-modifiers before the simulation is constructed. Equipment is build configuration, not
-mutable match state.
-
 ## Match setup
 
 Both fighters are `test_fighter`. Player 0 starts at `-120` px facing right, player 1 at
@@ -170,7 +162,7 @@ animation may be re-timed, re-posed or replaced entirely without a single combat
 moving, and `tests/content` asserts that the animation frame count and the move duration
 are allowed to differ, so nobody quietly couples them later.
 
-The loadout showcase replays these same clips on hover or focus. `move-effects.ts`
+The move showcase replays these same clips on hover or focus. `move-effects.ts`
 derives a stable particle profile from each move id and its tags, so all 24 attacks have
 distinct visual signatures in both the showcase and live combat without adding particle
 state to snapshots or hashes.

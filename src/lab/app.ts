@@ -3,7 +3,7 @@ import { px } from "../combat/constants";
 import type { FighterState, FrameReport, SimConfig } from "../combat/types";
 import { ContactKind, DebuffEventKind, DebuffKind } from "../combat/types";
 import { Simulation } from "../combat/simulation/simulation";
-import { DEFAULT_MOVE_LOADOUT, testFighterWithBuild, testFighterWithLoadout } from "../content/test-fighter";
+import { DEFAULT_MOVE_LOADOUT, testFighterWithLoadout } from "../content/test-fighter";
 import { TEST_FIGHTER_ANIMATIONS, TEST_FIGHTER_MODEL, TEST_FIGHTER_PLAYBACK, TEST_FIGHTER_RIG } from "../content/test-fighter-assets";
 import { STATUS_RULES } from "../content/status-rules";
 import { gameAudio } from "../client/audio/audio-manager";
@@ -28,8 +28,6 @@ import type { CombatScenario } from "./scenario/scenario";
 import { buildLabView } from "./view";
 import { markTutorialSeen, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
-import { buildStateFromPlayerSave, createDefaultPlayerSave } from "../player/save";
-import { loadPlayerSave } from "../player/client";
 import { readGameSession, STAGE_CATALOG } from "../game/session";
 
 const FRAME_MS = 1000 / 60;
@@ -57,17 +55,14 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   if (!session) throw new Error("Training requires an explicit game session");
   const developerTools = session.options.developerTools === true;
   const publicPlay = !developerTools;
-  const playerSave = await loadPlayerSave();
-  const buildState = buildStateFromPlayerSave(playerSave);
-  let activeBuild = buildState.presets[buildState.activePreset];
-  const playerCharacter = testFighterWithBuild(activeBuild.loadout, activeBuild.equipment);
+  const playerCharacter = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
   const dummyCharacter = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
   const combatCharacters = [playerCharacter, dummyCharacter];
   const enemyIndex = 1;
   const preferences = loadPreferences();
   applyPreferences(preferences);
 
-  replaceTrustedMarkup(mount, buildLabView({ character: playerCharacter, buildState, preferences, dummyOptions: DUMMY_OPTIONS, publicPlay, developerTools }));
+  replaceTrustedMarkup(mount, buildLabView({ character: playerCharacter, preferences, dummyOptions: DUMMY_OPTIONS, publicPlay, developerTools }));
   mount.removeAttribute("aria-busy");
 
   const selectedStage = STAGE_CATALOG["training-grid"].stage;
@@ -121,7 +116,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let selectedInteraction: InteractionSelection | null = null;
   let renderedTimelineMoveId = -1;
   let renderedTimelinePlayhead = -2;
-  let timelinePinnedMoveId = activeBuild.loadout[0] ?? -1;
+  let timelinePinnedMoveId = DEFAULT_MOVE_LOADOUT[0] ?? -1;
   let interactionRenderKey = "";
   let lastPlayerInput = 0;
   let latestTutorialSnapshot: TutorialSnapshot | null = null;
@@ -583,13 +578,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   function startTutorial(): void {
     markTutorialSeen();
     if (menuOpen()) closeMenu();
-    const defaults = createDefaultPlayerSave().loadouts.byId["loadout-01"];
-    activeBuild = {
-      name: "Tutorial Fire Route",
-      loadout: DEFAULT_MOVE_LOADOUT.slice(),
-      equipment: { ...defaults.equipment },
-    };
-    Object.assign(playerCharacter, testFighterWithBuild(activeBuild.loadout, activeBuild.equipment));
+    Object.assign(playerCharacter, testFighterWithLoadout(DEFAULT_MOVE_LOADOUT));
     resetMatch();
     timeline.paused = false;
     tutorial.start();
@@ -606,8 +595,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   function stopTutorial(completed: boolean): void {
     if (menuOpen()) closeMenu();
     tutorial.stop();
-    activeBuild = buildState.presets[buildState.activePreset];
-    Object.assign(playerCharacter, testFighterWithBuild(activeBuild.loadout, activeBuild.equipment));
+    Object.assign(playerCharacter, testFighterWithLoadout(DEFAULT_MOVE_LOADOUT));
     resetMatch();
     timeline.paused = false;
     const cleanUrl = new URL(window.location.href);

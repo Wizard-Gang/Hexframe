@@ -14,17 +14,6 @@ Wave rules:
 
 ## Open tasks
 
-### HF-154 — [DB] Delete server-side saves, loadout presets and armor
-
-- Dependency: HF-153 delivered.
-- Why: After HF-153 the player save only supplies Training's active preset and armor, and the Worker bundles combat content solely to validate crafting and rewards that no screen can reach.
-- Scope: Delete the `PlayerSaveObject` Durable Object and its `PLAYER_SAVES` bindings, `/api/save` and its operations, the signed `hf_player` identity cookie, `src/player/`, `src/lab/build-state.ts`, the armor, material, crafting and set-perk content, and the save store's Black Belfry validation. Add the Wrangler migration that deletes the `PlayerSaveObject` class. Training builds the Test Fighter from the default loadout with no equipment; preferences and tutorial progress stay in device storage. Update the security model and architecture documents for the removed save authority.
-- Non-goals: Do not change engine perk, armor-mitigation or resistance code (HF-155), the input scheme (HF-156) or authentication (HF-159).
-- Acceptance: The Worker bundle imports no combat content or save module; `/api/save` paths return the generic JSON 404; `npm run deploy:dry-run` accepts the configuration with the deletion migration; no source or test references the save, presets, armor or crafting.
-- Risk: High. Cloudflare deletes every stored player save when the next release deploys, and redeploying v0.7.9 afterwards does not restore them.
-- Validation: Standard validation plus `npm run deploy:dry-run` and a browser check of Training.
-- Authorities: `wrangler.jsonc`, `src/worker/index.ts`, `src/worker/env.ts`, `docs/SECURITY-MODEL.md`, `docs/ARCHITECTURE.md`.
-
 ### HF-155 — [REFACTOR] Prune campaign-only engine features
 
 - Dependency: HF-153 and HF-154 delivered.

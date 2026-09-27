@@ -39,6 +39,9 @@ jobs:
       - name: Dependency advisory (network)
         run: npm run audit:dependencies
 
+      - name: Production config dry run
+        run: npm run deploy:dry-run
+
       - name: Local dev lifecycle smoke
         if: github.event_name == 'pull_request'
         run: npm run test:dev-smoke
