@@ -1,6 +1,5 @@
 import { startLab } from "../lab/app";
 import { readGameSession } from "../game/session";
-import { collapseCampaignLoadoutMenu } from "./campaign-menu-cleanup";
 import { desktopOnlyMarkup, isUnsupportedMobileDevice, startFrontApp } from "./front-app";
 import { attachVersionBadge } from "./version-badge";
 import { replaceTrustedMarkup } from "./trusted-markup";
@@ -17,7 +16,6 @@ if (isUnsupportedMobileDevice()) {
 } else {
   void (session ? startLab(mount) : startFrontApp(mount)).then((teardown) => {
     dispose = teardown;
-    if (session) collapseCampaignLoadoutMenu(mount, session);
   });
 }
 void attachVersionBadge(document.body);

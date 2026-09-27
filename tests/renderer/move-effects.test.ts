@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { TEST_FIGHTER } from "../../src/content/test-fighter";
-import { BELL_WARDEN } from "../../src/content/bell-warden";
 import { MOVE_VISUALS, moveEffectProfile, moveVisualDefinition } from "../../src/renderer/svg/move-effects";
 
 describe("move particle profiles", () => {
@@ -34,7 +33,7 @@ describe("move particle profiles", () => {
   });
 
   it("authors an anchor and exact non-overlapping windows for every playable technique", () => {
-    const moves = [...TEST_FIGHTER.moves, ...BELL_WARDEN.moves];
+    const moves = TEST_FIGHTER.moves;
     expect(Object.keys(MOVE_VISUALS)).toEqual(expect.arrayContaining(moves.map((move) => move.key)));
     for (const move of moves) {
       const visual = moveVisualDefinition(move.key);

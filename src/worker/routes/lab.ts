@@ -3,8 +3,7 @@
  *
  * `/lab` is intentionally private. An authenticated operator is sent to the Training
  * Grid with developer tools and the tutorial enabled; everyone else goes through the
- * sign-in flow. Campaign content remains in the product, but it is not part of the
- * laboratory entry path.
+ * sign-in flow.
  */
 import type { Env } from "../env";
 import { credentialsConfigured } from "../auth/credentials";

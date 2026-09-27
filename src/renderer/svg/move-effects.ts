@@ -85,10 +85,6 @@ export const MOVE_VISUALS: Readonly<Record<string, MoveVisualDefinition>> = {
   meteor_heel: visual("heel_descent", "falling_embers", "meteor_splash", "foot_near", 3, 3, [4, 24, 3, 50, 2, 4], [7, 8, 14, 20]),
   void_dive: visual("dive_wake", "split_afterimage", "void_crater", "pelvis", 18, 12, [4, 29, -4, 22, 3, 5], [8, 9, 16, 23]),
   grave_toll: visual("shock_ring", "bell_arcs", "resonant_burst", "chest", 0, 0, [6, 38, 5, 0, 1, 6], [10, 11, 18, 26]),
-  chain_sweep: visual("ground_arc", "chain_drag", "iron_spray", "hand_near", 18, 8, [3, 36, -2, 0, 1, 5], [35, 36, 49, 61]),
-  bell_hammer: visual("vertical_shards", "bell_fall", "stone_crack", "hand_near", 0, 8, [4, 32, 2, 0, 2, 6], [31, 32, 46, 60]),
-  grave_pulse: visual("shock_ring", "grave_rings", "grave_burst", "ground", 0, -2, [5, 42, -3, 0, 0, 6], [29, 30, 49, 63]),
-  chain_hook: visual("void_tether", "chain_threads", "hook_snap", "hand_near", 12, 0, [3, 34, 3, 15, 1, 5], [24, 25, 39, 53]),
 };
 
 const DEFAULT_VISUAL: MoveVisualDefinition = {

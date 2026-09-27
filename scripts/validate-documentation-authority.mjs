@@ -9,6 +9,7 @@ const retired = [
   "docs/RECONSTRUCTION.md",
   "docs/SHADOWMONEY-RETIREMENT.md",
   "docs/CONTRACTS.md",
+  "docs/AI-APPLICABILITY.md",
   "docs/history",
 ];
 
@@ -26,6 +27,7 @@ const forbiddenReferences = [
   "docs/RECONSTRUCTION.md",
   "docs/SHADOWMONEY-RETIREMENT.md",
   "docs/CONTRACTS.md",
+  "docs/AI-APPLICABILITY.md",
   "docs/history/",
   "CHANGE-MAP.csv",
 ];
@@ -50,9 +52,6 @@ assert.doesNotMatch(securityModel, /ShadowMoney|predecessor saves/i);
 
 const architecture = readFileSync(join(root, "docs/ARCHITECTURE.md"), "utf8");
 assert.doesNotMatch(architecture, /legacy lab fragments|not yet componentized/i);
-
-const ai = readFileSync(join(root, "docs/AI-APPLICABILITY.md"), "utf8");
-assert.doesNotMatch(ai, /no runtime dependencies at all/i);
 
 const licensing = readFileSync(join(root, "docs/LICENSING.md"), "utf8");
 assert.match(licensing, /react.*react-dom/is);

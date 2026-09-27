@@ -1,50 +1,33 @@
 import { describe, expect, it } from "vitest";
 
-import { aiSlot, defaultSession, readGameSession, sessionUrl, STAGE_CATALOG } from "../../src/game/session";
+import { defaultSession, readGameSession, sessionUrl, STAGE_CATALOG } from "../../src/game/session";
 
-describe("game session contract", () => {
-  it("launches every mode through an explicit shared contract", () => {
-    expect(defaultSession("campaign").stageId).toBe("black-belfry-campaign");
-    expect(defaultSession("fight").stageId).toBe("black-belfry-arena");
-    expect(defaultSession("training").stageId).toBe("training-grid");
-    expect(Object.keys(STAGE_CATALOG)).toEqual([
-      "black-belfry-campaign",
-      "black-belfry-arena",
-      "training-grid",
-    ]);
+describe("Training session routing", () => {
+  it("defines one Training session and one Training Grid stage", () => {
+    expect(defaultSession()).toEqual({
+      mode: "training",
+      options: { developerTools: false, tutorial: false },
+    });
+    expect(Object.keys(STAGE_CATALOG)).toEqual(["training-grid"]);
+    expect(STAGE_CATALOG["training-grid"].name).toBe("Training Grid");
     expect(STAGE_CATALOG["training-grid"].stage.id).toBe("training-grid");
   });
 
-  it("round-trips a selected loadout and validates stage variants", () => {
-    const fight = defaultSession("fight", "loadout-03");
-    const url = new URL(sessionUrl(fight), "https://hexframe.test");
-    expect(readGameSession(url)).toEqual(fight);
-
-    url.searchParams.set("stage", "black-belfry-campaign");
-    expect(readGameSession(url)?.stageId).toBe("black-belfry-arena");
-
-    url.searchParams.set("opponent", "training-dummy");
-    expect(readGameSession(url)?.encounterId).toBe("bell-warden");
-  });
-
-  it("round-trips AI party slots as loadout consumers", () => {
-    const fight = defaultSession("fight", "loadout-01");
-    fight.party.push(aiSlot("loadout-02", 2, "master"));
-    const restored = readGameSession(new URL(sessionUrl(fight), "https://hexframe.test"));
-    expect(restored).toEqual(fight);
-    expect(restored?.party[1].controller).toBe("ai");
-    expect(restored?.party[1].aiProfile?.difficulty).toBe("master");
-  });
-
-  it("treats the menu route as no active session", () => {
+  it("requires the explicit Training query and ignores retired session parameters", () => {
     expect(readGameSession(new URL("https://hexframe.test/play/"))).toBeNull();
+    expect(readGameSession(new URL("https://hexframe.test/play/?mode=other"))).toBeNull();
+
+    const restored = readGameSession(new URL("https://hexframe.test/play/?mode=training&stage=elsewhere&encounter=other&loadout=old&friendlyFire=1"));
+    expect(restored).toEqual(defaultSession());
   });
 
-  it("round-trips an explicit Training tutorial session", () => {
-    const tutorial = defaultSession("training", "loadout-02");
-    tutorial.options.tutorial = true;
-    const url = sessionUrl(tutorial);
-    expect(url).toMatch(/^\/play\/\?/);
-    expect(readGameSession(new URL(url, "https://hexframe.test"))).toEqual(tutorial);
+  it("round-trips developer tools and tutorial without any other session state", () => {
+    const session = defaultSession();
+    session.options.developerTools = true;
+    session.options.tutorial = true;
+    const url = new URL(sessionUrl(session), "https://hexframe.test");
+    expect(url.pathname).toBe("/play/");
+    expect([...url.searchParams.keys()].sort()).toEqual(["debug", "mode", "tutorial"]);
+    expect(readGameSession(url)).toEqual(session);
   });
 });

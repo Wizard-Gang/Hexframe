@@ -91,15 +91,19 @@ describe("public playtest route", () => {
     },
   );
 
-  it.each(["/training/", "/campaign/", "/fight/", "/loadouts/loadout-01/", "/forge/", "/settings/"])(
-    "redirects the retired public route %s to training",
+  it("keeps the canonical /play slash redirect", async () => {
+    const response = await worker.fetch(new Request("https://hexframe.test/play"), environment([]));
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("/play/");
+  });
+
+  it.each(["/training", "/campaign", "/fight", "/loadouts", "/forge", "/settings"])(
+    "returns 404 for retired route %s",
     async (pathname) => {
       const paths: string[] = [];
       const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment(paths));
-      expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/play/");
-      expect(paths).toEqual([]);
-      expect(await response.text()).toBe("");
+      expect(response.status).toBe(404);
+      expect(paths).toEqual([pathname]);
     },
   );
 });
