@@ -14,16 +14,6 @@ Wave rules:
 
 ## Open tasks
 
-### HF-158 — [FIX] Rebuild the tutorial so every lesson can be completed
-
-- Dependency: HF-157 delivered.
-- Why: Two lessons require screens Training does not have, the tutorial cannot be started or restarted in the game, and its panel covers the health bars.
-- Scope: Replace the lessons with Movement, Defense (the dummy attacks mid, low and overhead), Attacks (the four kit buttons), Combo (Ember Palm → Ashen Sweep → Phoenix Drive) and Inspect (turn on Debug, pause on contact, step one frame). Start and restart the tutorial from the pause menu, offer a dismissible first-visit prompt that does not block play, keep progress in device storage, and place the panel clear of the health bars. Delete lesson, UI-event and storage code the new lessons do not use.
-- Non-goals: Do not add lessons for features outside the MVP.
-- Acceptance: A headless test completes every lesson from scripted inputs and UI events, and no lesson passes on elapsed time alone; a keyboard-only browser run completes the tutorial end to end; the tutorial can be restarted from the pause menu.
-- Validation: Standard validation plus the tutorial suite and a browser run-through.
-- Authorities: `src/lab/tutorial.ts`, `src/lab/app.ts`, `src/lab/view.ts`.
-
 ### HF-159 — [SEC] Retire the private developer surface
 
 - Dependency: HF-157 delivered; the debug tools are public in Training and the move list is in the game.

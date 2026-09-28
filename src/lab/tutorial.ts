@@ -2,8 +2,6 @@ import type { FrameReport, InputFrame, SimState } from "../combat/types";
 import {
   actionBit,
   ContactKind,
-  DebuffEventKind,
-  DebuffKind,
   HitLevel,
   InputBit,
   StateId,
@@ -13,17 +11,14 @@ import { MoveId } from "../content/test-fighter";
 export type TutorialLessonId =
   | "movement"
   | "defense"
-  | "directions"
-  | "first-route"
-  | "status"
-  | "codex";
+  | "attacks"
+  | "combo"
+  | "inspect";
 
 export type TutorialUiEvent =
-  | "codex-opened"
-  | "demo-played"
-  | "demo-mode-changed"
-  | "demo-scrubbed"
-  | "frame-inspected";
+  | "debug-enabled"
+  | "contact-paused"
+  | "frame-stepped";
 
 interface TutorialStep {
   objective: string;
@@ -55,78 +50,68 @@ export interface TutorialSnapshot {
   completedLessons: readonly TutorialLessonId[];
 }
 
-const STORAGE_KEY = "hexframe.tutorial.v1";
+const STORAGE_KEY = "hexframe.tutorial.progress.v2";
+const PROMPT_STORAGE_KEY = "hexframe.tutorial.prompt.v2";
 
 export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
   {
     id: "movement",
     title: "Movement",
-    hint: "Complete each action in the real arena.",
+    hint: "Use the live movement controls. Each objective watches the authoritative fighter state.",
     steps: [
       { objective: "Move forward", success: "Forward movement complete" },
       { objective: "Move backward", success: "Backward movement complete" },
       { objective: "Crouch", success: "Crouch complete" },
       { objective: "Jump", success: "Jump complete" },
-      { objective: "Double-tap a direction to dash", success: "Dash complete" },
     ],
   },
   {
     id: "defense",
     title: "Defense",
-    hint: "Hold away. Add down for a low; stand for an overhead.",
+    hint: "The dummy will attack mid, low, then overhead. Hold away; add down for the low.",
     steps: [
       { objective: "Block the telegraphed mid", success: "Mid blocked" },
-      { objective: "Crouch-block the low", success: "Low blocked" },
-      { objective: "Stand-block the overhead", success: "Overhead blocked" },
+      { objective: "Crouch-block the telegraphed low", success: "Low blocked" },
+      { objective: "Stand-block the telegraphed overhead", success: "Overhead blocked" },
     ],
   },
   {
-    id: "directions",
-    title: "Four attack directions",
-    hint: "The arrow-key diamond mirrors Y / X / B / A.",
+    id: "attacks",
+    title: "Attacks",
+    hint: "Use each button in the fixed four-button kit.",
     steps: [
-      { objective: "Press ↑ / Y for the Fire starter", success: "Ember Palm started" },
+      { objective: "Press ↑ / Y for Ember Palm", success: "Ember Palm started" },
       { objective: "Press ← / X for Ashen Sweep", success: "Ashen Sweep started" },
-      { objective: "Press → / B for the Freeze starter", success: "Frost Heel started" },
+      { objective: "Press → / B for Frost Heel", success: "Frost Heel started" },
       { objective: "Press ↓ / A for Phoenix Drive", success: "Phoenix Drive started" },
     ],
   },
   {
-    id: "first-route",
-    title: "Your first route",
-    hint: "Cancel on contact: Starter → Link → Cashout.",
+    id: "combo",
+    title: "Combo",
+    hint: "Cancel on contact: Ember Palm → Ashen Sweep → Phoenix Drive.",
     steps: [
       { objective: "Land Ember Palm", success: "Starter connected" },
       { objective: "Cancel into Ashen Sweep", success: "Link connected" },
-      { objective: "Cash out with Phoenix Drive", success: "Route complete" },
+      { objective: "Cash out with Phoenix Drive", success: "Combo complete" },
     ],
   },
   {
-    id: "status",
-    title: "Status payoff",
-    hint: "Repeat the Fire route and watch Burn prime, stack, and cash out.",
+    id: "inspect",
+    title: "Inspect",
+    hint: "Use the same on-screen Debug tools available in normal Training.",
     steps: [
-      { objective: "Apply Burn with a Fire technique", success: "Burn applied" },
-      { objective: "Finish with Phoenix Drive", success: "Status route complete" },
-    ],
-  },
-  {
-    id: "codex",
-    title: "Codex",
-    hint: "The demonstration is a deterministic mini-match using the same engine.",
-    steps: [
-      { objective: "Open Moves in the Codex", success: "Move selected" },
-      { objective: "Play the demonstration", success: "Demonstration played" },
-      { objective: "Switch Hit / Block", success: "Scenario changed" },
-      { objective: "Scrub one frame", success: "Frame inspected" },
-      { objective: "Inspect its authored frame data", success: "Codex complete" },
+      { objective: "Turn on Debug", success: "Debug enabled" },
+      { objective: "Enable Pause on contact, then land an attack", success: "Contact paused" },
+      { objective: "Step forward one frame", success: "Frame stepped" },
     ],
   },
 ];
 
-const DIRECTION_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.FrostHeel, MoveId.PhoenixDrive];
-const ROUTE_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.PhoenixDrive];
+const ATTACK_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.FrostHeel, MoveId.PhoenixDrive];
+const COMBO_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.PhoenixDrive];
 const DEFENSE_LEVELS = [HitLevel.Mid, HitLevel.Low, HitLevel.Overhead];
+const INSPECT_EVENTS: readonly TutorialUiEvent[] = ["debug-enabled", "contact-paused", "frame-stepped"];
 
 export class TutorialController {
   active = false;
@@ -135,7 +120,7 @@ export class TutorialController {
   private lessonComplete = false;
   private tutorialComplete = false;
   private dummyClock = 0;
-  private routeClock = 0;
+  private comboClock = 0;
   private lastConfirmation: string | null = null;
   private resetRequested = false;
   private readonly completed = loadCompletedLessons();
@@ -150,17 +135,25 @@ export class TutorialController {
     this.defenseActions = defenseActions;
   }
 
-  start(lessonId: TutorialLessonId = "movement"): void {
-    const index = TUTORIAL_LESSONS.findIndex((lesson) => lesson.id === lessonId);
+  start(lessonId?: TutorialLessonId): void {
+    const requested = lessonId ?? this.firstIncompleteLesson();
+    const index = TUTORIAL_LESSONS.findIndex((lesson) => lesson.id === requested);
     this.active = true;
     this.lessonIndex = Math.max(0, index);
     this.stepIndex = 0;
     this.lessonComplete = false;
     this.tutorialComplete = false;
     this.dummyClock = 0;
-    this.routeClock = 0;
+    this.comboClock = 0;
     this.lastConfirmation = null;
+    this.resetRequested = true;
     this.emit();
+  }
+
+  restart(): void {
+    this.completed.clear();
+    persistCompletedLessons(this.completed);
+    this.start("movement");
   }
 
   stop(): void {
@@ -169,7 +162,7 @@ export class TutorialController {
   }
 
   nextLesson(): void {
-    if (!this.active) return;
+    if (!this.active || !this.lessonComplete) return;
     if (this.lessonIndex >= TUTORIAL_LESSONS.length - 1) {
       this.tutorialComplete = true;
       this.emit();
@@ -179,41 +172,31 @@ export class TutorialController {
     this.stepIndex = 0;
     this.lessonComplete = false;
     this.dummyClock = 0;
-    this.routeClock = 0;
+    this.comboClock = 0;
     this.lastConfirmation = null;
     this.resetRequested = true;
     this.emit();
   }
 
-  skipLesson(): void {
-    this.lessonComplete = true;
-    this.nextLesson();
-  }
-
-  observe(input: InputFrame, state: SimState, reports: readonly FrameReport[]): void {
+  observe(_input: InputFrame, state: SimState, reports: readonly FrameReport[]): void {
     if (!this.active || this.lessonComplete || this.tutorialComplete) return;
     const lesson = TUTORIAL_LESSONS[this.lessonIndex];
     let success = false;
 
-    if (lesson.id === "movement") success = movementSuccess(this.stepIndex, input, state);
-    if (lesson.id === "directions") success = moveStarted(reports, DIRECTION_MOVES[this.stepIndex]);
-    if (lesson.id === "first-route") {
-      success = moveConnected(reports, ROUTE_MOVES[this.stepIndex]);
+    if (lesson.id === "movement") success = movementSuccess(this.stepIndex, state);
+    if (lesson.id === "attacks") success = moveStarted(reports, ATTACK_MOVES[this.stepIndex]);
+    if (lesson.id === "combo") {
+      success = moveConnected(reports, COMBO_MOVES[this.stepIndex]);
       if (this.stepIndex > 0) {
-        this.routeClock++;
-        if (!success && this.routeClock > 120) {
+        this.comboClock++;
+        if (!success && this.comboClock > 120) {
           this.stepIndex = 0;
-          this.routeClock = 0;
+          this.comboClock = 0;
           this.lastConfirmation = null;
           this.resetRequested = true;
           this.emit();
         }
       }
-    }
-    if (lesson.id === "status") {
-      success = this.stepIndex === 0
-        ? reports.some((report) => report.debuffs.some((event) => event.source === 0 && event.target === 1 && event.debuff === DebuffKind.Burn && event.kind === DebuffEventKind.Applied))
-        : moveConnected(reports, MoveId.PhoenixDrive);
     }
     if (lesson.id === "defense") {
       const contacts = reports.flatMap((report) => report.contacts).filter((contact) => contact.attacker === 1 && contact.defender === 0);
@@ -227,19 +210,16 @@ export class TutorialController {
   }
 
   recordUi(event: TutorialUiEvent): void {
-    if (!this.active || this.lessonComplete) return;
+    if (!this.active || this.lessonComplete || this.tutorialComplete) return;
     const lesson = TUTORIAL_LESSONS[this.lessonIndex];
-    const expected: Partial<Record<TutorialLessonId, readonly TutorialUiEvent[]>> = {
-      codex: ["codex-opened", "demo-played", "demo-mode-changed", "demo-scrubbed", "frame-inspected"],
-    };
-    if (expected[lesson.id]?.[this.stepIndex] === event) this.completeStep();
+    if (lesson.id === "inspect" && INSPECT_EVENTS[this.stepIndex] === event) this.completeStep();
   }
 
-  dummyInput(state: SimState): InputFrame {
+  dummyInput(_state: SimState): InputFrame {
     if (!this.active || TUTORIAL_LESSONS[this.lessonIndex].id !== "defense" || this.lessonComplete) return 0;
     this.dummyClock++;
     const drillFrame = this.dummyClock % 110;
-    if (drillFrame !== 52) return 0;
+    if (drillFrame !== 1) return 0;
     return this.defenseActions[this.stepIndex] ?? 0;
   }
 
@@ -267,10 +247,14 @@ export class TutorialController {
       lessonComplete: this.lessonComplete,
       tutorialComplete: this.tutorialComplete,
       telegraph: lesson.id === "defense" && !this.lessonComplete
-        ? `${["MID", "LOW", "OVERHEAD"][this.stepIndex]} IN ${Math.max(1, Math.ceil((52 - (this.dummyClock % 110)) / 30))}`
+        ? `${["MID", "LOW", "OVERHEAD"][this.stepIndex]} · HOLD THE REQUIRED GUARD`
         : null,
       completedLessons: [...this.completed],
     };
+  }
+
+  private firstIncompleteLesson(): TutorialLessonId {
+    return TUTORIAL_LESSONS.find((lesson) => !this.completed.has(lesson.id))?.id ?? "movement";
   }
 
   private completeStep(): void {
@@ -279,11 +263,12 @@ export class TutorialController {
     if (this.stepIndex < lesson.steps.length - 1) {
       this.stepIndex++;
       this.dummyClock = 0;
-      this.routeClock = 0;
+      this.comboClock = 0;
     } else {
       this.lessonComplete = true;
       this.completed.add(lesson.id);
       persistCompletedLessons(this.completed);
+      if (this.lessonIndex === TUTORIAL_LESSONS.length - 1) this.tutorialComplete = true;
     }
     this.emit();
   }
@@ -293,13 +278,12 @@ export class TutorialController {
   }
 }
 
-function movementSuccess(step: number, input: InputFrame, state: SimState): boolean {
+function movementSuccess(step: number, state: SimState): boolean {
   const fighter = state.fighters[0];
   if (step === 0) return fighter.state === StateId.WalkForward;
   if (step === 1) return fighter.state === StateId.WalkBackward;
   if (step === 2) return fighter.state === StateId.Crouch;
-  if (step === 3) return fighter.state === StateId.JumpSquat || fighter.airborne === 1;
-  return fighter.state === StateId.Dash && (input & (InputBit.Left | InputBit.Right)) !== 0;
+  return fighter.state === StateId.JumpSquat || fighter.airborne === 1;
 }
 
 function moveStarted(reports: readonly FrameReport[], moveId: number): boolean {
@@ -324,24 +308,27 @@ function loadCompletedLessons(): Set<TutorialLessonId> {
 function persistCompletedLessons(completed: ReadonlySet<TutorialLessonId>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...completed]));
-    localStorage.setItem("hexframe.tutorial.seen.v1", "true");
   } catch {
     // Tutorial progress remains valid for the current session when storage is unavailable.
   }
 }
 
-export function tutorialSeen(): boolean {
+export function tutorialPromptSeen(): boolean {
   try {
-    return localStorage.getItem("hexframe.tutorial.seen.v1") === "true";
+    return localStorage.getItem(PROMPT_STORAGE_KEY) === "true";
   } catch {
     return true;
   }
 }
 
-export function markTutorialSeen(): void {
+export function markTutorialPromptSeen(): void {
   try {
-    localStorage.setItem("hexframe.tutorial.seen.v1", "true");
+    localStorage.setItem(PROMPT_STORAGE_KEY, "true");
   } catch {
-    // The first-launch choice is session-only when storage is unavailable.
+    // The first-visit choice is session-only when storage is unavailable.
   }
+}
+
+export function tutorialRequested(search: string): boolean {
+  return new URLSearchParams(search).get("tutorial") === "1";
 }
