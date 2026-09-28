@@ -14,7 +14,6 @@ import { DEFAULT_ACTION_KEYMAP, DEFAULT_KEYMAP_P1, DEFAULT_KEYMAP_P2, NO_ACTION_
 import { hashState } from "../rollback/hashing/fnv";
 import type { DebugToggles } from "../renderer/svg/debug-overlay";
 import { Renderer } from "../renderer/svg/renderer";
-import { DebugPanel } from "./debugger/panel";
 import { DummyController, DummyMode } from "./dummy/dummy";
 import type { DummyModeValue } from "./dummy/dummy";
 import { applyPreferences, loadPreferences, persistPreferences, resetPreferences } from "./preferences";
@@ -28,9 +27,11 @@ import type { CombatScenario } from "./scenario/scenario";
 import { buildLabView } from "./view";
 import { markTutorialSeen, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
-import { readGameSession, STAGE_CATALOG } from "../game/session";
+import { STAGE_CATALOG } from "../game/session";
 
 const FRAME_MS = 1000 / 60;
+const DEBUG_STORAGE_KEY = "hexframe.debug.v1";
+const NO_DEBUG_TOGGLES: DebugToggles = { hitboxes: false, hurtboxes: false, pushboxes: false, origins: false, skeleton: false, boneNames: false, velocity: false };
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex='-1'])";
 
 const DUMMY_OPTIONS: readonly [DummyModeValue, string][] = [
@@ -41,8 +42,7 @@ const DUMMY_OPTIONS: readonly [DummyModeValue, string][] = [
   [DummyMode.Reversal, "Reversal"],
 ];
 
-type MenuTab = "settings" | "training" | "debug";
-type SettingsTab = "audio" | "video" | "accessibility" | "controls";
+type MenuDetail = "moves" | "settings" | "controls";
 
 function edge(now: GamepadUiState, before: GamepadUiState, key: keyof GamepadUiState): boolean {
   return now[key] && !before[key];
@@ -50,11 +50,7 @@ function edge(now: GamepadUiState, before: GamepadUiState, key: keyof GamepadUiS
 
 /** Mounts the controller-first game and its integrated Training tools. */
 export async function startLab(mount: HTMLElement): Promise<() => void> {
-  const url = new URL(window.location.href);
-  const session = readGameSession(url);
-  if (!session) throw new Error("Training requires an explicit game session");
-  const developerTools = session.options.developerTools === true;
-  const publicPlay = !developerTools;
+  let debugEnabled = loadDebugEnabled();
   const playerCharacter = createTestFighter();
   const dummyCharacter = createTestFighter();
   const combatCharacters = [playerCharacter, dummyCharacter];
@@ -62,7 +58,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const preferences = loadPreferences();
   applyPreferences(preferences);
 
-  replaceTrustedMarkup(mount, buildLabView({ character: playerCharacter, preferences, dummyOptions: DUMMY_OPTIONS, publicPlay, developerTools }));
+  replaceTrustedMarkup(mount, buildLabView({ character: playerCharacter, preferences, dummyOptions: DUMMY_OPTIONS, debugEnabled }));
   mount.removeAttribute("aria-busy");
 
   const selectedStage = STAGE_CATALOG["training-grid"].stage;
@@ -85,7 +81,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     fighters: [0, 1].map(() => ({ model: TEST_FIGHTER_MODEL, rig: TEST_FIGHTER_RIG, animations: TEST_FIGHTER_ANIMATIONS, playback: TEST_FIGHTER_PLAYBACK })),
     stage: selectedStage,
   });
-  const panel = developerTools ? new DebugPanel(required("debug-panel")) : null;
   const toggles: DebugToggles = { hitboxes: false, hurtboxes: false, pushboxes: false, origins: false, skeleton: false, boneNames: false, velocity: false };
 
   timeline.inputProvider = () => {
@@ -103,8 +98,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let lastTime = performance.now();
   let elapsed = 0;
   let lastReport: FrameReport | null = null;
-  let activeTab: MenuTab = "training";
-  let activeSettingsTab: SettingsTab = "audio";
   let resumeAfterMenu = false;
   let previousUi = gamepad.sampleUi();
   let focusBeforeMenu: HTMLElement | null = null;
@@ -126,8 +119,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const render = (now = performance.now()): void => {
     const state = sim.getState();
     const stateHash = hashState(state);
-    renderer.render(state, lastReport ?? timeline.lastReport, toggles);
-    panel?.update(state, sim.characters(), lastReport ?? timeline.lastReport, stateHash);
+    renderer.render(state, lastReport ?? timeline.lastReport, debugEnabled ? toggles : NO_DEBUG_TOGGLES);
     const frameReadout = mount.querySelector<HTMLElement>("#frame-readout");
     const playState = mount.querySelector<HTMLElement>("#play-state");
     if (frameReadout) frameReadout.textContent = String(state.frame).padStart(6, "0");
@@ -191,12 +183,14 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "pause") timeline.paused = !timeline.paused;
     if (action === "menu") openMenu();
     if (action === "close-menu") closeMenu();
-    if (action === "return-main") window.location.href = "/play/";
+    if (action === "return-main") window.location.href = "/";
     if (action === "back-10") stepFrames(-10);
     if (action === "back") stepFrames(-1);
     if (action === "forward") stepFrames(1);
     if (action === "forward-10") stepFrames(10);
-    if (action === "reset" && confirmDestructive("Reset the current match?")) resetMatch();
+    if (action === "reset") resetMatch();
+    if (action === "debug") setDebugEnabled(!debugEnabled);
+    if (action === "start-tutorial") startTutorial();
     if (action === "scenario-capture") captureCurrentScenario();
     if (action === "scenario-replay") replayCapturedScenario();
     if (action === "scenario-export") exportCapturedScenario();
@@ -204,8 +198,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "skip-tutorial-lesson") tutorial.skipLesson();
     if (action === "next-tutorial-lesson") advanceTutorial();
     if (action === "exit-tutorial") exitTutorial();
-    if (button.dataset.menuTab) showTab(button.dataset.menuTab as MenuTab);
-    if (button.dataset.settingsTab) showSettingsTab(button.dataset.settingsTab as SettingsTab);
+    if (button.dataset.menuDetailTarget) showMenuDetail(button.dataset.menuDetailTarget as MenuDetail);
     if (button.dataset.contactFrame !== undefined && button.dataset.contactIndex !== undefined) inspectInteraction(Number(button.dataset.contactFrame), Number(button.dataset.contactIndex));
     const save = button.dataset.save;
     if (save) {
@@ -239,9 +232,15 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   const keydown = (event: KeyboardEvent): void => {
     if (!event.ctrlKey && !event.metaKey && !event.altKey) gameAudio.ensure();
+    if (event.code === "Backquote" && !isFormControl(event.target)) {
+      if (event.repeat) return;
+      event.preventDefault();
+      setDebugEnabled(!debugEnabled);
+      render();
+      return;
+    }
     if (menuOpen()) {
       if (event.code === "Tab") { trapFocus(event); return; }
-      if (handleTabKey(event)) return;
       if (event.code === "Escape") { event.preventDefault(); closeMenu(); }
       return;
     }
@@ -266,17 +265,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   window.addEventListener("keydown", keydown);
   document.addEventListener("visibilitychange", visibility);
   motionQuery.addEventListener("change", motionChange);
-  if (developerTools) {
-    void fetch("/api/lab/session")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((session: unknown) => {
-        if (typeof session === "object" && session !== null && "username" in session && typeof session.username === "string") required("session-label").textContent = session.username;
-      })
-      .catch(() => undefined);
-  }
   syncTutorialUi(tutorial.snapshot());
-  showTab(activeTab);
-  if (session.options.tutorial) startTutorial();
   render();
   animationId = requestAnimationFrame(loop);
 
@@ -324,7 +313,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     setGameContentInert(true);
     const remembered = lastMenuFocus && lastMenuFocus.isConnected && !lastMenuFocus.closest("[hidden]")
       ? lastMenuFocus
-      : mount.querySelector<HTMLButtonElement>(`[data-menu-tab='${activeTab}']`);
+      : mount.querySelector<HTMLButtonElement>("[data-action='close-menu']");
     remembered?.focus();
   }
 
@@ -351,50 +340,22 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }
   }
 
-  function showTab(tab: MenuTab): void {
-    activeTab = tab;
-    for (const button of mount.querySelectorAll<HTMLButtonElement>("[data-menu-tab]")) {
-      const active = button.dataset.menuTab === tab;
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-selected", String(active));
-      button.tabIndex = active ? 0 : -1;
-    }
-    for (const page of mount.querySelectorAll<HTMLElement>("[data-menu-page]")) {
-      const active = page.dataset.menuPage === tab;
-      page.hidden = !active;
-      page.classList.toggle("active", active);
-    }
+  function setDebugEnabled(enabled: boolean): void {
+    debugEnabled = enabled;
+    persistDebugEnabled(enabled);
+    const tools = required("debug-tools");
+    tools.hidden = !enabled;
+    const button = required("debug-control");
+    button.setAttribute("aria-expanded", String(enabled));
+    button.setAttribute("aria-pressed", String(enabled));
+    button.textContent = "Debug: " + (enabled ? "On" : "Off") + " (`)";
   }
 
-
-  function showSettingsTab(tab: SettingsTab): void {
-    activeSettingsTab = tab;
-    for (const button of mount.querySelectorAll<HTMLButtonElement>("[data-settings-tab]")) {
-      const active = button.dataset.settingsTab === tab;
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-selected", String(active));
-      button.tabIndex = active ? 0 : -1;
+  function showMenuDetail(detail: MenuDetail): void {
+    for (const section of mount.querySelectorAll<HTMLElement>("[data-menu-detail]")) {
+      section.hidden = section.dataset.menuDetail !== detail;
     }
-    for (const page of mount.querySelectorAll<HTMLElement>("[data-settings-panel]")) page.hidden = page.dataset.settingsPanel !== tab;
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   function confirmDestructive(message: string): boolean {
@@ -593,9 +554,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     tutorial.stop();
     resetMatch();
     timeline.paused = false;
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete("tutorial");
-    window.history.replaceState(null, "", cleanUrl);
     mount.querySelector<HTMLButtonElement>("[data-action='menu']")?.focus();
   }
 
@@ -722,12 +680,15 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       if (edge(now, previousUi, "menu")) openMenu();
       if (timeline.paused && edge(now, previousUi, "leftBumper")) stepFrames(-1);
       if (timeline.paused && edge(now, previousUi, "rightBumper")) stepFrames(1);
+      if (timeline.paused && edge(now, previousUi, "up")) focusGamepadTarget("up");
+      if (timeline.paused && edge(now, previousUi, "down")) focusGamepadTarget("down");
+      if (timeline.paused && edge(now, previousUi, "left") && !adjustFocused(-1)) focusGamepadTarget("left");
+      if (timeline.paused && edge(now, previousUi, "right") && !adjustFocused(1)) focusGamepadTarget("right");
+      if (timeline.paused && edge(now, previousUi, "confirm")) activateFocused();
       previousUi = now;
       return;
     }
     if (edge(now, previousUi, "back") || edge(now, previousUi, "menu")) closeMenu();
-    if (edge(now, previousUi, "leftBumper")) cycleTab(-1);
-    if (edge(now, previousUi, "rightBumper")) cycleTab(1);
     if (edge(now, previousUi, "up")) focusGamepadTarget("up");
     if (edge(now, previousUi, "down")) focusGamepadTarget("down");
     if (edge(now, previousUi, "left") && !adjustFocused(-1)) focusGamepadTarget("left");
@@ -737,7 +698,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   }
 
   function visibleGamepadTargets(): HTMLElement[] {
-    return [...mount.querySelectorAll<HTMLElement>("[data-gamepad-nav]")].filter((element) => !element.closest("[hidden]") && !(element instanceof HTMLButtonElement && element.disabled));
+    return [...mount.querySelectorAll<HTMLElement>("[data-gamepad-nav]")].filter((element) => !element.closest("[hidden]") && !element.closest("[inert]") && !(element instanceof HTMLButtonElement && element.disabled));
   }
 
   function focusGamepadTarget(direction: "up" | "down" | "left" | "right"): void {
@@ -747,7 +708,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       ? targets.find((target) => target === document.activeElement || target.contains(document.activeElement))
       : undefined;
     if (!current) {
-      mount.querySelector<HTMLButtonElement>(`[data-menu-tab='${activeTab}']`)?.focus();
+      targets[0]?.focus();
       return;
     }
     const from = centerOf(current.getBoundingClientRect());
@@ -761,16 +722,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }).filter((candidate) => candidate.primary > 3)
       .sort((a, b) => (a.primary + a.secondary * 2.2) - (b.primary + b.secondary * 2.2));
     let next = candidates[0]?.target;
-    if (!next && preferences.controls.menuWrap) {
-      const wrapped = targets.filter((target) => target !== current).sort((a, b) => {
-        const ca = centerOf(a.getBoundingClientRect());
-        const cb = centerOf(b.getBoundingClientRect());
-        const edgeA = direction === "left" ? -ca.x : direction === "right" ? ca.x : direction === "up" ? -ca.y : ca.y;
-        const edgeB = direction === "left" ? -cb.x : direction === "right" ? cb.x : direction === "up" ? -cb.y : cb.y;
-        return edgeB - edgeA;
-      });
-      next = wrapped[0];
-    }
     next?.focus();
     gameAudio.play("navigate");
   }
@@ -806,33 +757,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     else if (active instanceof HTMLElement) active.querySelector<HTMLElement>("button, input[type='checkbox']")?.click();
   }
 
-  function cycleTab(delta: number): void {
-    const tabs = [...mount.querySelectorAll<HTMLElement>("[data-menu-tab]")]
-      .map((tab) => tab.dataset.menuTab)
-      .filter((tab): tab is MenuTab => tab !== undefined);
-    const index = tabs.indexOf(activeTab);
-    showTab(tabs[(index + delta + tabs.length) % tabs.length]);
-    mount.querySelector<HTMLButtonElement>(`[data-menu-tab='${activeTab}']`)?.focus();
-  }
-
-  function handleTabKey(event: KeyboardEvent): boolean {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.code)) return false;
-    const target = event.target instanceof Element ? event.target.closest<HTMLButtonElement>("[role='tab']") : null;
-    if (!target) return false;
-    event.preventDefault();
-    const settings = target.dataset.settingsTab !== undefined;
-    const tabs = settings
-      ? [...mount.querySelectorAll<HTMLButtonElement>("[data-settings-tab]")]
-      : [...mount.querySelectorAll<HTMLButtonElement>("[data-menu-tab]")];
-    const index = tabs.indexOf(target);
-    const next = event.code === "Home" ? 0 : event.code === "End" ? tabs.length - 1 : (index + (event.code === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
-    const button = tabs[next];
-    if (settings) showSettingsTab(button.dataset.settingsTab as SettingsTab);
-    else showTab(button.dataset.menuTab as MenuTab);
-    button.focus();
-    return true;
-  }
-
   function trapFocus(event: KeyboardEvent, dialog = required("lab-menu")): void {
     const items = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => !element.closest("[hidden]") && !element.inert);
     if (items.length === 0) {
@@ -850,6 +774,22 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       event.preventDefault();
       first.focus();
     }
+  }
+}
+
+function loadDebugEnabled(): boolean {
+  try {
+    return localStorage.getItem(DEBUG_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function persistDebugEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(DEBUG_STORAGE_KEY, enabled ? "1" : "0");
+  } catch {
+    // Debug persistence is device-local enhancement only.
   }
 }
 

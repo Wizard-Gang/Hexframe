@@ -9,101 +9,62 @@ function environment(paths: string[]): Env {
     fetch: async (input: Request): Promise<Response> => {
       const path = new URL(input.url).pathname;
       paths.push(path);
-      if (path === "/lab/index.html") {
-        return new Response('<script src="/lab/assets/game.js"></script><link href="/lab/assets/game.css">', {
-          headers: { "content-type": "text/html; charset=utf-8" },
-        });
-      }
-      if (path === "/index.html") {
-        return new Response("<main><h1>Hexframe</h1><a href=\"/play/\">Open training</a></main>", {
-          headers: { "content-type": "text/html; charset=utf-8" },
-        });
-      }
-      if (path === "/lab/assets/game.js") {
-        return new Response("export {};", { headers: { "content-type": "text/javascript" } });
-      }
+      if (path === "/play/index.html") return new Response('<script src="/play/assets/game.js"></script><link href="/play/assets/game.css">', { headers: { "content-type": "text/html; charset=utf-8" } });
+      if (path === "/index.html") return new Response('<main><h1>Hexframe</h1><a href="/play/">Open training</a></main>', { headers: { "content-type": "text/html; charset=utf-8" } });
+      if (path === "/play/assets/game.js") return new Response("export {};", { headers: { "content-type": "text/javascript" } });
       return new Response("missing", { status: 404 });
     },
   } as unknown as Fetcher;
   return { ASSETS: assets, ENVIRONMENT: "test" };
 }
 
-describe("public playtest route", () => {
-  it("serves the combat document without credentials and rewrites its gated assets", async () => {
-    const paths: string[] = [];
-    const url = new URL("https://hexframe.test/play/");
-    const response = await handlePlay(new Request(url), environment(paths), url);
-
-    expect(response.status).toBe(200);
-    expect(await response.text()).toContain('src="/play/assets/game.js"');
-    expect(paths).toEqual(["/lab/index.html"]);
-    expect(response.headers.get("cache-control")).toBe("no-store");
-  });
-
-  it("maps public hashed assets to the built lab bundle", async () => {
-    const paths: string[] = [];
-    const url = new URL("https://hexframe.test/play/assets/game.js");
-    const response = await handlePlay(new Request(url), environment(paths), url);
-
-    expect(response.status).toBe(200);
-    expect(paths).toEqual(["/lab/assets/game.js"]);
-    expect(response.headers.get("cache-control")).toContain("immutable");
-  });
-
-  it("serves the training bundle through the canonical play route", async () => {
-    const paths: string[] = [];
-    const url = new URL("https://hexframe.test/play/?mode=training");
+describe("public Training route", () => {
+  it("serves the first-class play document directly with no query requirement", async () => {
+    const paths: string[] = []; const url = new URL("https://hexframe.test/play/");
     const response = await handleTraining(new Request(url), environment(paths), url);
-    expect(response.status).toBe(200);
-    expect(await response.text()).toContain('src="/play/assets/game.js"');
+    expect(response.status).toBe(200); expect(await response.text()).toContain('src="/play/assets/game.js"');
+    expect(paths).toEqual(["/play/index.html"]); expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
-  it("strips unauthenticated developer tools without rendering redirect text", async () => {
-    const url = new URL("https://hexframe.test/play/?mode=training&debug=1");
-    const response = await handleTraining(new Request(url), environment([]), url);
-    expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("/play/?mode=training");
-    expect(await response.text()).toBe("");
+  it("canonicalizes retired Training query flags away", async () => {
+    for (const search of ["?mode=training", "?debug=1", "?tutorial=1", "?mode=other&debug=1"]) {
+      const paths: string[] = []; const url = new URL(`https://hexframe.test/play/${search}`);
+      const response = await handleTraining(new Request(url), environment(paths), url);
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe("/play/");
+      expect(paths).toEqual([]);
+    }
+  });
+
+  it("serves play assets without lab-path rewriting", async () => {
+    const paths: string[] = []; const url = new URL("https://hexframe.test/play/assets/game.js");
+    const response = await handlePlay(new Request(url), environment(paths), url);
+    expect(response.status).toBe(200); expect(paths).toEqual(["/play/assets/game.js"]); expect(response.headers.get("cache-control")).toContain("immutable");
   });
 
   it("remains read-only at the HTTP boundary", async () => {
     const url = new URL("https://hexframe.test/play/");
     const response = await handlePlay(new Request(url, { method: "POST" }), environment([]), url);
-    expect(response.status).toBe(405);
-    expect(response.headers.get("allow")).toBe("GET, HEAD");
+    expect(response.status).toBe(405); expect(response.headers.get("allow")).toBe("GET, HEAD");
   });
 
   it("serves a public project overview at the root", async () => {
-    const paths: string[] = [];
-    const response = await worker.fetch(new Request("https://hexframe.test/"), environment(paths));
-    expect(response.status).toBe(200);
-    expect(paths).toEqual(["/index.html"]);
-    expect(await response.text()).toContain("Open training");
+    const paths: string[] = []; const response = await worker.fetch(new Request("https://hexframe.test/"), environment(paths));
+    expect(response.status).toBe(200); expect(paths).toEqual(["/index.html"]); expect(await response.text()).toContain("Open training");
   });
 
-  it.each(["/codex/", "/codex/moves/3/"])(
-    "routes the protected developer surface at %s through operator sign in",
-    async (pathname) => {
-      const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment([]));
-      expect(response.status).toBe(302);
-      expect(response.headers.get("location")).toContain("/login?next=");
-      expect(await response.text()).toBe("");
-    },
-  );
-
-  it("keeps the canonical /play slash redirect", async () => {
-    const response = await worker.fetch(new Request("https://hexframe.test/play"), environment([]));
-    expect(response.status).toBe(308);
-    expect(response.headers.get("location")).toBe("/play/");
+  it.each(["/codex/", "/codex/moves/3/"])("routes the protected Codex surface at %s through operator sign in", async (pathname) => {
+    const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment([]));
+    expect(response.status).toBe(302); expect(response.headers.get("location")).toContain("/login?next=");
   });
 
-  it.each(["/training", "/campaign", "/fight", "/forge", "/settings"])(
-    "returns 404 for retired route %s",
-    async (pathname) => {
-      const paths: string[] = [];
-      const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment(paths));
-      expect(response.status).toBe(404);
-      expect(paths).toEqual([pathname]);
-    },
-  );
+  it("keeps the canonical /play slash redirect and drops retired query flags", async () => {
+    const response = await worker.fetch(new Request("https://hexframe.test/play?debug=1"), environment([]));
+    expect(response.status).toBe(308); expect(response.headers.get("location")).toBe("/play/");
+  });
+
+  it.each(["/training", "/campaign", "/fight", "/forge", "/settings"])("returns 404 for retired route %s", async (pathname) => {
+    const paths: string[] = []; const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment(paths));
+    expect(response.status).toBe(404); expect(paths).toEqual([pathname]);
+  });
 });

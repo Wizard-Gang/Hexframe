@@ -17,7 +17,7 @@ attack hit.
 
 The Worker no longer stores player saves, inventory, equipment, progression, loadout presets
 or a player identity. Training constructs the Test Fighter from bundled authored content.
-Preferences and tutorial progress are stored only on the device. The remaining server-side
+Preferences, tutorial progress and Debug visibility are stored only on the device. The remaining server-side
 authority is limited to access to the private developer surface until that surface is retired.
 
 ## Authentication
@@ -45,9 +45,9 @@ There is no separate player identity cookie.
 
 | Route | Access |
 | --- | --- |
-| `/`, `/play/` and built assets | Public, no sign-in |
+| `/`, `/play/`, Training Debug tooling and built assets | Public, no sign-in |
 | `/api/save` and former save subpaths | Generic JSON API 404 |
-| Training developer tooling and `/api/lab/*` | Requires a valid developer session |
+| `/lab`, `/codex` and `/api/lab/*` | Requires a valid developer session until HF-159 retires the private surface |
 | Sign-in page | Publicly reachable by design; it grants nothing without credentials |
 
 Every response carries `x-content-type-options: nosniff` and a `referrer-policy`. Asset
@@ -57,6 +57,6 @@ requests are rebuilt as bare GETs so no client cookie is forwarded to the asset 
 
 - It does not defend against a player modifying their own local simulation. Combat is
   client-side; there is no competitive integrity claim.
-- Device-local preferences and tutorial progress are browser storage, not synchronized
+- Device-local preferences, tutorial progress and Debug visibility are browser storage, not synchronized
   account data or a backup service.
 - It makes no certification claim.

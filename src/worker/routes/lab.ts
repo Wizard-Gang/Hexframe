@@ -1,9 +1,8 @@
 /**
- * Primary developer-laboratory entry.
+ * Authenticated legacy developer entry retained until HF-159.
  *
- * `/lab` is intentionally private. An authenticated operator is sent to the Training
- * Grid with developer tools and the tutorial enabled; everyone else goes through the
- * sign-in flow.
+ * Authentication remains in place, but the separate developer Training layout no longer
+ * exists. A verified operator lands on the same public /play/ Training screen.
  */
 import type { Env } from "../env";
 import { credentialsConfigured } from "../auth/credentials";
@@ -37,5 +36,5 @@ export async function handleLab(request: Request, env: Env, url: URL): Promise<R
     return redirect(`/login?next=${encodeURIComponent(next)}`);
   }
 
-  return redirect("/play/?mode=training&debug=1&tutorial=1");
+  return redirect("/play/");
 }

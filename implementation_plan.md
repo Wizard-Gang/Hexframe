@@ -14,16 +14,6 @@ Wave rules:
 
 ## Open tasks
 
-### HF-157 — [FEAT] Rebuild Training around an on-screen Debug toggle
-
-- Dependency: HF-156 delivered.
-- Why: Public Training hides hitboxes, frame stepping and the inspectors inside a pause menu that stops the game, while the useful inline layout is reachable only after signing in.
-- Scope: Make `/play/` start the Training session directly, with no launch page and no query parameters; build the page at `play/index.html` and delete the Worker's `/lab/`-to-`/play/` HTML and asset rewriting. Keep a compact always-visible bar for play/pause, reset, dummy mode and speed. Add one Debug toggle, an on-screen button plus the `` ` `` key, remembered on the device and available to every visitor, that shows or hides without pausing: hitbox, hurtbox, pushbox, origin and skeleton overlays; the frame counter, step ±1 and ±10 and pause-on-contact; the frame inspector, move frame timeline and contact history; save states; and scenario capture, replay, export and import. Fold the separate developer layout into this one screen. Reduce the pause menu to Resume, Restart, Tutorial, Move list, Settings, Controls and Exit; the move list shows each kit move's input, level, damage and startup, active and recovery frames. Collapse Settings to one page and drop options that have no effect or whose feature is gone (mono audio, music, ambience, dynamic range, visual quality, menu wrap, crafting confirmation). Update the overview's training links and copy.
-- Non-goals: Do not change combat rules or the kit. Do not remove the sign-in stack or the Codex (HF-159).
-- Acceptance: At desktop width, Debug toggles every inspection surface while the match keeps running; keyboard and gamepad reach every control; the accessibility contract test covers the new layout; `/play/` needs no query string; the move list matches the kit's authored frame data.
-- Validation: Standard validation plus a desktop browser run-through with Debug on and off.
-- Authorities: `src/lab/app.ts`, `src/lab/view.ts`, `src/client/styles/lab.css`, `src/documents/site-documents.tsx`, `vite.config.ts`, `src/worker/routes/play.ts`.
-
 ### HF-158 — [FIX] Rebuild the tutorial so every lesson can be completed
 
 - Dependency: HF-157 delivered.

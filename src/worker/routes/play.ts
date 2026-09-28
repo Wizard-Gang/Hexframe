@@ -1,15 +1,13 @@
 /**
- * Public game and training surfaces.
+ * Public Training surface.
  *
- * `/play/` and `/training/` deliberately reuse one browser game bundle. It contains
- * combat content and local UI, but no credentials or privileged server capability.
- * Developer mode is allowed only after the Worker verifies the operator session.
+ * /play/ is a first-class build output. The Worker no longer rewrites the private lab
+ * document or its asset paths, and Training has no query-string capability gate.
  */
 import type { Env } from "../env";
-import { credentialsConfigured } from "../auth/credentials";
-import { verifySessionCookie } from "../auth/session";
 
-const LAB_DOCUMENT = "/lab/index.html";
+const PLAY_DOCUMENT = "/play/index.html";
+
 async function asset(env: Env, url: URL, path: string): Promise<Response> {
   return env.ASSETS.fetch(new Request(new URL(path, url.origin), { method: "GET" }));
 }
@@ -22,21 +20,21 @@ export async function handlePlay(request: Request, env: Env, url: URL): Promise<
     });
   }
 
-  const routePrefix = "/play";
-  const assetPrefix = `${routePrefix}/assets/`;
-  const lastSegment = url.pathname.slice(url.pathname.lastIndexOf("/") + 1);
-  const wantsFile = lastSegment.includes(".");
-  if (wantsFile && !url.pathname.startsWith(assetPrefix)) {
+  const isDocument = url.pathname === "/play/";
+  const isAsset = url.pathname.startsWith("/play/assets/");
+  if (isDocument && url.search) {
+    return new Response(null, { status: 308, headers: { location: "/play/", "cache-control": "no-store" } });
+  }
+  if (!isDocument && !isAsset) {
     return new Response(`Not found: ${url.pathname}\n`, {
       status: 404,
       headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
     });
   }
 
-  const assetPath = wantsFile ? url.pathname.replace(new RegExp(`^${routePrefix}/`), "/lab/") : LAB_DOCUMENT;
-  const upstream = await asset(env, url, assetPath);
+  const upstream = await asset(env, url, isDocument ? PLAY_DOCUMENT : url.pathname);
   if (upstream.status === 404) {
-    return new Response(wantsFile ? `Not found: ${url.pathname}\n` : "The game bundle is unavailable.\n", {
+    return new Response(isDocument ? "The game bundle is unavailable.\n" : `Not found: ${url.pathname}\n`, {
       status: 404,
       headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
     });
@@ -45,30 +43,13 @@ export async function handlePlay(request: Request, env: Env, url: URL): Promise<
   const headers = new Headers(upstream.headers);
   headers.set("x-content-type-options", "nosniff");
   headers.set("referrer-policy", "no-referrer");
-  headers.set("cache-control", wantsFile ? "public, max-age=31536000, immutable" : "no-store");
+  headers.set("cache-control", isAsset ? "public, max-age=31536000, immutable" : "no-store");
 
-  if (request.method === "HEAD") return new Response(null, { status: upstream.status, headers });
-  if (wantsFile) return new Response(upstream.body, { status: upstream.status, headers });
-
-  const html = (await upstream.text()).replaceAll('"/lab/assets/', `"${routePrefix}/assets/`);
-  headers.delete("content-length");
-  return new Response(html, { status: upstream.status, headers });
+  return new Response(request.method === "HEAD" ? null : upstream.body, {
+    status: upstream.status,
+    statusText: upstream.statusText,
+    headers,
+  });
 }
 
-export async function handleTraining(request: Request, env: Env, url: URL): Promise<Response> {
-  if (url.searchParams.get("debug") === "1") {
-    const session = credentialsConfigured(env)
-      ? await verifySessionCookie(env, request.headers.get("cookie"))
-      : null;
-    if (!session) {
-      const safe = new URL(url);
-      safe.searchParams.delete("debug");
-      safe.searchParams.set("mode", "training");
-      return new Response(null, {
-        status: 302,
-        headers: { location: `${safe.pathname}${safe.search}`, "cache-control": "no-store" },
-      });
-    }
-  }
-  return handlePlay(request, env, url);
-}
+export const handleTraining = handlePlay;

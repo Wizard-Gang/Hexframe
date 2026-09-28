@@ -2,8 +2,8 @@
  * The Hexframe Worker.
  *
  * `run_worker_first` is on, so every request in the deployment arrives here — including
- * ones for static files. That lets the Worker validate Training's developer flag and keep
- * API routing explicit before an asset is handed out.
+ * ones for static files. That lets the Worker keep Training and private API routing
+ * explicit before an asset is handed out.
  *
  * This file is a router and nothing else. It holds no combat logic and no player state:
  * the deterministic simulation and Training state live in the browser.
@@ -103,7 +103,7 @@ async function route(request: Request, env: Env, url: URL): Promise<Response> {
     return handleLogout(url);
   }
 
-  if (path === "/play") return redirect(`/play/${url.search}`);
+  if (path === "/play") return redirect("/play/");
   if (path.startsWith("/play/")) return handleTraining(request, env, url);
 
   if (path === "/codex" || path.startsWith("/codex/")) return handleCodex(request, env, url);
