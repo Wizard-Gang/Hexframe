@@ -1,104 +1,88 @@
 # Architecture
 
-Hexframe is organised around one idea: **the simulation is the only authority.** One frame
-of inputs goes in, one frame of authoritative state comes out, and everything else —
-rendering, tooling and the Worker — is downstream of that.
+Hexframe is a small browser Training product built around one rule: **the simulation is the combat authority**. One frame of inputs produces one frame of authoritative state. Rendering, Training tools, replay inspection, documents, and the Worker consume that state without deciding combat outcomes.
+
+## Public product
+
+There are two public product routes:
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Project overview rendered as a useful build-time document |
+| `/play/` | Training document plus the interactive browser runtime |
+
+`/play` is only a canonical redirect to `/play/` and preserves `?tutorial=1`. The Worker returns a generic JSON 404 under `/api/*`; the current product exposes no application API.
+
+Training contains the fixed four-button kit:
+
+| Input | Move |
+| --- | --- |
+| ↑ / Y | Ember Palm |
+| ← / X | Ashen Sweep |
+| → / B | Frost Heel |
+| ↓ / A | Phoenix Drive |
+
+Ember Palm can route on hit into Ashen Sweep and then Phoenix Drive. The dummy, five-lesson tutorial, frame transport, combat geometry, contact inspection, save states, and deterministic scenario replay all operate on the same browser simulation.
 
 ## Authority model
 
-| Concern | Authority | Everything else |
-| --- | --- | --- |
-| What happened in a frame | `src/combat/simulation/simulation.ts` | Reads `FrameReport`; cannot change the outcome |
-| What a fighter looks like | Derived from authoritative state | The renderer draws it; it never decides it |
-| Whether an attack hit | The browser simulation | The Worker has no opinion and never has |
-| Preferences, tutorial progress and Debug visibility | Browser device storage | The Worker holds no player record |
+| Concern | Authority |
+| --- | --- |
+| Combat result for a frame | `src/combat/simulation/simulation.ts` |
+| Input resolution | `src/input/` plus authored command data |
+| Snapshot/replay state | `src/rollback/` |
+| Training interaction and tools | `src/lab/` |
+| Visual presentation | `src/renderer/` and `src/client/` |
+| Preferences, tutorial progress, Debug visibility | Device-local browser storage |
+| Public routing and response hardening | `src/worker/` |
 
-The Worker is a small public router. It serves hardened static assets, canonicalizes
-`/play` to `/play/`, and returns a JSON 404 for `/api/*`. It holds no combat logic,
-player persistence, application credentials or sessions.
-
-## Module layers
-
-A module may depend only on layers below it. This is enforced by the shape of the imports,
-and it is why every commit in this repository builds on its own.
-
-```
-L0   combat/types · combat/constants · content/raw-types · worker/env
-L1   combat/state/machine · combat/collision/aabb · content/validate
-     input/buffer/{history,input-buffer} · input/parser/numpad
-     rollback/snapshots/snapshot
-L2   combat/commands/resolve · combat/movement/physics · content/loader
-     input/parser/command-parser · rollback/hashing/fnv · rollback/snapshots/ring
-L3   combat/collision/boxes · content/test-fighter · renderer/animation/animator
-L4   combat/collision/pushbox · combat/hit-resolution/resolve
-L5   combat/simulation/simulation · worker/index
-L6   combat/index · rollback/replay/rollback-session
-L7+  renderer/** · game/** · lab/** · client/**
-```
-
-`src/combat`, `src/rollback`, `src/input` and `src/game` import **nothing** from
-`src/renderer`, `src/lab` or `src/client`. That is checked, not assumed.
-
-Training is the complete game-state surface for the MVP: every simulation contains exactly
-two fighters on the Training Grid. The fixed four-button kit, public Debug tools, dummy,
-tutorial and replay tools all operate on that same deterministic browser simulation.
+The Worker does not own combat, progression, player identity, or browser preferences.
 
 ## Determinism
 
-Determinism is a property of the state representation, not a coding convention:
+Determinism is encoded in the state model:
 
-- Every stored quantity is a 32-bit integer. Positions are *sim units* at 1/100 pixel;
-  content is authored in whole pixels and converted once, in the loader.
-- The frame rate is fixed at 60 Hz and never derived from a browser `deltaTime`.
-- Command parsing happens **inside** the step, so a rollback cannot depend on the caller
-  re-running a parser the simulation cannot see.
-- The only randomness is a seeded xorshift whose state lives in `SimState`, so restoring a
-  snapshot restores the generator with it.
+- Stored combat quantities are 32-bit integers; authored pixel values are converted to simulation units at the content boundary.
+- The simulation advances at a fixed 60 Hz rather than browser wall-clock time.
+- Command parsing happens inside the deterministic step.
+- Randomness is seeded and its state is part of the simulation snapshot.
+- Snapshot readers validate their version instead of guessing across incompatible formats.
 
-`src/combat`, `src/rollback`, `src/input`, `src/game`, `src/content` and `src/renderer`
-contain no `Math.random`, `Date.now`, `performance.now` or `crypto.getRandomValues`.
+The combat, rollback, input, game, content, and renderer layers do not use ambient time or randomness as combat authority.
 
-## Data contracts
+## Layering
 
-| Contract | Version tag | Why it matters |
-| --- | --- | --- |
-| Snapshot format | `SNAPSHOT_VERSION` | Readers reject other versions rather than misread them |
-| Authored content | JSON Schema under `schemas/` | Validated by test before it can reach the simulation |
+Lower-level simulation modules do not import the Training UI:
 
-## Document and interactive-client boundary
+```text
+combat / input / content
+        ↓
+game / rollback
+        ↓
+renderer
+        ↓
+lab / client
+```
 
-The root overview and public Training document are HTML documents rendered from React 19 TSX
-during the Vite build. Their useful headings, navigation, explanatory copy and fallback
-content exist in the built HTML before browser JavaScript runs.
+The Worker is a separate public edge boundary. It receives requests, canonicalizes the Training path, serves Workers Static Assets, returns the generic API 404 response, and applies hardened response headers.
 
-Combat, simulation, Training controls, animation and inspection tools are a browser client
-application. Those capabilities intentionally require JavaScript because they execute and
-inspect the deterministic game runtime rather than decorate an otherwise complete document.
+## Documents and browser runtime
 
-React is the document-presentation authority, not the combat authority. Build-time document
-components do not own game state, hit resolution, input parsing, persistence or routing.
-They are rendered with `react-dom/server` and are not hydrated merely to satisfy a React
-architecture.
+The overview and Training fallback are React 19 TSX documents rendered during the Vite build with `react-dom/server`. Their headings, navigation, explanatory copy, and fallback content exist before browser JavaScript runs.
 
-Workers Static Assets serves the Vite output through the Worker so the same hardened response
-headers apply to documents, assets and 404s. Training constructs the Test Fighter from
-bundled authored content, while preferences, tutorial progress and Debug visibility remain
-device-local. Authoritative combat remains in the browser simulation.
+Interactive combat necessarily requires the browser runtime. React document rendering does not own simulation state, hit resolution, input parsing, persistence, or routing.
 
-This client-application boundary is Hexframe's explicit WG-ARCH-001 exception to the normal
-expectation that a product document remain fully operable without JavaScript: the documents
-remain useful without JavaScript, while the game itself necessarily requires the browser
-client.
+Imperative Training views may cross one audited raw-markup boundary in `src/client/trusted-markup.ts`. That parser rejects script/style elements, inline event handlers, inline style attributes, and JavaScript URLs. Other application parser sinks are rejected by presentation-security validation.
 
-Imperative interactive views that emit internal HTML strings may cross exactly one audited
-raw-markup parser boundary: `src/client/trusted-markup.ts`. That boundary rejects script
-elements, style elements, inline style attributes, inline event handlers and JavaScript URLs
-before parsing. Direct HTML parser sinks elsewhere in application source are prohibited by
-`npm run validate:presentation-security`.
+## Worker boundary
 
-## What is deliberately not here
+Every deployed request passes through `src/worker/index.ts` before static assets. The reduced Worker owns only:
 
-- **No server authority over combat.** The Worker cannot alter a hit or a frame.
-- **No application authentication or session state.** The current product is public.
-- **No floats below `src/combat`.** Two machines disagreeing in the last bit disagree about whether an attack hit.
-- **No ambient randomness anywhere the simulation can see it.**
+- `/` static overview delivery;
+- canonical `/play` → `/play/` redirect behavior;
+- `/play/` and its built assets;
+- generic JSON 404 responses under `/api/*`;
+- hardened text 404s for other missing paths;
+- response security headers.
+
+Local development uses the same routing shape without application credentials. Production credentials exist only in protected deployment/provider state and are not part of the runtime application contract.

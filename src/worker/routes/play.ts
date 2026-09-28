@@ -1,9 +1,9 @@
 /**
  * Public Training surface.
  *
- * /play/ is a first-class build output. The Worker no longer rewrites the private lab
- * document or its asset paths. The only public query contract is ?tutorial=1, which starts
- * the authored Training tutorial; retired capability flags remain canonicalized away.
+ * /play/ is a first-class build output. The only public query contract is ?tutorial=1,
+ * which starts the authored five-lesson Training tutorial. Other query parameters are
+ * canonicalized away before the document is served.
  */
 import type { Env } from "../env";
 

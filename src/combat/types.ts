@@ -183,7 +183,7 @@ export interface MoveDef {
   id: number;
   key: string;
   animation: string;
-  /** Searchable build-crafting vocabulary: fire, burn, projectile, guard-break, and so on. */
+  /** Searchable move-tag vocabulary: fire, burn, projectile, guard-break, and so on. */
   tags: string[];
   /** Short player-facing explanation of the authored technique. */
   description: string;

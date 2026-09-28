@@ -1,65 +1,101 @@
 # Hexframe
 
-Hexframe is a browser-based fighting-game training lab. It combines fixed-step combat, authored frame data, replayable state, keyboard and gamepad controls, and integrated training tools.
+Hexframe is a browser-based deterministic fighting-game Training lab. The public product has two routes: `/` is the project overview and `/play/` is the playable Training surface. Combat, frame inspection, replay tooling, the tutorial, and preferences run in the browser; the Worker is a small hardened routing boundary.
 
-Controlled changes use the `HF-###` namespace and the title/body format in [Change management](docs/CHANGE-MANAGEMENT.md). Required PR checks are `verify`, `change-id` and `secrets` on the exact head; the committed [GitHub settings](config/github-repository-settings.json) require current-with-main status, squash-only merges, automatic completed-branch deletion, zero bypass actors and immutable `v*` tags. The permanent [implementation plan](implementation_plan.md) is empty when no task is queued; the next instruction first fills it through a controlled plan-only change. [AGENTS.md](AGENTS.md) carries the shared work protocol.
-
-GitHub auto-merge is available for an individually configured PR. Enabling it for the repository does not enroll PRs automatically; any enrolled controlled PR still uses squash and must satisfy the required exact-head, current-with-main checks and controlled commit record.
+Controlled changes use the `HF-###` namespace and the title/body format in [Change management](docs/CHANGE-MANAGEMENT.md). Required PR checks are `verify`, `change-id`, and `secrets` on the exact head. The committed [GitHub settings](config/github-repository-settings.json) require current-with-main status, squash-only merges, automatic completed-branch deletion, zero bypass actors, and immutable `v*` tags. [AGENTS.md](AGENTS.md) carries the repository work protocol, and the [implementation plan](implementation_plan.md) is the current/future queue.
 
 **[Overview](https://hexframe.wizardgang.ai)** · **[Training](https://hexframe.wizardgang.ai/play/)** · **[Case study](https://wizardgang.ai/projects/hexframe/)**
 
+## Training MVP
+
+Training opens directly at `/play/` with one fixed four-button kit:
+
+| Input | Move | Role |
+| --- | --- | --- |
+| ↑ / Y | Ember Palm | Mid |
+| ← / X | Ashen Sweep | Low |
+| → / B | Frost Heel | Overhead |
+| ↓ / A | Phoenix Drive | Launcher |
+
+On hit, Ember Palm can route into Ashen Sweep and then Phoenix Drive.
+
+The public Debug toggle is always available on screen and with the backtick key. It reveals frame transport, combat geometry, authoritative frame inspection, contact history, save states, and deterministic scenario capture/replay without adding a server-side player record.
+
+The five-lesson tutorial runs inside Training. `?tutorial=1` starts it directly. Preferences, tutorial progress, and Debug visibility are device-local.
+
+## Public routing
+
+The two product routes are:
+
+- `/` — public project overview.
+- `/play/` — public Training.
+
+`/play` permanently redirects to the canonical Training path and preserves `?tutorial=1`. Requests under `/api/*` receive the same generic JSON 404 because the MVP exposes no application API. Other missing paths use the hardened static 404 boundary.
+
 ## Run locally
+
+Use the exact Node and npm versions committed by the repository.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-The root route serves the project overview and `/play/` opens Training directly. Both are public. Local development requires no application credential file. On macOS and Linux, the dev wrapper owns the detached Wrangler process group it starts: interrupt/termination cleanup re-observes the child and signals the tree only after checkout ownership is proven. An already occupied port 8788 is reported as foreign/unowned and is never killed. Platforms without safe process-ownership inspection are refused before Wrangler is spawned.
+Local development needs no application credentials. The dev wrapper owns the Wrangler process tree it starts, refuses unsafe ownership states, and cleans up only processes it can prove belong to the checkout.
 
-## Command and capability map
+## Command map
 
-`npm run check` is the canonical credential-free repository acceptance gate. It does not read
-live provider settings and it does not perform a network dependency-advisory query.
+`npm run check` is the canonical credential-free acceptance gate. Network/provider checks stay separate.
 
-| Capability | Invocation | Prerequisite / access | Credentials and network | Mutation boundary | Production? | Ordinary local/PR validation? |
-| --- | --- | --- | --- | --- | --- | --- |
-| Clean dependency install | `npm ci` | Exact Node/npm versions and committed lockfile | npm registry network; no provider credentials | Replaces local `node_modules`; only version-approved install scripts may run | No | Yes; standard clean-install preparation |
-| Repository acceptance | `npm run check` | Dependencies already installed | No provider credentials or provider access required | Runs history, bounded tracked-tree and reachable-history secret scanning, patch-integrity fixtures and any explicitly supplied committed range, types, tests, build, and document/content/security/release-boundary checks; build output is local/ignored | No | Yes; canonical credential-free acceptance |
-| Local development | `npm run dev` | Dependencies installed; no `.env` or `.dev.vars` required | No application credentials or provider access required | Builds locally, starts owned local Wrangler on port 8788, and cleans its proven process group on wrapper interrupt/termination | No | Local development, not an acceptance gate |
-| Dependency advisory | `npm run audit:dependencies` | Committed lockfile; normally run after `npm ci` | npm registry network required; no provider credentials | Runs a read-only `npm audit --json --audit-level=high`; fails on high/critical findings or an unavailable/untrustworthy query | No | Yes; explicit network-backed security gate, separate from `check` |
-| Live GitHub settings verification | `GH_ADMIN_TOKEN=$(gh auth token) npm run verify:github-settings` | Repository Administration read access | GitHub token and network required | Reads live repository settings/rulesets and compares them with `config/github-repository-settings.json` | No | Separate read-only provider verification; not ordinary credential-free validation |
-| Apply GitHub settings contract | `GH_ADMIN_TOKEN=... npm run apply:github-settings` | Repository Administration write access | GitHub token and network required | Mutates GitHub merge settings/rulesets to the committed contract, then re-reads them | No app deploy | No; privileged provider mutation |
-| Production-config dry run | `npm run deploy:dry-run` | Dependencies installed | No provider credentials required | Uses the repository deploy CLI in explicit dry-run mode; builds locally and asks Wrangler to validate production configuration without publishing | No | Yes when production-config validation is relevant |
-| Pull-request CI | Automatic on `pull_request` | PR branch current with `main` for merge | GitHub Actions/npm registry access; no production credentials | Runs `npm ci`, canonical `npm run check` with the exact PR base/head supplied to its patch-integrity owner, the named network advisory gate, a test-only real local dev start/stop smoke, controlled-title validation, and tracked-secret scanning | No | Yes; required PR validation |
-| Release publication | Push an annotated `v<package.json version>` tag | Exact semantic-version tag on the intended commit | GitHub Actions access; workflow uses its GitHub token | Release workflow validates the exact tag, runs `npm ci` and canonical `npm run check` on that tagged checkout, then publishes the GitHub Release and calls the protected deploy workflow | Yes, through the protected deploy stage | No; this is a release action |
-| Production deployment | Release workflow only: `.github/workflows/deploy.yml` invokes `npm run deploy:production` | Validated immutable release tag and protected `production` environment | Cloudflare production secrets and provider network | Guarded repository CLI revalidates the exact release identity, builds with that tag, performs Wrangler production deployment, and verifies the uploaded version is live at 100%; the command fails closed outside the expected Actions/tag context | Yes | No; protected production mutation only |
+| Purpose | Command | Boundary |
+| --- | --- | --- |
+| Install exact dependencies | `npm ci` | Local dependency install from the committed lockfile |
+| Start local Training | `npm run dev` | Credential-free local Wrangler lifecycle |
+| Repository acceptance | `npm run check` | Credential-free history, secrets, types, tests, build, document, security, and release-boundary validation |
+| Documentation authority | `npm run validate:documentation-authority` | Verifies the current docs set, README references/commands, and retired vocabulary sweep |
+| Dependency advisory gate | `npm run audit:dependencies` | Read-only npm registry query; fails closed on high/critical findings or an untrustworthy response |
+| Live GitHub settings check | `npm run verify:github-settings` | Read-only provider comparison; requires an administration-readable token |
+| Production config dry run | `npm run deploy:dry-run` | Non-publishing Wrangler production configuration validation |
 
-Canonical `npm run check` owns committed patch integrity. PR CI supplies `PATCH_BASE_SHA` and
-`PATCH_HEAD_SHA` from the pull-request event, so the helper checks exactly that committed range.
-Outside PR context, `check` does not guess or fetch a base; it skips the committed-range portion.
-To reproduce a committed range locally, supply both commit SHAs before running `npm run check`.
-CI still additionally validates the real local lifecycle smoke, the controlled PR title, and the
-tracked tree for credential material. Dependency advisory enforcement is intentionally separate
-from `check` and runs as the explicit network-backed `npm run audit:dependencies` gate; do not
-treat `check` itself as an `npm audit` query.
+Privileged repository-setting mutation and production deployment are not ordinary development commands. See the governed documents below before using those paths.
 
-For release identity and rollback rules, see [Release management](docs/RELEASE-MANAGEMENT.md).
+## Architecture and data
 
-## Structure
+- `src/combat/` is the deterministic combat authority.
+- `src/input/` resolves keyboard/gamepad input into the fixed kit.
+- `src/rollback/` owns snapshots and deterministic replay.
+- `src/lab/` owns Training, dummy behavior, tutorial, Debug tools, preferences, and frame tooling.
+- `src/client/` owns browser entry points and presentation.
+- `src/worker/` serves hardened static content, canonicalizes the Training path, and returns the generic API 404 boundary.
 
-- `src/combat/` contains the deterministic combat model.
-- `src/game/` and `src/rollback/` contain sessions, snapshots, and replay contracts.
-- `src/lab/` contains the training interface and simulation tools.
-- `src/client/` contains browser entry points and presentation.
-- `src/worker/` contains hardened static routing, the `/play` canonical redirect, and the JSON `/api/*` 404 boundary.
+Combat state is not trusted or stored by the Worker. The current product keeps preferences, tutorial progress, and Debug visibility on the device.
+
+See [Architecture](docs/ARCHITECTURE.md) and [Security model](docs/SECURITY-MODEL.md) for the detailed boundaries.
+
+## Licensing
+
+Hexframe is MIT-licensed. The distributable client contains first-party Hexframe code plus the runtime libraries declared in `package.json`.
+
+- Runtime dependencies: `react` and `react-dom`; both are MIT-licensed.
+- Development tooling: Vite, Vitest, TypeScript, Wrangler, Ajv, and type packages.
+- Fonts: family names only; no font file is bundled.
+- Audio: synthesized at runtime with WebAudio; no audio asset is bundled.
+- Art: `characters/test_fighter/model.svg` is first-party project art.
+- External media: no third-party image, font, audio, or video asset is bundled.
+
+Dependency and asset licensing must be re-reviewed whenever runtime dependencies or bundled media change.
 
 ## Documentation
 
+The long-lived repository documents are intentionally small:
+
 - [Architecture](docs/ARCHITECTURE.md)
 - [Security model](docs/SECURITY-MODEL.md)
+- [Change management](docs/CHANGE-MANAGEMENT.md)
 - [Release management](docs/RELEASE-MANAGEMENT.md)
 
-## Deployment
+## Release and deployment
 
-Production releases are deployed from exact semantic-version tags. The running release is published at [version.json](https://hexframe.wizardgang.ai/version.json).
+Normal controlled changes do not publish production. Releases use immutable annotated semantic-version tags, GitHub Releases as the human-readable release authority, and the protected tag-driven deployment workflow described in [Release management](docs/RELEASE-MANAGEMENT.md).
+
+The running release publishes its identity at [version.json](https://hexframe.wizardgang.ai/version.json).

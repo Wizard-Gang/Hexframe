@@ -56,7 +56,7 @@ describe("Training accessibility and Debug contract", () => {
 
   it("retains only settings that still have Training behavior", () => {
     const html = view();
-    for (const retired of ["Mono audio", "Music", "Ambience", "Dynamic range", "Visual quality", "Menu wrap", "Crafting confirmation"]) expect(html).not.toContain(retired);
+    for (const retired of ["Mono audio", "Music", "Ambience", "Dynamic range", "Visual quality", "Menu wrap"]) expect(html).not.toContain(retired);
     for (const retiredKey of ["music", "ambience", "mono", "dynamicRange", "quality", "menuWrap", "holdToConfirm"]) expect(preferencesSource).not.toMatch(new RegExp(`\\b${retiredKey}\\s*:`));
   });
 

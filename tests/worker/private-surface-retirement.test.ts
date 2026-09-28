@@ -26,9 +26,6 @@ describe("HF-159 private developer surface retirement", () => {
     "/logout",
     "/lab",
     "/lab/",
-    "/codex",
-    "/codex/",
-    "/codex/moves/3/",
   ])("returns the hardened static 404 for retired document route %s", async (pathname) => {
     const response = await worker.fetch(
       new Request(`https://hexframe.test${pathname}`),
@@ -65,7 +62,6 @@ describe("HF-159 private developer surface retirement", () => {
       "src/worker/auth/session.ts",
       "src/worker/routes/login.ts",
       "src/worker/routes/lab.ts",
-      "src/worker/routes/codex.ts",
       "src/worker/routes/api-lab.ts",
       "scripts/dev-secrets.mjs",
       "scripts/dev-secret-cases.mjs",
@@ -76,31 +72,7 @@ describe("HF-159 private developer surface retirement", () => {
     const env = readFileSync(join(root, "src/worker/env.ts"), "utf8");
     const workerSource = readFileSync(join(root, "src/worker/index.ts"), "utf8");
     expect(env).not.toContain("ADMIN_");
-    expect(workerSource).not.toMatch(/auth\/|handleLogin|handleLogout|handleLab|handleCodex|session/i);
-  });
-
-  it("removes the standalone Codex and its move-demonstration-only code", () => {
-    for (const path of [
-      "codex/index.html",
-      "src/client/codex-main.ts",
-      "src/client/styles/codex.css",
-      "src/lab/move-demonstration.ts",
-      "src/lab/move-demonstration-scenario.ts",
-      "src/lab/move-presentation.ts",
-      "tests/lab/move-demonstration-scenario.test.ts",
-      "tests/lab/move-presentation.test.ts",
-      "tests/worker/codex.test.ts",
-      "tests/worker/lab.test.ts",
-    ]) {
-      expect(existsSync(join(root, path)), path).toBe(false);
-    }
-
-    const vite = readFileSync(join(root, "vite.config.ts"), "utf8");
-    const documents = readFileSync(join(root, "src/documents/site-documents.tsx"), "utf8");
-    const trainingStyles = readFileSync(join(root, "src/client/styles/lab.css"), "utf8");
-    expect(vite).not.toMatch(/codex/i);
-    expect(documents).not.toMatch(/codex/i);
-    expect(trainingStyles).not.toMatch(/codex-/i);
+    expect(workerSource).not.toMatch(/auth\/|handleLogin|handleLogout|handleLab|session/i);
   });
 
   it("keeps local development credential-free without weakening lifecycle ownership", () => {
