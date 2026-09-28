@@ -97,15 +97,6 @@ export function isInvulnerable(
   c: CharacterDef,
   kind: InvulKindValue,
 ): boolean {
-  if (
-    kind === InvulKind.Strike &&
-    c.perks.graveStep &&
-    f.state === StateId.Dash &&
-    f.stateFrame < 3 &&
-    f.dashForward === 0
-  ) {
-    return true;
-  }
   const move = activeMoveOf(f, c);
   if (move === null) return false;
   for (const w of move.invulWindows) {

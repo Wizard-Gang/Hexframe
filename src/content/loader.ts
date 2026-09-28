@@ -256,15 +256,6 @@ export function loadCharacter(raw: RawCharacter, moves: RawMove[]): CharacterDef
     name: raw.name,
     health: raw.health,
     stamina: 100,
-    armor: 0,
-    resistances: { poison: 0, fire: 0, frost: 0, shock: 0 },
-    perks: {
-      graveStep: false,
-      venomEdge: false,
-      staticConductor: false,
-      voidChannel: false,
-      burningBrand: false,
-    },
     walkForwardSpeed: px(raw.walkForwardSpeed),
     walkBackwardSpeed: px(raw.walkBackwardSpeed),
     dashForward: {

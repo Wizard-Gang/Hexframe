@@ -23,7 +23,6 @@ export interface CombatScenario {
     id: string;
     health: number;
     stamina: number;
-    armor: number;
     moveIds: number[];
   }[];
   inputs: RecordedInputFrame[];
@@ -64,7 +63,6 @@ export function captureScenario(
       id: character.id,
       health: character.health,
       stamina: character.stamina,
-      armor: character.armor,
       moveIds: character.moves.map((move) => move.id),
     })),
     inputs: timeline.recordedInputs(stateFrame),

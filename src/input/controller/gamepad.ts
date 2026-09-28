@@ -86,7 +86,6 @@ export class GamepadController {
     for (const [button, position] of faceToPosition) {
       if (pressed(pad, button)) bits |= actionBit(bank * 4 + position);
     }
-    if (pressed(pad, 5)) bits |= InputBit.Interact;
     return bits & INPUT_MASK;
   }
 

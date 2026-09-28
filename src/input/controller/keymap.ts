@@ -25,7 +25,6 @@ export const DEFAULT_KEYMAP_P1: KeyMap = {
   KeyA: InputBit.Left,
   KeyS: InputBit.Down,
   KeyD: InputBit.Right,
-  KeyE: InputBit.Interact,
 };
 
 /** Optional second-player movement keys used by dummy recording. */

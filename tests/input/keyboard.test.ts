@@ -45,12 +45,9 @@ describe("keyboard input adapter", () => {
     keyboard.dispose();
   });
 
-  it("reserves Space, maps E to interact, and uses Ctrl/Command for power", () => {
+  it("reserves Space and uses Ctrl/Command for power", () => {
     const target = new EventTarget();
     const keyboard = new KeyboardController(target, DEFAULT_KEYMAP_P1, DEFAULT_ACTION_KEYMAP, { ownsModifiedActions: () => true });
-    key(target, "keydown", "KeyE");
-    expect(keyboard.sample()).toBe(InputBit.Interact);
-    key(target, "keyup", "KeyE");
     key(target, "keydown", "ArrowUp", { ctrl: true });
     expect(keyboard.sample()).toBe(InputBit.Action9);
     key(target, "keyup", "ArrowUp", { ctrl: true });

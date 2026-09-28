@@ -30,10 +30,7 @@ function workerSources(path = join(root, "src/worker")): string {
 describe("HF-154 save retirement", () => {
   it.each([
     "/api/save",
-    "/api/save/progression/boss",
-    "/api/save/progression/stage-event",
-    "/api/save/armory/craft",
-    "/api/save/campaign/reset",
+    "/api/save/retired",
   ])("returns the generic JSON API 404 for %s", async (pathname) => {
     const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment());
     expect(response.status).toBe(404);

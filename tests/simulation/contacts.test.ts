@@ -1,16 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { armorMitigatedDamage } from "../../src/combat/hit-resolution/resolve";
 import { ContactKind, InputBit, StateId } from "../../src/combat/types";
 import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim, placeFighters, runFrames } from "../helpers/harness";
 
 describe("contact resolution", () => {
   const basics = [MoveId.StandingLight, MoveId.CrouchingLight, ...Array.from({ length: 14 }, () => MoveId.StandingLight)];
-  it("derives direct-hit mitigation from a flat armor rating", () => {
-    expect(armorMitigatedDamage(100, 0)).toBe(100);
-    expect(armorMitigatedDamage(100, 400)).toBe(50);
-    expect(armorMitigatedDamage(1, 9999)).toBe(1);
-  });
   it("applies a standing light exactly once", () => {
     const sim = createSim(undefined, basics);
     placeFighters(sim, -18, 18);

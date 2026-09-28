@@ -14,26 +14,22 @@
  * and an unsigned write would fold them onto a different bit pattern on the way back.
  * `rng` is the one exception and is documented where it is written.
  *
- * Field order is exactly declaration order in `src/combat/types.ts`, with each array
- * preceded by its length so a reader never has to know how many fighters, entities or
- * history frames the writer had.
+ * Field order is exactly declaration order in `src/combat/types.ts`. The fighter count is
+ * fixed at two; variable-length input-history rows remain length-prefixed.
  */
 
-import { SNAPSHOT_VERSION } from "../../combat/constants";
+import { PLAYER_COUNT, SNAPSHOT_VERSION } from "../../combat/constants";
 import { StateId } from "../../combat/types";
-import type { EntityState, Facing, FighterState, SimState, StateIdValue } from "../../combat/types";
+import type { Facing, FighterState, SimState, StateIdValue } from "../../combat/types";
 
-/** version, frame, rng, fighter count. */
-const HEADER_INTS = 4;
+/** version, frame, rng. Fighter count is fixed by the Training simulation contract. */
+const HEADER_INTS = 3;
 
-/** `FighterState` has thirty-six integer fields; the final six are per-target hit masks. */
-const FIGHTER_INTS = 36;
+/** `FighterState` has thirty integer fields. */
+const FIGHTER_INTS = 30;
 
-/** `EntityState` has twelve. */
-const ENTITY_INTS = 12;
-
-/** `StageState` has nine fixed integer fields. */
-const STAGE_INTS = 9;
+/** Training keeps only immutable-grid world bounds in state. */
+const STAGE_INTS = 2;
 
 const BYTES_PER_INT = 4;
 
@@ -104,8 +100,13 @@ function toStateId(value: number): StateIdValue {
 }
 
 function byteLengthOf(state: SimState): number {
-  let ints = HEADER_INTS + state.fighters.length * FIGHTER_INTS;
-  ints += 1 + state.entities.length * ENTITY_INTS;
+  if (state.fighters.length !== PLAYER_COUNT) {
+    throw new RangeError(`snapshot: expected ${PLAYER_COUNT} fighters, got ${state.fighters.length}`);
+  }
+  if (state.inputHistory.length !== PLAYER_COUNT) {
+    throw new RangeError(`snapshot: expected ${PLAYER_COUNT} input histories, got ${state.inputHistory.length}`);
+  }
+  let ints = HEADER_INTS + PLAYER_COUNT * FIGHTER_INTS;
   ints += STAGE_INTS;
   ints += 1; // roundOver
   ints += 1; // player count for the input history
@@ -126,7 +127,6 @@ export function serializeState(state: SimState): Uint8Array {
   // canonical whichever sign convention the generator happens to leave it in.
   w.u32(state.rng >>> 0);
 
-  w.i32(state.fighters.length);
   for (const f of state.fighters) {
     w.i32(f.x);
     w.i32(f.y);
@@ -158,34 +158,10 @@ export function serializeState(state: SimState): Uint8Array {
     w.i32(f.shockFrames);
     w.i32(f.bleedStacks);
     w.i32(f.bleedFrames);
-    for (const flags of f.hitFlagsByTarget) w.i32(flags);
-  }
-
-  w.i32(state.entities.length);
-  for (const e of state.entities) {
-    w.i32(e.id);
-    w.i32(e.kind);
-    w.i32(e.owner);
-    w.i32(e.x);
-    w.i32(e.y);
-    w.i32(e.vx);
-    w.i32(e.vy);
-    w.i32(e.life);
-    w.i32(e.hitFlags);
-    w.i32(e.w);
-    w.i32(e.h);
-    w.i32(e.value);
   }
 
   w.i32(state.stage.worldMinX);
   w.i32(state.stage.worldMaxX);
-  w.i32(state.stage.arenaMinX);
-  w.i32(state.stage.arenaMaxX);
-  w.i32(state.stage.arenaLocked);
-  w.i32(state.stage.bossActive);
-  w.i32(state.stage.checkpoint);
-  w.i32(state.stage.rewardSpawned);
-  w.i32(state.stage.bossActivatedFrame);
 
   w.i32(state.roundOver);
 
@@ -216,9 +192,8 @@ export function deserializeState(bytes: Uint8Array): SimState {
   const frame = r.i32();
   const rng = r.u32();
 
-  const fighterCount = r.count("fighter");
-  const fighters: FighterState[] = new Array<FighterState>(fighterCount);
-  for (let i = 0; i < fighterCount; i++) {
+  const fighters: FighterState[] = new Array<FighterState>(PLAYER_COUNT);
+  for (let i = 0; i < PLAYER_COUNT; i++) {
     fighters[i] = {
       x: r.i32(),
       y: r.i32(),
@@ -250,44 +225,20 @@ export function deserializeState(bytes: Uint8Array): SimState {
       shockFrames: r.i32(),
       bleedStacks: r.i32(),
       bleedFrames: r.i32(),
-      hitFlagsByTarget: [r.i32(), r.i32(), r.i32(), r.i32(), r.i32(), r.i32()],
-    };
-  }
-
-  const entityCount = r.count("entity");
-  const entities: EntityState[] = new Array<EntityState>(entityCount);
-  for (let i = 0; i < entityCount; i++) {
-    entities[i] = {
-      id: r.i32(),
-      kind: r.i32(),
-      owner: r.i32(),
-      x: r.i32(),
-      y: r.i32(),
-      vx: r.i32(),
-      vy: r.i32(),
-      life: r.i32(),
-      hitFlags: r.i32(),
-      w: r.i32(),
-      h: r.i32(),
-      value: r.i32(),
     };
   }
 
   const stage = {
     worldMinX: r.i32(),
     worldMaxX: r.i32(),
-    arenaMinX: r.i32(),
-    arenaMaxX: r.i32(),
-    arenaLocked: r.i32(),
-    bossActive: r.i32(),
-    checkpoint: r.i32(),
-    rewardSpawned: r.i32(),
-    bossActivatedFrame: r.i32(),
   };
 
   const roundOver = r.i32();
 
   const playerCount = r.count("input history player");
+  if (playerCount !== PLAYER_COUNT) {
+    throw new RangeError(`snapshot: expected ${PLAYER_COUNT} input histories, got ${playerCount}`);
+  }
   const inputHistory: number[][] = new Array<number[]>(playerCount);
   for (let p = 0; p < playerCount; p++) {
     const rowLength = r.count("input history frame");
@@ -298,7 +249,7 @@ export function deserializeState(bytes: Uint8Array): SimState {
     inputHistory[p] = row;
   }
 
-  return { frame, rng, fighters, entities, stage, roundOver, inputHistory };
+  return { frame, rng, fighters, stage, roundOver, inputHistory };
 }
 
 /**
@@ -345,33 +296,6 @@ export function cloneState(state: SimState): SimState {
       shockFrames: f.shockFrames,
       bleedStacks: f.bleedStacks,
       bleedFrames: f.bleedFrames,
-      hitFlagsByTarget: [
-        f.hitFlagsByTarget[0],
-        f.hitFlagsByTarget[1],
-        f.hitFlagsByTarget[2],
-        f.hitFlagsByTarget[3],
-        f.hitFlagsByTarget[4],
-        f.hitFlagsByTarget[5],
-      ],
-    };
-  }
-
-  const entities: EntityState[] = new Array<EntityState>(state.entities.length);
-  for (let i = 0; i < state.entities.length; i++) {
-    const e = state.entities[i];
-    entities[i] = {
-      id: e.id,
-      kind: e.kind,
-      owner: e.owner,
-      x: e.x,
-      y: e.y,
-      vx: e.vx,
-      vy: e.vy,
-      life: e.life,
-      hitFlags: e.hitFlags,
-      w: e.w,
-      h: e.h,
-      value: e.value,
     };
   }
 
@@ -384,7 +308,6 @@ export function cloneState(state: SimState): SimState {
     frame: state.frame,
     rng: state.rng,
     fighters,
-    entities,
     stage: { ...state.stage },
     roundOver: state.roundOver,
     inputHistory,
