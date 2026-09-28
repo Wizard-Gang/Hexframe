@@ -38,7 +38,6 @@ describe("public Hexframe surface", () => {
     expect(rootHtml).toContain('aria-label="Primary"');
     expect(rootHtml).toContain('aria-current="page">Overview');
     expect(labHtml).toContain('aria-current="page">TRAINING');
-    expect(rootHtml).not.toContain(">LOADOUTS<");
   });
 
   it("uses the WizardGang mark and favicon across build-time documents", () => {

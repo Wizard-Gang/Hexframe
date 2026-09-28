@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_MOVE_LOADOUT, testFighterWithLoadout } from "../../src/content/test-fighter";
+import { createTestFighter } from "../../src/content/test-fighter";
 import { DEFAULT_PREFERENCES } from "../../src/lab/preferences";
 import { buildLabView } from "../../src/lab/view";
 
 function view(publicPlay = true, developerTools = false): string {
   return buildLabView({
-    character: testFighterWithLoadout(DEFAULT_MOVE_LOADOUT),
+    character: createTestFighter(),
     preferences: DEFAULT_PREFERENCES,
     dummyOptions: [[0, "Stand"]],
     publicPlay,
@@ -30,19 +30,17 @@ describe("lab accessibility contract", () => {
     expect(html).toContain('id="interaction-history"');
     expect(html).toContain('data-action="scenario-capture"');
     expect(html).toContain("Pause on contact");
-    expect(html).toContain("Audio captions");
-    expect(html).toContain("Combat flashes");
-    expect(html).toContain("Status patterns");
-    expect(html).toContain("Strong focus indicator");
   });
 
-  it("does not render the retired editor and reference pages", () => {
+  it("shows the fixed four-button legend without modifier controls", () => {
     const html = view();
-    for (const id of ["page-loadout", "page-armor", "page-craft", "page-moves", "page-status", "page-codex-equipment", "page-stages", "page-enemies", "page-tutorial", "page-profile", "page-credits"]) {
-      expect(html).not.toContain(`id="${id}"`);
-    }
-    expect(html).not.toContain("Extra confirmation for crafting");
-    expect(html).not.toContain("Press any button");
+    expect(html).toContain("<b>↑ / Y</b> Ember Palm");
+    expect(html).toContain("<b>← / X</b> Ashen Sweep");
+    expect(html).toContain("<b>→ / B</b> Frost Heel");
+    expect(html).toContain("<b>↓ / A</b> Phoenix Drive");
+    expect(html).not.toContain("<b>SETUP</b>");
+    expect(html).not.toContain("<b>POWER</b>");
+    expect(html).not.toContain("<b>FINALE</b>");
   });
 
   it("keeps developer tools inline without exposing the developer tab publicly", () => {

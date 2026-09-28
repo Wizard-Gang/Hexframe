@@ -1,4 +1,4 @@
-import { DEFAULT_MOVE_LOADOUT, testFighterWithLoadout } from "../content/test-fighter";
+import { createTestFighter } from "../content/test-fighter";
 import {
   TEST_FIGHTER_ANIMATIONS,
   TEST_FIGHTER_MODEL,
@@ -23,9 +23,10 @@ const mountNode = document.querySelector<HTMLElement>("#codex");
 if (!mountNode) throw new Error("Codex mount is missing");
 const mount: HTMLElement = mountNode;
 
-const character = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
+const character = createTestFighter();
+const moves = character.commands.map((command) => character.moves.find((move) => move.id === command.moveId)).filter((move): move is (typeof character.moves)[number] => move !== undefined);
 const initialId = moveIdFromPath(window.location.pathname);
-let selected = character.moves.find((move) => move.id === initialId) ?? character.moves[0];
+let selected = moves.find((move) => move.id === initialId) ?? moves[0];
 
 replaceTrustedMarkup(mount, `<a class="skip-link" href="#codex-content">Skip to move Codex</a>
 <main class="lab-shell codex-standalone" id="codex-content">
@@ -37,7 +38,7 @@ replaceTrustedMarkup(mount, `<a class="skip-link" href="#codex-content">Skip to 
     <div class="codex-moves-shell">
       <aside class="codex-move-index" aria-label="Move index">
         <label><span>SEARCH MOVES</span><input type="search" data-codex-search placeholder="Name, role, family…" aria-label="Search move Codex"></label>
-        <div id="codex-move-index">${character.moves.map(moveButton).join("")}</div>
+        <div id="codex-move-index">${moves.map(moveButton).join("")}</div>
       </aside>
       <section class="codex-demonstration" aria-label="Move demonstration">
         <header class="demonstration-toolbar">
@@ -61,7 +62,7 @@ replaceTrustedMarkup(mount, `<a class="skip-link" href="#codex-content">Skip to 
         </div>
         <output class="codex-frame-detail" id="codex-frame-detail">FRAME 01 · STARTUP</output>
         <section class="move-timeline-console codex-timeline" id="codex-move-timeline" data-codex-timeline aria-label="Interactive move frame timeline">${moveTimelineMarkup(selected)}</section>
-        <article class="codex-move-detail" id="codex-move-detail">${codexMoveDetailMarkup(selected, character, DEFAULT_MOVE_LOADOUT)}</article>
+        <article class="codex-move-detail" id="codex-move-detail">${codexMoveDetailMarkup(selected, character)}</article>
       </section>
     </div>
   </section>
@@ -133,12 +134,12 @@ window.addEventListener("pagehide", () => {
 void attachVersionBadge(document.body);
 
 function selectMove(id: number, autoplay: boolean): void {
-  const move = character.moves.find((candidate) => candidate.id === id);
+  const move = moves.find((candidate) => candidate.id === id);
   if (!move) return;
   selected = move;
   demonstration.select(move.id, autoplay);
   replaceTrustedMarkup(required("codex-move-timeline"), moveTimelineMarkup(move));
-  replaceTrustedMarkup(required("codex-move-detail"), codexMoveDetailMarkup(move, character, DEFAULT_MOVE_LOADOUT));
+  replaceTrustedMarkup(required("codex-move-detail"), codexMoveDetailMarkup(move, character));
   for (const button of mount.querySelectorAll<HTMLButtonElement>("[data-codex-move]")) {
     const active = Number(button.dataset.codexMove) === move.id;
     button.classList.toggle("active", active);

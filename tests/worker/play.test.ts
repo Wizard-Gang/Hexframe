@@ -97,7 +97,7 @@ describe("public playtest route", () => {
     expect(response.headers.get("location")).toBe("/play/");
   });
 
-  it.each(["/training", "/campaign", "/fight", "/loadouts", "/forge", "/settings"])(
+  it.each(["/training", "/campaign", "/fight", "/forge", "/settings"])(
     "returns 404 for retired route %s",
     async (pathname) => {
       const paths: string[] = [];

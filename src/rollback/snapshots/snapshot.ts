@@ -25,8 +25,8 @@ import type { Facing, FighterState, SimState, StateIdValue } from "../../combat/
 /** version, frame, rng. Fighter count is fixed by the Training simulation contract. */
 const HEADER_INTS = 3;
 
-/** `FighterState` has thirty integer fields. */
-const FIGHTER_INTS = 30;
+/** `FighterState` has twenty-four integer fields. */
+const FIGHTER_INTS = 24;
 
 /** Training keeps only immutable-grid world bounds in state. */
 const STAGE_INTS = 2;
@@ -150,14 +150,8 @@ export function serializeState(state: SimState): Uint8Array {
     w.i32(f.dashForward);
     w.i32(f.burnStacks);
     w.i32(f.burnFrames);
-    w.i32(f.poisonStacks);
-    w.i32(f.poisonFrames);
     w.i32(f.freezeStacks);
     w.i32(f.freezeFrames);
-    w.i32(f.shockStacks);
-    w.i32(f.shockFrames);
-    w.i32(f.bleedStacks);
-    w.i32(f.bleedFrames);
   }
 
   w.i32(state.stage.worldMinX);
@@ -217,14 +211,8 @@ export function deserializeState(bytes: Uint8Array): SimState {
       dashForward: r.i32(),
       burnStacks: r.i32(),
       burnFrames: r.i32(),
-      poisonStacks: r.i32(),
-      poisonFrames: r.i32(),
       freezeStacks: r.i32(),
       freezeFrames: r.i32(),
-      shockStacks: r.i32(),
-      shockFrames: r.i32(),
-      bleedStacks: r.i32(),
-      bleedFrames: r.i32(),
     };
   }
 
@@ -288,14 +276,8 @@ export function cloneState(state: SimState): SimState {
       dashForward: f.dashForward,
       burnStacks: f.burnStacks,
       burnFrames: f.burnFrames,
-      poisonStacks: f.poisonStacks,
-      poisonFrames: f.poisonFrames,
       freezeStacks: f.freezeStacks,
       freezeFrames: f.freezeFrames,
-      shockStacks: f.shockStacks,
-      shockFrames: f.shockFrames,
-      bleedStacks: f.bleedStacks,
-      bleedFrames: f.bleedFrames,
     };
   }
 

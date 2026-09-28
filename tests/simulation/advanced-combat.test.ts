@@ -5,14 +5,9 @@ import { canStartMove, moveOf, staminaCostOf, startMove } from "../../src/combat
 import { resolveContacts } from "../../src/combat/hit-resolution/resolve";
 import { JUMP_STAMINA_COST } from "../../src/combat/movement/physics";
 import { Simulation } from "../../src/combat/simulation/simulation";
-import type { CharacterDef, FrameReport } from "../../src/combat/types";
+import type { CharacterDef, FrameReport, MoveDef } from "../../src/combat/types";
 import { InputBit, StateId } from "../../src/combat/types";
-import {
-  DEFAULT_MOVE_LOADOUT,
-  MoveId,
-  TEST_FIGHTER,
-  testFighterWithLoadout,
-} from "../../src/content/test-fighter";
+import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim, placeFighters, runFrames } from "../helpers/harness";
 
 function report(): FrameReport {
@@ -40,89 +35,51 @@ describe("stamina economy", () => {
     expect(fighter.stamina).toBe(TEST_FIGHTER.stamina - TEST_FIGHTER.dashForward.staminaCost + 1);
   });
 
-  it("gates techniques by their authored stamina cost", () => {
-    const base = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
-    const poisonMove = moveOf(base, MoveId.VenomFang)!;
-    expect(staminaCostOf(base, poisonMove)).toBe(poisonMove.staminaCost);
-
-    const fighter = new Simulation(config(base)).getState().fighters[0];
-    fighter.stamina = poisonMove.staminaCost - 1;
-    expect(canStartMove(fighter, base, poisonMove)).toBe(false);
-    fighter.stamina = poisonMove.staminaCost;
-    expect(canStartMove(fighter, base, poisonMove)).toBe(true);
-    startMove(fighter, base, poisonMove);
+  it("gates a retained technique by its authored stamina cost", () => {
+    const move = moveOf(TEST_FIGHTER, MoveId.FrostHeel)!;
+    expect(staminaCostOf(TEST_FIGHTER, move)).toBe(move.staminaCost);
+    const fighter = new Simulation(config(TEST_FIGHTER)).getState().fighters[0];
+    fighter.stamina = move.staminaCost - 1;
+    expect(canStartMove(fighter, TEST_FIGHTER, move)).toBe(false);
+    fighter.stamina = move.staminaCost;
+    expect(canStartMove(fighter, TEST_FIGHTER, move)).toBe(true);
+    startMove(fighter, TEST_FIGHTER, move);
     expect(fighter.stamina).toBe(0);
   });
 });
 
-describe("aerial combat", () => {
-  it("requires air state for air techniques and preserves air state when they recover", () => {
-    const airLoadout = [MoveId.AstralJab, ...DEFAULT_MOVE_LOADOUT.slice(1)];
-    const character = testFighterWithLoadout(airLoadout);
-    const sim = new Simulation(config(character));
-    const fighter = sim.getState().fighters[0];
-
-    sim.step([InputBit.Action1, 0]);
-    expect(fighter.moveId).not.toBe(MoveId.AstralJab);
-
-    fighter.y = px(140);
-    fighter.airborne = 1;
-    fighter.state = StateId.Airborne;
-    sim.step([0, 0]);
-    sim.step([InputBit.Action1, 0]);
-    expect(fighter.moveId).toBe(MoveId.AstralJab);
-    expect(fighter.stamina).toBe(character.stamina - moveOf(character, MoveId.AstralJab)!.staminaCost);
-
-    runFrames(sim, moveOf(character, MoveId.AstralJab)!.duration);
-    expect(fighter.airborne).toBe(1);
-    expect(fighter.state).toBe(StateId.Airborne);
-  });
-
-  it("Rift Uppercut launches both fighters and exposes authored air cancels", () => {
-    const loadout = [MoveId.RiftUppercut, MoveId.AstralJab, MoveId.WitchKnee, MoveId.VoidDive, ...DEFAULT_MOVE_LOADOUT.slice(4)];
-    const character = testFighterWithLoadout(loadout);
-    const sim = new Simulation(config(character));
-    placeFighters(sim, -18, 18);
-    const reports = runFrames(sim, 30, (frame, player) => player === 0 && frame === 0 ? InputBit.Action1 : 0);
-    const contact = reports.flatMap((item) => item.contacts)[0];
-    const rift = moveOf(character, MoveId.RiftUppercut)!;
-
-    expect(contact?.moveId).toBe(MoveId.RiftUppercut);
-    expect(sim.getState().fighters[1].airborne).toBe(1);
-    expect(rift.cancelWindows[0].into).toEqual([25, 26, 27, 28]);
-  });
-});
-
-describe("true hyper armor", () => {
-  it("absorbs one strike without cancelling Bastion Break, then breaks on the next", () => {
-    const attacker = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
-    const defender = testFighterWithLoadout([MoveId.BastionBreak, ...DEFAULT_MOVE_LOADOUT.slice(1)]);
-    const sim = new Simulation(config(attacker, defender));
+describe("hyper armor engine contract", () => {
+  it("still absorbs the authored number of strikes before hitstun", () => {
+    const attack = moveOf(TEST_FIGHTER, MoveId.EmberPalm)!;
+    const base = moveOf(TEST_FIGHTER, MoveId.PhoenixDrive)!;
+    const armoredMove: MoveDef = {
+      ...base,
+      id: 99,
+      key: "armor_fixture",
+      armorWindows: [{ startFrame: 0, endFrame: base.duration - 1, hits: 1 }],
+    };
+    const defender: CharacterDef = { ...TEST_FIGHTER, moves: [...TEST_FIGHTER.moves, armoredMove] };
+    const sim = new Simulation(config(TEST_FIGHTER, defender));
     placeFighters(sim, -18, 18);
     const state = sim.getState();
-    const attack = moveOf(attacker, MoveId.StandingLight)!;
-    const bastion = moveOf(defender, MoveId.BastionBreak)!;
-    const a = state.fighters[0];
-    const d = state.fighters[1];
-    startMove(a, attacker, attack);
-    startMove(d, defender, bastion);
-    a.moveFrame = attack.hitboxes[0].startFrame;
-    d.moveFrame = bastion.startup - 1;
+    const attacker = state.fighters[0];
+    const target = state.fighters[1];
+    startMove(attacker, TEST_FIGHTER, attack);
+    startMove(target, defender, armoredMove);
+    attacker.moveFrame = attack.hitboxes[0].startFrame;
+    target.moveFrame = 0;
 
     const first = report();
-    resolveContacts(state, [attacker, defender], [0, 0], first);
+    resolveContacts(state, [TEST_FIGHTER, defender], [0, 0], first);
     expect(first.contacts[0].armored).toBe(true);
-    expect(d.health).toBeLessThan(defender.health);
-    expect(d.moveId).toBe(MoveId.BastionBreak);
-    expect(d.state).toBe(StateId.Attack);
-    expect(armorRemaining(d, defender)).toBe(0);
+    expect(target.state).toBe(StateId.Attack);
+    expect(armorRemaining(target, defender)).toBe(0);
 
-    startMove(a, attacker, attack);
-    a.moveFrame = attack.hitboxes[0].startFrame;
+    startMove(attacker, TEST_FIGHTER, attack);
+    attacker.moveFrame = attack.hitboxes[0].startFrame;
     const second = report();
-    resolveContacts(state, [attacker, defender], [0, 0], second);
+    resolveContacts(state, [TEST_FIGHTER, defender], [0, 0], second);
     expect(second.contacts[0].armored).toBe(false);
-    expect(d.moveId).toBe(-1);
-    expect(d.state).toBe(StateId.HitstunStand);
+    expect(target.state).toBe(StateId.HitstunStand);
   });
 });

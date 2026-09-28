@@ -40,7 +40,7 @@ export class DebugPanel {
           <div><dt>health</dt><dd>${fighter.health} / ${character.health}</dd></div>
           <div><dt>stamina</dt><dd>${fighter.stamina} / ${character.stamina} · regen ${fighter.staminaRegenDelay}</dd></div>
           <div><dt>hyper armor</dt><dd>${fighter.armorHits} hit(s) absorbed</dd></div>
-          <div><dt>status</dt><dd>burn ${fighter.burnStacks} · poison ${fighter.poisonStacks} · freeze ${fighter.freezeStacks} · shock ${fighter.shockStacks} · bleed ${fighter.bleedStacks}</dd></div>
+          <div><dt>status</dt><dd>burn ${fighter.burnStacks} · freeze ${fighter.freezeStacks}</dd></div>
         </dl>
       </article>`;
     });

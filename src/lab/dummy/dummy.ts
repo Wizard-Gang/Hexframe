@@ -84,7 +84,7 @@ export class DummyController {
       case DummyMode.Reversal:
         if (this.pendingCounter && isActionable(fighter)) {
           this.pendingCounter = false;
-          return InputBit.Light;
+          return InputBit.Action1;
         }
         return this.mode === DummyMode.Counterattack ? backInput(state, player) : 0;
       case DummyMode.Stand:

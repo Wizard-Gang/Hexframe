@@ -3,7 +3,7 @@ import { px } from "../combat/constants";
 import type { FighterState, FrameReport, SimConfig } from "../combat/types";
 import { ContactKind, DebuffEventKind, DebuffKind } from "../combat/types";
 import { Simulation } from "../combat/simulation/simulation";
-import { DEFAULT_MOVE_LOADOUT, testFighterWithLoadout } from "../content/test-fighter";
+import { createTestFighter } from "../content/test-fighter";
 import { TEST_FIGHTER_ANIMATIONS, TEST_FIGHTER_MODEL, TEST_FIGHTER_PLAYBACK, TEST_FIGHTER_RIG } from "../content/test-fighter-assets";
 import { STATUS_RULES } from "../content/status-rules";
 import { gameAudio } from "../client/audio/audio-manager";
@@ -55,8 +55,8 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   if (!session) throw new Error("Training requires an explicit game session");
   const developerTools = session.options.developerTools === true;
   const publicPlay = !developerTools;
-  const playerCharacter = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
-  const dummyCharacter = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
+  const playerCharacter = createTestFighter();
+  const dummyCharacter = createTestFighter();
   const combatCharacters = [playerCharacter, dummyCharacter];
   const enemyIndex = 1;
   const preferences = loadPreferences();
@@ -78,7 +78,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   timeline.pauseOnContact = false;
   const dummy = new DummyController();
   const tutorial = new TutorialController(syncTutorialUi);
-  const keyboard = new KeyboardController(window, DEFAULT_KEYMAP_P1, DEFAULT_ACTION_KEYMAP, { ownsModifiedActions: () => document.hasFocus() && !menuOpen() });
+  const keyboard = new KeyboardController(window, DEFAULT_KEYMAP_P1, DEFAULT_ACTION_KEYMAP);
   const secondKeyboard = new KeyboardController(window, DEFAULT_KEYMAP_P2, NO_ACTION_KEYMAP);
   const gamepad = new GamepadController();
   const renderer = new Renderer(required("stage"), sim.characters(), {
@@ -114,7 +114,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let selectedInteraction: InteractionSelection | null = null;
   let renderedTimelineMoveId = -1;
   let renderedTimelinePlayhead = -2;
-  let timelinePinnedMoveId = DEFAULT_MOVE_LOADOUT[0] ?? -1;
+  let timelinePinnedMoveId = playerCharacter.commands[0]?.moveId ?? -1;
   let interactionRenderKey = "";
   let lastPlayerInput = 0;
   let latestTutorialSnapshot: TutorialSnapshot | null = null;
@@ -338,7 +338,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (resumeAfterMenu) timeline.paused = false;
     resumeAfterMenu = false;
     (focusBeforeMenu ?? mount.querySelector<HTMLButtonElement>("[data-action='menu']"))?.focus();
-    tutorial.recordUi("returned-to-combat");
   }
 
   function setGameContentInert(inert: boolean): void {
@@ -576,7 +575,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   function startTutorial(): void {
     markTutorialSeen();
     if (menuOpen()) closeMenu();
-    Object.assign(playerCharacter, testFighterWithLoadout(DEFAULT_MOVE_LOADOUT));
     resetMatch();
     timeline.paused = false;
     tutorial.start();
@@ -593,7 +591,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   function stopTutorial(completed: boolean): void {
     if (menuOpen()) closeMenu();
     tutorial.stop();
-    Object.assign(playerCharacter, testFighterWithLoadout(DEFAULT_MOVE_LOADOUT));
     resetMatch();
     timeline.paused = false;
     const cleanUrl = new URL(window.location.href);
@@ -701,9 +698,8 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   function renderDebuffs(player: number, fighter: FighterState): void {
     const statuses = [
-      ["burn", fighter.burnStacks, fighter.burnFrames], ["poison", fighter.poisonStacks, fighter.poisonFrames],
-      ["freeze", fighter.freezeStacks, fighter.freezeFrames], ["shock", fighter.shockStacks, fighter.shockFrames],
-      ["bleed", fighter.bleedStacks, fighter.bleedFrames],
+      ["burn", fighter.burnStacks, fighter.burnFrames],
+      ["freeze", fighter.freezeStacks, fighter.freezeFrames],
     ] as const;
     const active = statuses.filter(([, stacks, frames]) => stacks > 0 && frames > 0);
     const lane = required(`debuff-p${player + 1}`);
@@ -865,10 +861,6 @@ function centerOf(rect: DOMRect): { x: number; y: number } {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
-function cueForDebuff(debuff: number): "burn" | "poison" | "freeze" | "shock" | "bleed" {
-  if (debuff === DebuffKind.Burn) return "burn";
-  if (debuff === DebuffKind.Poison) return "poison";
-  if (debuff === DebuffKind.Freeze) return "freeze";
-  if (debuff === DebuffKind.Shock) return "shock";
-  return "bleed";
+function cueForDebuff(debuff: number): "burn" | "freeze" {
+  return debuff === DebuffKind.Burn ? "burn" : "freeze";
 }

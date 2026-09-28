@@ -26,15 +26,9 @@ describe("authoritative move demonstrations", () => {
     expect(scenario.frames.at(-1)?.state.fighters[1].health).toBe(TEST_FIGHTER.health);
   });
 
-  it("can start and resolve an authored airborne move without parallel physics", () => {
-    const dive = TEST_FIGHTER.moves.find((move) => move.id === MoveId.VoidDive)!;
-    const scenario = buildMoveDemonstrationScenario(TEST_FIGHTER, dive, "hit");
-    expect(scenario.frames.some((frame) => frame.report?.moveStarts.some((event) => event.moveId === dive.id))).toBe(true);
-    expect(scenario.frames.some((frame) => frame.state.fighters[0].airborne === 1)).toBe(true);
-  });
-
   it("produces the selected contact result for every catalog move", () => {
-    for (const move of TEST_FIGHTER.moves) {
+    for (const command of TEST_FIGHTER.commands) {
+      const move = TEST_FIGHTER.moves.find((candidate) => candidate.id === command.moveId)!;
       const hit = buildMoveDemonstrationScenario(TEST_FIGHTER, move, "hit");
       expect(hit.frames.flatMap((frame) => frame.report?.contacts ?? []).map((contact) => contact.kind), move.key).toContain(ContactKind.Hit);
       const block = buildMoveDemonstrationScenario(TEST_FIGHTER, move, "block");

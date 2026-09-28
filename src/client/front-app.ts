@@ -1,6 +1,6 @@
 import { px } from "../combat/constants";
 import { Simulation } from "../combat/simulation/simulation";
-import { DEFAULT_MOVE_LOADOUT, testFighterWithLoadout } from "../content/test-fighter";
+import { createTestFighter } from "../content/test-fighter";
 import {
   TEST_FIGHTER_ANIMATIONS,
   TEST_FIGHTER_MODEL,
@@ -57,8 +57,8 @@ export async function startFrontApp(mount: HTMLElement): Promise<() => void> {
 function mountTrainingStages(mount: HTMLElement): Renderer[] {
   const renderers: Renderer[] = [];
   for (const stageMount of mount.querySelectorAll<HTMLElement>("[data-training-stage]")) {
-    const player = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
-    const dummy = testFighterWithLoadout(DEFAULT_MOVE_LOADOUT);
+    const player = createTestFighter();
+    const dummy = createTestFighter();
     const stage = STAGE_CATALOG["training-grid"].stage;
     const simulation = new Simulation({
       characters: [player, dummy],

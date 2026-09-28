@@ -102,14 +102,8 @@ export class Simulation {
         dashForward: 1,
         burnStacks: 0,
         burnFrames: 0,
-        poisonStacks: 0,
-        poisonFrames: 0,
         freezeStacks: 0,
         freezeFrames: 0,
-        shockStacks: 0,
-        shockFrames: 0,
-        bleedStacks: 0,
-        bleedFrames: 0,
       });
     }
 

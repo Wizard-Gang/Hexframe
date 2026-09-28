@@ -73,9 +73,6 @@ export class GamepadController {
     if (pressed(pad, 14) || horizontal <= -this.axisThreshold) bits |= InputBit.Left;
     if (pressed(pad, 15) || horizontal >= this.axisThreshold) bits |= InputBit.Right;
 
-    const leftTrigger = pressed(pad, 6);
-    const rightTrigger = pressed(pad, 7);
-    const bank = (leftTrigger ? 1 : 0) + (rightTrigger ? 2 : 0);
     // Spatial diamond: Y/X/B/A maps to ↑/←/→/↓, matching the keyboard arrow cluster.
     const faceToPosition: readonly [number, number][] = [
       [3, 0],
@@ -84,7 +81,7 @@ export class GamepadController {
       [0, 3],
     ];
     for (const [button, position] of faceToPosition) {
-      if (pressed(pad, button)) bits |= actionBit(bank * 4 + position);
+      if (pressed(pad, button)) bits |= actionBit(position);
     }
     return bits & INPUT_MASK;
   }

@@ -39,18 +39,6 @@ export const InputBit = {
   Action2: 1 << 5,
   Action3: 1 << 6,
   Action4: 1 << 7,
-  Action5: 1 << 8,
-  Action6: 1 << 9,
-  Action7: 1 << 10,
-  Action8: 1 << 11,
-  Action9: 1 << 12,
-  Action10: 1 << 13,
-  Action11: 1 << 14,
-  Action12: 1 << 15,
-  Action13: 1 << 16,
-  Action14: 1 << 17,
-  Action15: 1 << 18,
-  Action16: 1 << 19,
   // Compatibility names for authored 0.1 content and existing replay scripts.
   Light: 1 << 4,
   Medium: 1 << 5,
@@ -58,7 +46,7 @@ export const InputBit = {
   Throw: 1 << 7,
 } as const;
 
-export const ACTION_SLOT_COUNT = 16;
+export const ACTION_SLOT_COUNT = 4;
 
 /** The input bit for a zero-based action slot. Invalid slots map to no input. */
 export function actionBit(slot: number): number {
@@ -197,7 +185,7 @@ export interface MoveDef {
   animation: string;
   /** Searchable build-crafting vocabulary: fire, burn, projectile, guard-break, and so on. */
   tags: string[];
-  /** Short player-facing explanation used by the loadout builder. */
+  /** Short player-facing explanation of the authored technique. */
   description: string;
   duration: number;
   startup: number;
@@ -346,14 +334,8 @@ export interface FighterState {
   /** Deterministic stack counts and lifetimes for tag-driven status effects. */
   burnStacks: number;
   burnFrames: number;
-  poisonStacks: number;
-  poisonFrames: number;
   freezeStacks: number;
   freezeFrames: number;
-  shockStacks: number;
-  shockFrames: number;
-  bleedStacks: number;
-  bleedFrames: number;
 }
 
 export interface StageDef {
@@ -431,7 +413,7 @@ export interface ContactEvent {
   y: number;
 }
 
-export const DebuffKind = { Burn: 0, Poison: 1, Freeze: 2, Shock: 3, Bleed: 4 } as const;
+export const DebuffKind = { Burn: 0, Freeze: 1 } as const;
 export type DebuffKindValue = (typeof DebuffKind)[keyof typeof DebuffKind];
 
 export const DebuffEventKind = { Applied: 0, Tick: 1, Consumed: 2, Triggered: 3 } as const;

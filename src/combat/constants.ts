@@ -56,7 +56,7 @@ export const STAMINA_REGEN_DELAY = 36;
 export const COMMAND_HISTORY_FRAMES = 32;
 
 /** Snapshot format tag. Bump when the serialised layout changes; readers reject others. */
-export const SNAPSHOT_VERSION = 10;
+export const SNAPSHOT_VERSION = 11;
 
 /** FNV-1a 32-bit parameters, used for every determinism hash in the project. */
 export const FNV_OFFSET_BASIS = 0x811c9dc5;
