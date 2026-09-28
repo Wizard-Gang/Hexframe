@@ -48,8 +48,9 @@ function releaseTriggerFailures(workflow) {
     .filter((line) => line.trim() && indentation(line) === 2 && /^[A-Za-z0-9_-]+:\s*$/.test(line.trim()))
     .map((line) => line.trim().slice(0, -1));
 
-  if (events.length !== 1 || events[0] !== "push") {
-    failures.push("release workflow must be triggered only by semantic release tag pushes");
+  const expectedEvents = ["push", "workflow_dispatch"];
+  if (events.length !== expectedEvents.length || !expectedEvents.every((event) => events.includes(event))) {
+    failures.push("release workflow must accept only semantic tag push and exact-tag workflow dispatch events");
     return failures;
   }
 
@@ -92,6 +93,10 @@ export function validateReleaseWorkflow(workflow) {
   if (!deploy) failures.push("release workflow must define deploy");
 
   if (!hasFullHistoryCheckout(reproduce)) failures.push("reproduce must checkout full Git/tag history");
+  if (!reproduce.includes('case "$GITHUB_EVENT_NAME" in')) failures.push("reproduce must guard the release event");
+  if (!reproduce.includes("push|workflow_dispatch)")) failures.push("reproduce must allow only tag push or exact-tag workflow dispatch");
+  if (!reproduce.includes('[ "$GITHUB_REF_TYPE" = "tag" ]')) failures.push("reproduce must require a tag ref");
+  if (!reproduce.includes('[ "$GITHUB_REF" = "refs/tags/$GITHUB_REF_NAME" ]')) failures.push("reproduce must bind the exact tag ref");
 
   const identity = 'npm run verify:release-identity -- --tag "$GITHUB_REF_NAME" --ref-type "$GITHUB_REF_TYPE" --fetch-origin';
   const install = "npm ci";

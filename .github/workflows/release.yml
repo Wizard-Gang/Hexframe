@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,6 +14,18 @@ jobs:
   reproduce:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate release event boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_EVENT_NAME" in
+            push|workflow_dispatch) ;;
+            *) echo "::error::unauthorized release event $GITHUB_EVENT_NAME"; exit 1 ;;
+          esac
+          [ "$GITHUB_REF_TYPE" = "tag" ] || { echo "::error::release requires a tag ref"; exit 1; }
+          printf '%s\n' "$GITHUB_REF_NAME" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::release requires exact semantic tag"; exit 1; }
+          [ "$GITHUB_REF" = "refs/tags/$GITHUB_REF_NAME" ] || { echo "::error::release ref does not match tag"; exit 1; }
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0

@@ -23,8 +23,9 @@ export function assertProductionContext(env = process.env) {
   if (env.GITHUB_ACTIONS !== "true") {
     throw new Error("production deployment is supported only in GitHub Actions");
   }
-  if (env.GITHUB_EVENT_NAME !== "push") {
-    throw new Error(`production deployment requires the release tag push event, received ${env.GITHUB_EVENT_NAME || "unknown"}`);
+  const eventName = required(env, "GITHUB_EVENT_NAME");
+  if (!["push", "workflow_dispatch"].includes(eventName)) {
+    throw new Error(`production deployment requires a release tag push or exact-tag workflow dispatch event, received ${eventName}`);
   }
   if (env.GITHUB_REPOSITORY !== REPOSITORY) {
     throw new Error(`production deployment requires ${REPOSITORY}, received ${env.GITHUB_REPOSITORY || "unknown"}`);

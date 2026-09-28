@@ -24,7 +24,7 @@ v<package.json version>
 
 The Release and Deploy workflows call the same repository-owned release-identity CLI. It verifies that:
 
-- the workflow was triggered by an exact semantic-version `vX.Y.Z` tag;
+- the workflow is running on an exact semantic-version `vX.Y.Z` tag ref, whether entered by an external tag push or the repository-owned release cutter's exact-tag dispatch;
 - the tag is annotated;
 - the tag version equals `package.json#version`;
 - the tagged commit is the commit checked out and reproduced;
@@ -59,17 +59,19 @@ Evidence is divided by concern:
 
 ```text
 merge to main
-→ CI
-→ set package version
-→ create annotated v* tag
+→ CI validates the exact current main commit
+→ release cutter derives package version and creates the annotated v* tag only if that CI head is still current main and the tag does not exist
+→ cutter verifies the remote annotated tag and dispatches Release at that exact tag ref
 → Release workflow validates that exact tag, runs npm ci, and reproduces it through canonical npm run check
 → GitHub Release is published with generated notes
 → protected production workflow deploys that exact tag
 ```
 
-Release reproduction has one credential-free acceptance owner: after the clean install, the exact tagged checkout must pass canonical `npm run check` before publication. The release workflow does not maintain a separate typecheck/test/build subset. Canonical acceptance also runs deterministic release-workflow cases that guard the semantic-tag trigger, full tag history, release-identity preflight, clean install, canonical check, `gh release create --verify-tag`, and the downstream deploy handoff.
+The release cutter is transport, not a second release authority. It is activated only by successful CI for a push to `main`, checks that the validated CI SHA is still exact current `origin/main`, derives `vX.Y.Z` from `package.json`, refuses to move or recreate an existing tag, creates only an annotated tag on the validated SHA, verifies the remote dereferenced commit, and then dispatches the existing Release workflow at that tag ref. It uses only the repository-scoped `GITHUB_TOKEN`; no PAT or provider credential is introduced. GitHub suppresses recursive workflow starts for ordinary tag pushes made with `GITHUB_TOKEN`, so the explicit exact-tag `workflow_dispatch` handoff is required.
 
-A successful merge, pull request, branch push, or arbitrary `main` commit does not deploy production.
+Release reproduction has one credential-free acceptance owner: after the clean install, the exact tagged checkout must pass canonical `npm run check` before publication. The release workflow does not maintain a separate typecheck/test/build subset. Canonical acceptance also runs deterministic release-cutter and release-workflow cases that guard stale-main rejection, existing-tag no-op behavior, annotated-tag creation, exact-tag dispatch, full tag history, release-identity preflight, clean install, canonical check, `gh release create --verify-tag`, and the downstream deploy handoff.
+
+A successful merge, pull request, branch push, or arbitrary `main` commit does not directly deploy production. A successful current-main CI run can only enter the release path by creating a previously absent annotated tag for the exact package version and dispatching Release on that immutable tag.
 
 ## Production mutation boundary
 
@@ -78,7 +80,7 @@ Production mutation is supported only by the tag-driven GitHub Actions release p
 - `.github/workflows/deploy.yml` is callable only from the Release workflow.
 - The deploy job runs inside the protected `production` GitHub environment.
 - The deployment checkout is the caller's immutable tag ref.
-- The deploy workflow invokes the repository-owned `npm run deploy:production` command inside the protected environment. That command fails closed unless it is running in GitHub Actions for this repository's exact semantic release tag, receives the same expected tag from the Release workflow, has the protected Cloudflare credentials, and passes the shared release-identity CLI again before mutation.
+- The deploy workflow invokes the repository-owned `npm run deploy:production` command inside the protected environment. That command fails closed unless it is running in GitHub Actions for this repository's exact semantic release tag from an authorized tag-push or exact-tag Release dispatch event, receives the same expected tag from the Release workflow, has the protected Cloudflare credentials, and passes the shared release-identity CLI again before mutation.
 - The guarded production command builds with the validated tag, performs the Wrangler production deployment, and verifies the uploaded Version ID is the live deployment serving 100% of traffic. The workflow retains provider protection, secret injection, sequencing, and public `version.json` evidence.
 - After authenticated Version ID verification, public `version.json` must match the same release tag and resolved deployed commit. A Cloudflare managed challenge is the only public-check exception; it is recorded as a warning because authenticated provider verification remains authoritative. Other retrieval failures and identity mismatches fail the deploy workflow.
 - `npm run deploy:dry-run` uses the same repository deploy CLI in explicit non-mutating mode to build and validate the production Wrangler configuration with `--dry-run`; it cannot publish.

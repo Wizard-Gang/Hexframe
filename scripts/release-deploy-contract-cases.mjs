@@ -51,6 +51,7 @@ function validateReleaseDeployContract({ release, deploy, deployCli, versionStam
   requireText(failures, deployCli, "GITHUB_REF_NAME", "guarded deploy must derive the event tag from GitHub Actions");
   requireText(failures, deployCli, "GITHUB_REF", "guarded deploy must bind the exact event ref");
   requireText(failures, deployCli, "EXPECTED_TAG", "guarded deploy must bind the caller release tag");
+  requireText(failures, deployCli, '"workflow_dispatch"', "guarded deploy must recognize the authorized exact-tag dispatch event");
   requireText(failures, deployCli, "verify:release-identity", "guarded deploy must re-run immutable release identity validation");
   requireText(failures, deployCli, "RELEASE: tag", "release build must stamp the validated tag into version.json");
   requireText(failures, deployCli, '["wrangler", "deploy", "--env", "production"]', "guarded deploy must capture the uploaded Cloudflare version");
@@ -81,6 +82,11 @@ test("release publication and handoff drift fail the contract", () => {
 
   const wrongTag = mutate("release", "      tag: ${{ github.ref_name }}", "      tag: v0.0.0");
   assert.match(validateReleaseDeployContract(wrongTag).join("\n"), /exact event tag/);
+});
+
+test("deploy event authorization drift fails the contract", () => {
+  const changed = mutate("deployCli", '"workflow_dispatch"', '"schedule"');
+  assert.match(validateReleaseDeployContract(changed).join("\n"), /authorized exact-tag dispatch event/);
 });
 
 test("protected environment and immutable checkout drift fail the contract", () => {

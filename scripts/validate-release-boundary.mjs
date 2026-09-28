@@ -13,6 +13,8 @@ assert.equal(scripts["verify:release-identity"], "node scripts/release-identity.
 assert.equal(scripts["test:release-workflow"], "node --test scripts/release-workflow-cases.mjs");
 assert.equal(scripts["test:release-identity"], "node --test scripts/release-identity-cases.mjs");
 assert.match(String(scripts.check), /npm run test:release-workflow/, "canonical check must exercise release workflow cases");
+assert.equal(scripts["test:release-cutter"], "node --test scripts/release-cutter-cases.mjs");
+assert.match(String(scripts.check), /npm run test:release-cutter/, "canonical check must exercise release cutter cases");
 assert.match(String(scripts.check), /npm run test:release-identity/, "canonical check must exercise release identity cases");
 assert.match(String(scripts.check), /npm run test:deploy/, "canonical check must exercise guarded deploy cases");
 assert.match(String(scripts.check), /npm run test:release-deploy-contract/, "canonical check must exercise release-to-deploy contract cases");
@@ -56,7 +58,7 @@ assert.doesNotMatch(localSecrets, /ADMIN_|wrangler|secret\s+put|loadRootEnv|CLOU
 
 const release = read(".github/workflows/release.yml");
 assert.match(release, /push:\s*\n\s+tags:\s*\n\s+- "v\[0-9\]\+\.\[0-9\]\+\.\[0-9\]\+"/);
-assert.doesNotMatch(release, /workflow_dispatch:/, "release workflow must not be manually dispatchable");
+assert.match(release, /workflow_dispatch:/, "release workflow must accept exact-tag dispatch from the release cutter");
 assert.match(
   release,
   /npm run verify:release-identity -- --tag "\$GITHUB_REF_NAME" --ref-type "\$GITHUB_REF_TYPE" --fetch-origin/,
@@ -85,6 +87,17 @@ assert.doesNotMatch(release, /docs\/releases|CHANGELOG\.md|--notes-file/, "relea
 assert.match(release, /deploy:\s*\n\s+needs:\s*reproduce/, "production deploy must remain downstream of successful release reproduction");
 assert.match(release, /uses:\s*\.\/\.github\/workflows\/deploy\.yml/);
 assert.match(release, /tag:\s*\$\{\{ github\.ref_name \}\}/);
+
+const cutter = read(".github/workflows/release-cutter.yml");
+assert.match(cutter, /workflow_run:/, "release cutter must follow CI completion");
+assert.match(cutter, /workflows: \["CI"\]/, "release cutter must follow CI only");
+assert.match(cutter, /branches: \[main\]/, "release cutter must be scoped to main");
+assert.doesNotMatch(cutter, /workflow_dispatch:/, "release cutter itself must not be manually dispatchable");
+assert.match(cutter, /contents:\s*write/, "release cutter needs tag write permission");
+assert.match(cutter, /actions:\s*write/, "release cutter needs Release dispatch permission");
+assert.match(cutter, /git tag -a/, "release cutter must create annotated tags");
+assert.match(cutter, /actions\/workflows\/release\.yml\/dispatches/, "release cutter must dispatch the existing Release workflow");
+assert.doesNotMatch(cutter, /CLOUDFLARE|wrangler|environment:\s*production/i, "release cutter must not own production provider mutation");
 
 const deploy = read(".github/workflows/deploy.yml");
 assert.match(deploy, /workflow_call:/);

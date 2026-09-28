@@ -49,7 +49,15 @@ test("dry run builds and invokes only Wrangler dry-run deployment", () => {
   ]);
 });
 
-test("production context rejects local, branch, mismatched-tag, and missing-credential calls", () => {
+test("production context accepts only authorized exact-tag release events", () => {
+  assert.equal(
+    assertProductionContext(productionEnv({ GITHUB_EVENT_NAME: "workflow_dispatch" })),
+    "v0.7.9",
+  );
+  assert.throws(
+    () => assertProductionContext(productionEnv({ GITHUB_EVENT_NAME: "schedule" })),
+    /release tag push or exact-tag workflow dispatch/,
+  );
   assert.throws(
     () => assertProductionContext(productionEnv({ GITHUB_ACTIONS: "" })),
     /only in GitHub Actions/,
