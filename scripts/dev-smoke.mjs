@@ -1,16 +1,17 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync, readlinkSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readlinkSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { ROOT_DIR, ROOT_ENV_PATH } from "./env.mjs";
-import { LOCAL_DEV_VARS_PATH } from "./dev-secrets.mjs";
+import { ROOT_DIR } from "./env.mjs";
 import { isLocalWranglerPortOccupied, observeProcess } from "./dev-lifecycle.mjs";
 
 if (process.platform !== "linux") {
   throw new Error("The controlled real Wrangler smoke currently requires Linux /proc process inspection.");
 }
+const ROOT_ENV_PATH = resolve(ROOT_DIR, ".env");
+const LOCAL_DEV_VARS_PATH = resolve(ROOT_DIR, ".dev.vars");
 if (existsSync(ROOT_ENV_PATH) || existsSync(LOCAL_DEV_VARS_PATH)) {
-  throw new Error("Refusing the smoke test because .env or .dev.vars already exists; existing local credentials will not be overwritten.");
+  throw new Error("Refusing the smoke test because .env or .dev.vars exists; the controlled smoke requires a credential-free checkout.");
 }
 
 function procStatus(pid) {
@@ -67,17 +68,6 @@ async function waitUntil(predicate, timeoutMs, message) {
   throw new Error(message);
 }
 
-const smokeValues = {
-  ADMIN_USERNAME: "test-smoke-admin",
-  ADMIN_PASSWORD: "test-smoke-password-131",
-  ADMIN_SESSION_SECRET: "test-smoke-session-131",
-};
-writeFileSync(
-  ROOT_ENV_PATH,
-  [...Object.entries(smokeValues).map(([key, value]) => `${key}=${value}`), ""].join("\n"),
-  { mode: 0o600 },
-);
-
 let wrapperPid = null;
 let npmChild = null;
 let output = "";
@@ -109,7 +99,7 @@ try {
   await waitUntil(async () => !(await isLocalWranglerPortOccupied()), 10_000, "port 8788 remained occupied after dev wrapper shutdown");
   const leftovers = localProcesses().filter(isWranglerDev);
   assert.deepEqual(leftovers.map((entry) => ({ pid: entry.pid, argv: entry.argv })), [], "owned Wrangler descendants remained after shutdown");
-  console.log("Controlled npm run dev start/SIGINT/stop smoke passed with no owned Wrangler descendant.");
+  console.log("Controlled npm run dev start/SIGINT/stop smoke passed without credential files and with no owned Wrangler descendant.");
 } catch (error) {
   if (wrapperPid && alive(wrapperPid)) {
     const wrapper = procStatus(wrapperPid);
@@ -117,6 +107,6 @@ try {
   }
   throw new Error(`${error instanceof Error ? error.message : String(error)}${output ? `\nRecent dev output:\n${output}` : ""}`);
 } finally {
-  rmSync(ROOT_ENV_PATH, { force: true });
-  rmSync(LOCAL_DEV_VARS_PATH, { force: true });
+  assert.equal(existsSync(ROOT_ENV_PATH), false, "npm run dev must not create .env");
+  assert.equal(existsSync(LOCAL_DEV_VARS_PATH), false, "npm run dev must not create .dev.vars");
 }

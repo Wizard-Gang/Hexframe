@@ -48,18 +48,15 @@ describe("worker response hardening", () => {
     },
   );
 
-  it("preserves the login page's stricter route-specific policy", async () => {
+  it("hardens the generic JSON API 404 boundary", async () => {
     const response = await worker.fetch(
-      new Request("https://hexframe.test/login"),
+      new Request("https://hexframe.test/api/retired"),
       environment(),
     );
 
-    expect(response.status).toBe(503);
-    expect(response.headers.get("content-security-policy")).toContain("default-src 'none'");
-    const policy = response.headers.get("content-security-policy") ?? "";
-    expect(policy).not.toContain("static.cloudflareinsights.com");
-    expect(policy).toContain("style-src 'none'");
-    expect(policy).not.toContain("'unsafe-inline'");
+    expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(response.headers.get("content-security-policy")).toContain("default-src 'self'");
     expect(response.headers.get("x-frame-options")).toBe("DENY");
   });
 });

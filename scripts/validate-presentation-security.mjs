@@ -5,7 +5,7 @@ import { join, relative } from "node:path";
 const root = new URL("..", import.meta.url);
 const rootPath = root.pathname;
 const boundary = "src/client/trusted-markup.ts";
-const sourceRoots = ["src", "index.html", "play/index.html", "codex/index.html"];
+const sourceRoots = ["src", "index.html", "play/index.html"];
 
 function filesAt(path) {
   const full = join(rootPath, path);
@@ -42,7 +42,7 @@ for (const path of candidates) {
 const boundarySource = readFileSync(join(rootPath, boundary), "utf8");
 assert.equal((boundarySource.match(/\.innerHTML\s*=/g) ?? []).length, 1, "trusted markup boundary must own exactly one raw HTML parser sink");
 
-for (const path of ["dist/index.html", "dist/play/index.html", "dist/codex/index.html"]) {
+for (const path of ["dist/index.html", "dist/play/index.html"]) {
   const html = readFileSync(join(rootPath, path), "utf8");
   assert.doesNotMatch(html, /\sstyle\s*=\s*["']/i, `${path} contains inline styles`);
   assert.doesNotMatch(html, /\son[a-z]+\s*=\s*["']/i, `${path} contains inline event handlers`);

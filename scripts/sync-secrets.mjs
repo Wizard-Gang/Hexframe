@@ -1,3 +1,3 @@
 throw new Error(
-  "Local production secret synchronization is disabled. Manage production secrets in the protected GitHub production environment/provider instead.",
+  "Hexframe has no application secrets to synchronize. Production provider credentials remain managed by the protected release/deploy workflow and provider.",
 );

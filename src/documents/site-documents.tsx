@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 
-export type HexframeDocument = "root" | "play" | "codex";
+export type HexframeDocument = "root" | "play";
 
 const FAVICON = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%2308080b%22%2F%3E%3Crect%20x%3D%225%22%20y%3D%2215%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23d9ff43%22%2F%3E%3Crect%20x%3D%2215%22%20y%3D%225%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23a489ff%22%2F%3E%3C%2Fsvg%3E";
 
@@ -48,15 +48,6 @@ function TrainingFallback() {
   </main>;
 }
 
-function CodexFallback() {
-  return <main aria-labelledby="codex-fallback-title">
-    <p>HEXFRAME / MOVE CODEX</p>
-    <h1 id="codex-fallback-title">Authoritative move demonstrations</h1>
-    <p>The move catalog and explanatory document are available here; animated frame demonstrations require JavaScript and an authenticated developer session.</p>
-    <p><a href="/play/">Return to training</a></p>
-  </main>;
-}
-
 function RootDocument() {
   return <html lang="en"><head>
     <meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="color-scheme" content="dark"/>
@@ -74,18 +65,9 @@ function PlayDocument() {
   </head><body><div id="lab" aria-busy="true"><TrainingFallback /></div><script type="module" src="/src/client/lab-main.ts"></script></body></html>;
 }
 
-function CodexDocument() {
-  return <html lang="en"><head>
-    <meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="color-scheme" content="dark"/><meta name="robots" content="noindex, nofollow"/>
-    <title>Hexframe — Move Codex</title><link rel="icon" href={FAVICON}/>
-  </head><body><div id="codex"><CodexFallback /></div><script type="module" src="/src/client/codex-main.ts"></script></body></html>;
-}
-
 export function renderDocument(document: HexframeDocument): string {
   const markup = document === "root"
     ? renderToStaticMarkup(<RootDocument />)
-    : document === "play"
-      ? renderToStaticMarkup(<PlayDocument />)
-      : renderToStaticMarkup(<CodexDocument />);
+    : renderToStaticMarkup(<PlayDocument />);
   return `<!doctype html>${markup}`;
 }

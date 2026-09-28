@@ -6,10 +6,8 @@ const source = readFileSync(new URL("../../src/client/front-app.ts", import.meta
 const frontCss = readFileSync(new URL("../../src/client/styles/front.css", import.meta.url), "utf8");
 const labCss = readFileSync(new URL("../../src/client/styles/lab.css", import.meta.url), "utf8");
 const labMain = readFileSync(new URL("../../src/client/lab-main.ts", import.meta.url), "utf8");
-const loginSource = readFileSync(new URL("../../src/worker/routes/login.ts", import.meta.url), "utf8");
 const rootHtml = renderDocument("root");
 const playHtml = renderDocument("play");
-const codexHtml = renderDocument("codex");
 
 function relativeLuminance(hex: string): number {
   const channels = hex.match(/[\da-f]{2}/gi)?.map((value) => Number.parseInt(value, 16) / 255) ?? [];
@@ -31,7 +29,7 @@ describe("public Hexframe surface", () => {
 
   it("uses the WizardGang mark and favicon across build-time documents", () => {
     expect(rootHtml).toContain('class="wizardgang-mark"'); expect(playHtml).toContain('class="wizardgang-mark"');
-    for (const document of [rootHtml, playHtml, codexHtml, loginSource]) { expect(document).toContain('rel="icon"'); expect(document).toContain("%23d9ff43"); expect(document).toContain("%23a489ff"); }
+    for (const document of [rootHtml, playHtml]) { expect(document).toContain('rel="icon"'); expect(document).toContain("%23d9ff43"); expect(document).toContain("%23a489ff"); }
     expect(frontCss).toContain("background: #d9ff43; box-shadow: .5rem -.5rem 0 #a489ff;");
   });
 
@@ -54,7 +52,4 @@ describe("public Hexframe surface", () => {
     expect(contrastRatio("#758089", "#07090d")).toBeGreaterThanOrEqual(4.5); expect(contrastRatio("#758089", "#0d1115")).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("provides Codex fallback content before its interactive demonstration mounts", () => {
-    expect(codexHtml).toContain("Authoritative move demonstrations"); expect(codexHtml).toContain("animated frame demonstrations require JavaScript");
-  });
 });

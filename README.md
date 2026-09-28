@@ -12,11 +12,10 @@ GitHub auto-merge is available for an individually configured PR. Enabling it fo
 
 ```bash
 npm ci
-cp .env.example .env
 npm run dev
 ```
 
-The root route serves the project overview. `/play/` opens the training setup, and `/lab/` is the authenticated developer entry. On macOS and Linux, the dev wrapper owns the detached Wrangler process group it starts: interrupt/termination cleanup re-observes the child and signals the tree only after checkout ownership is proven. An already occupied port 8788 is reported as foreign/unowned and is never killed. Platforms without safe process-ownership inspection are refused before Wrangler is spawned.
+The root route serves the project overview and `/play/` opens Training directly. Both are public. Local development requires no application credential file. On macOS and Linux, the dev wrapper owns the detached Wrangler process group it starts: interrupt/termination cleanup re-observes the child and signals the tree only after checkout ownership is proven. An already occupied port 8788 is reported as foreign/unowned and is never killed. Platforms without safe process-ownership inspection are refused before Wrangler is spawned.
 
 ## Command and capability map
 
@@ -27,7 +26,7 @@ live provider settings and it does not perform a network dependency-advisory que
 | --- | --- | --- | --- | --- | --- | --- |
 | Clean dependency install | `npm ci` | Exact Node/npm versions and committed lockfile | npm registry network; no provider credentials | Replaces local `node_modules`; only version-approved install scripts may run | No | Yes; standard clean-install preparation |
 | Repository acceptance | `npm run check` | Dependencies already installed | No provider credentials or provider access required | Runs history, bounded tracked-tree and reachable-history secret scanning, patch-integrity fixtures and any explicitly supplied committed range, types, tests, build, and document/content/security/release-boundary checks; build output is local/ignored | No | Yes; canonical credential-free acceptance |
-| Local development | `npm run dev` | Root `.env` with `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` | Local app credentials only; no provider credentials required | Builds locally, writes ignored `.dev.vars` with owner-only permissions, then starts owned local Wrangler on port 8788 and cleans its proven process group on wrapper interrupt/termination | No | Local development, not an acceptance gate |
+| Local development | `npm run dev` | Dependencies installed; no `.env` or `.dev.vars` required | No application credentials or provider access required | Builds locally, starts owned local Wrangler on port 8788, and cleans its proven process group on wrapper interrupt/termination | No | Local development, not an acceptance gate |
 | Dependency advisory | `npm run audit:dependencies` | Committed lockfile; normally run after `npm ci` | npm registry network required; no provider credentials | Runs a read-only `npm audit --json --audit-level=high`; fails on high/critical findings or an unavailable/untrustworthy query | No | Yes; explicit network-backed security gate, separate from `check` |
 | Live GitHub settings verification | `GH_ADMIN_TOKEN=$(gh auth token) npm run verify:github-settings` | Repository Administration read access | GitHub token and network required | Reads live repository settings/rulesets and compares them with `config/github-repository-settings.json` | No | Separate read-only provider verification; not ordinary credential-free validation |
 | Apply GitHub settings contract | `GH_ADMIN_TOKEN=... npm run apply:github-settings` | Repository Administration write access | GitHub token and network required | Mutates GitHub merge settings/rulesets to the committed contract, then re-reads them | No app deploy | No; privileged provider mutation |
@@ -53,7 +52,7 @@ For release identity and rollback rules, see [Release management](docs/RELEASE-M
 - `src/game/` and `src/rollback/` contain sessions, snapshots, and replay contracts.
 - `src/lab/` contains the training interface and simulation tools.
 - `src/client/` contains browser entry points and presentation.
-- `src/worker/` contains routing, developer authentication, and static/API request boundaries.
+- `src/worker/` contains hardened static routing, the `/play` canonical redirect, and the JSON `/api/*` 404 boundary.
 
 ## Documentation
 

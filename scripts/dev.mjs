@@ -1,22 +1,28 @@
+import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { loadRootEnv, requireEnv, run } from "./env.mjs";
+import { ROOT_DIR, run } from "./env.mjs";
 import { runLocalWrangler } from "./dev-lifecycle.mjs";
-import { prepareLocalWrangler } from "./dev-secrets.mjs";
+import { LOCAL_WRANGLER_PORT } from "./dev-process-ownership.mjs";
 
-const REQUIRED_LOCAL_ADMIN_VALUES = ["ADMIN_USERNAME", "ADMIN_PASSWORD", "ADMIN_SESSION_SECRET"];
+export function localWranglerCommand(rootDir = ROOT_DIR) {
+  return {
+    command: process.execPath,
+    args: [
+      resolve(rootDir, "node_modules", "wrangler", "bin", "wrangler.js"),
+      "dev",
+      "--port",
+      LOCAL_WRANGLER_PORT,
+    ],
+  };
+}
 
 export async function runDev(argv = process.argv.slice(2), deps = {}) {
-  const loadValues = deps.loadRootEnv ?? loadRootEnv;
-  const requireValues = deps.requireEnv ?? requireEnv;
   const runCommand = deps.run ?? run;
-  const prepareWrangler = deps.prepareLocalWrangler ?? prepareLocalWrangler;
+  const makeWranglerCommand = deps.localWranglerCommand ?? localWranglerCommand;
   const runWrangler = deps.runLocalWrangler ?? runLocalWrangler;
 
-  const values = loadValues();
-  requireValues(values, REQUIRED_LOCAL_ADMIN_VALUES);
   if (!argv.includes("--skip-build")) runCommand("npm", ["run", "build"]);
-  const commandSpec = prepareWrangler(values);
-  return runWrangler(commandSpec);
+  return runWrangler(makeWranglerCommand());
 }
 
 async function main() {
