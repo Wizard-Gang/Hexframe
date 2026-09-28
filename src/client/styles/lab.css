@@ -189,8 +189,6 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .library-heading { display: flex; justify-content: space-between; align-items: end; margin: 28px 0 10px; padding-top: 20px; border-top: 1px solid var(--line); }
 .library-heading span { color: #727c85; font: 9px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
 
-/* Armory surfaces use compact MMO-style item boxes without nested scrolling. */
-.armory-page { padding: 0; background: radial-gradient(circle at 46% 26%, rgba(90,73,170,.12), transparent 36rem), #0a0e12; }
 [data-build-dirty] { color: var(--gold); }
 .grade-white { --grade: #d9dde1; border-color: #707881; }.grade-green { --grade: #70d58b; border-color: #3f8052; }.grade-blue { --grade: #70a9ff; border-color: #446a9e; }.grade-purple { --grade: #bd8cff; border-color: #7555a0; }.grade-orange { --grade: #ffad55; border-color: #9c6332; }.skill-thresholds { display: flex; gap: 3px; }.skill-thresholds i { display: grid; place-items: center; width: 16px; height: 16px; border: 1px solid #4c555e; border-radius: 50%; color: #69727a; font: normal 7px ui-monospace, monospace; }.skill-thresholds i.active { border-color: var(--acid); background: var(--acid); color: #08100e; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }

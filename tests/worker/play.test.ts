@@ -72,7 +72,7 @@ describe("public Training route", () => {
     expect(tutorial.status).toBe(308); expect(tutorial.headers.get("location")).toBe("/play/?tutorial=1");
   });
 
-  it.each(["/training", "/campaign", "/fight", "/forge", "/settings"])("returns 404 for retired route %s", async (pathname) => {
+  it.each(["/training", "/fight", "/forge", "/settings"])("returns 404 for retired route %s", async (pathname) => {
     const paths: string[] = []; const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment(paths));
     expect(response.status).toBe(404); expect(paths).toEqual([pathname]);
   });

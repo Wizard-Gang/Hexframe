@@ -1,59 +1,71 @@
 # Security model
 
+Hexframe is a public browser Training product. Its security model keeps combat authority in the browser, keeps player preferences on the device, and keeps provider credentials outside the application runtime.
+
 ## Trust boundaries
 
-| Boundary | What crosses it | What is trusted |
+| Boundary | What crosses it | Security treatment |
 | --- | --- | --- |
-| Browser → Worker | Public document, asset and API requests | Nothing. The Worker applies routing and response hardening before serving or rejecting a request. |
-| Browser → device storage | Preferences, tutorial progress and Debug visibility | Device-local state only; it grants no server capability. |
-| Browser → simulation | Inputs | The simulation is client-side and authoritative for combat only. |
+| Browser → Worker | Public document, asset, and API-path requests | Untrusted input; route, method, and response-hardening rules apply |
+| Browser → device storage | Preferences, tutorial progress, Debug visibility | Local convenience state only; grants no server capability |
+| Browser → simulation | Player and dummy inputs | Deterministic client-side combat state |
+| Release workflow → provider | Protected deployment credentials | Available only inside the governed production path |
 
-## Authority
-
-Combat is decided in the browser. This is deliberate and is **not** a trust claim: there is
-no competitive server state to protect, and the Worker holds no opinion about whether an
-attack hit.
-
-The Worker stores no player saves, inventory, equipment, progression, identity, application
-credentials or sessions. Training constructs the Test Fighter from bundled authored content.
-Preferences, tutorial progress and Debug visibility remain only on the device.
-
-## Authentication
-
-Hexframe has no application authentication surface. The overview, Training, Debug tools and
-their built assets are public. Requests under `/api/*` return the same JSON 404 boundary;
-there is no server capability to acquire through a cookie or credential.
-
-## Secrets
-
-- Local development requires no application credential file and `npm run dev` does not
-  read or create `.env` or `.dev.vars`.
-- Production deployment credentials remain in the protected GitHub production environment
-  and provider. They are injected only into the immutable tag-driven deploy workflow.
-- `wrangler.jsonc` deliberately omits the account identifier; the protected deploy
-  environment supplies it when a release is deployed.
-- No provider secret appears in tracked configuration, client code or any built asset.
-- CI retains tracked-tree and reachable-history secret scanning.
+Combat is client-side by design. That is not a competitive-integrity claim; there is no authoritative multiplayer or server combat state in the MVP.
 
 ## Public surface
 
-| Route | Behavior |
-| --- | --- |
-| `/` | Public project overview |
-| `/play` | Permanent redirect to canonical `/play/`, preserving `?tutorial=1` |
-| `/play/` and `/play/assets/*` | Public Training document and built assets |
-| `/api/*` | Generic JSON 404 |
-| Other missing paths | Hardened text 404 from the static routing boundary |
+The two public product routes are `/` and `/play/`.
 
-Every response carries the Worker's transport, framing, capability, content-type,
-referrer and content-security hardening. Asset requests are rebuilt as bare GETs before
-Workers Static Assets receives them, so browser cookies and other request headers are not
-forwarded to the asset server.
+The Worker additionally implements boundary behavior rather than product pages:
 
-## What this model does not claim
+- `/play` redirects permanently to canonical `/play/` and preserves `?tutorial=1`.
+- `/api/*` returns a generic JSON 404.
+- Other missing paths return a hardened text 404.
+- Static asset requests are rebuilt as bare GETs before Workers Static Assets receives them.
 
-- It does not defend against a player modifying their own local simulation. Combat is
-  client-side; there is no competitive integrity claim.
-- Device-local preferences, tutorial progress and Debug visibility are browser storage, not
-  synchronized account data or a backup service.
-- It makes no certification claim.
+The overview, Training, tutorial, and Debug tools are public. The Worker has no application authentication or session capability.
+
+## Runtime data
+
+The Worker stores no player save, inventory, equipment, progression, identity, application credential, or session. Training constructs its fighter content from bundled authored data.
+
+Preferences, tutorial progress, and Debug visibility remain in browser storage. They are not synchronized account data and are not a backup service.
+
+## Response hardening
+
+The Worker applies the repository security headers to routed responses, including:
+
+- Content Security Policy;
+- HSTS;
+- `X-Content-Type-Options: nosniff`;
+- `X-Frame-Options: DENY`;
+- restrictive Permissions Policy;
+- no-referrer policy where the upstream response does not already set one.
+
+Training assets use immutable caching while public documents and boundary responses remain non-cacheable where appropriate.
+
+## Secrets
+
+- Local development needs no application credential file.
+- `npm run dev` does not read or create `.env` or `.dev.vars`.
+- `wrangler.jsonc` omits the Cloudflare account identifier; the protected deployment environment supplies it.
+- Provider credentials remain in protected GitHub/provider state and are injected only into the immutable tag-driven deployment path.
+- No provider credential may appear in tracked source, documentation, tests, or built assets.
+- CI retains tracked-tree and reachable-history secret scanning.
+
+## Repository and release controls
+
+Protected `main` requires the exact-head `verify`, `change-id`, and `secrets` checks, strict current-with-main status, squash-only merges, and zero bypass actors. Protected `v*` tags cannot be updated or deleted.
+
+Production mutation is release-only. The release workflow validates an immutable annotated semantic-version tag, reproduces it through canonical repository acceptance, publishes the GitHub Release, and calls the protected deployment workflow for that same tag.
+
+## Scope of the model
+
+This model does not claim:
+
+- server enforcement against a player changing their own local simulation;
+- cloud synchronization of device-local preferences or tutorial state;
+- certification against an external compliance standard.
+
+Security corrections move forward through controlled changes and immutable later releases rather than rewriting published history.
