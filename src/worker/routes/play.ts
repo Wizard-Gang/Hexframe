@@ -2,7 +2,8 @@
  * Public Training surface.
  *
  * /play/ is a first-class build output. The Worker no longer rewrites the private lab
- * document or its asset paths, and Training has no query-string capability gate.
+ * document or its asset paths. The only public query contract is ?tutorial=1, which starts
+ * the authored Training tutorial; retired capability flags remain canonicalized away.
  */
 import type { Env } from "../env";
 
@@ -22,8 +23,9 @@ export async function handlePlay(request: Request, env: Env, url: URL): Promise<
 
   const isDocument = url.pathname === "/play/";
   const isAsset = url.pathname.startsWith("/play/assets/");
-  if (isDocument && url.search) {
-    return new Response(null, { status: 308, headers: { location: "/play/", "cache-control": "no-store" } });
+  if (isDocument && url.search && url.search !== "?tutorial=1") {
+    const location = url.searchParams.get("tutorial") === "1" ? "/play/?tutorial=1" : "/play/";
+    return new Response(null, { status: 308, headers: { location, "cache-control": "no-store" } });
   }
   if (!isDocument && !isAsset) {
     return new Response(`Not found: ${url.pathname}\n`, {

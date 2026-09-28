@@ -25,7 +25,7 @@ import type { InteractionSelection } from "./inspector";
 import { captureScenario, parseScenario, replayScenario, scenarioJson } from "./scenario/scenario";
 import type { CombatScenario } from "./scenario/scenario";
 import { buildLabView } from "./view";
-import { markTutorialSeen, TutorialController } from "./tutorial";
+import { markTutorialPromptSeen, tutorialPromptSeen, tutorialRequested, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
 import { STAGE_CATALOG } from "../game/session";
 
@@ -165,6 +165,9 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
         lastReport = reports[reports.length - 1];
         processReports(reports);
         tutorial.observe(lastPlayerInput, sim.getState(), reports);
+        if (timeline.pauseOnContact && timeline.paused && reports.some((report) => report.contacts.length > 0)) {
+          tutorial.recordUi("contact-paused");
+        }
         if (tutorial.consumeResetRequest()) resetMatch();
       }
     }
@@ -190,12 +193,16 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "forward-10") stepFrames(10);
     if (action === "reset") resetMatch();
     if (action === "debug") setDebugEnabled(!debugEnabled);
-    if (action === "start-tutorial") startTutorial();
+    if (action === "start-tutorial") startTutorial(tutorial.active);
+    if (action === "start-tutorial-prompt") startTutorial(false);
+    if (action === "dismiss-tutorial-prompt") {
+      markTutorialPromptSeen();
+      syncTutorialPrompt();
+    }
     if (action === "scenario-capture") captureCurrentScenario();
     if (action === "scenario-replay") replayCapturedScenario();
     if (action === "scenario-export") exportCapturedScenario();
     if (action === "reset-preferences" && confirmDestructive("Reset every setting to its default?")) replacePreferences(resetPreferences());
-    if (action === "skip-tutorial-lesson") tutorial.skipLesson();
     if (action === "next-tutorial-lesson") advanceTutorial();
     if (action === "exit-tutorial") exitTutorial();
     if (button.dataset.menuDetailTarget) showMenuDetail(button.dataset.menuDetailTarget as MenuDetail);
@@ -266,6 +273,8 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   document.addEventListener("visibilitychange", visibility);
   motionQuery.addEventListener("change", motionChange);
   syncTutorialUi(tutorial.snapshot());
+  if (tutorialRequested(window.location.search)) startTutorial(false);
+  else syncTutorialPrompt();
   render();
   animationId = requestAnimationFrame(loop);
 
@@ -349,6 +358,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     button.setAttribute("aria-expanded", String(enabled));
     button.setAttribute("aria-pressed", String(enabled));
     button.textContent = "Debug: " + (enabled ? "On" : "Off") + " (`)";
+    if (enabled) recognizeInspectState();
   }
 
   function showMenuDetail(detail: MenuDetail): void {
@@ -533,27 +543,31 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }
   }
 
-  function startTutorial(): void {
-    markTutorialSeen();
+  function startTutorial(restart: boolean): void {
+    markTutorialPromptSeen();
+    syncTutorialPrompt();
     if (menuOpen()) closeMenu();
+    if (restart) tutorial.restart();
+    else tutorial.start();
     resetMatch();
     timeline.paused = false;
-    tutorial.start();
+    recognizeInspectState();
   }
 
   function finishTutorial(): void {
-    stopTutorial(true);
+    stopTutorial();
   }
 
   function exitTutorial(): void {
-    stopTutorial(false);
+    stopTutorial();
   }
 
-  function stopTutorial(completed: boolean): void {
+  function stopTutorial(): void {
     if (menuOpen()) closeMenu();
     tutorial.stop();
     resetMatch();
     timeline.paused = false;
+    syncTutorialPrompt();
     mount.querySelector<HTMLButtonElement>("[data-action='menu']")?.focus();
   }
 
@@ -566,8 +580,20 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     tutorial.nextLesson();
     if (tutorial.consumeResetRequest()) resetMatch();
     timeline.paused = false;
+    recognizeInspectState();
   }
 
+  function recognizeInspectState(): void {
+    const snapshot = tutorial.snapshot();
+    if (snapshot.active && snapshot.lessonId === "inspect" && snapshot.stepIndex === 0 && debugEnabled) {
+      tutorial.recordUi("debug-enabled");
+    }
+  }
+
+  function syncTutorialPrompt(): void {
+    const prompt = mount.querySelector<HTMLElement>("#tutorial-prompt");
+    if (prompt) prompt.hidden = tutorialPromptSeen() || tutorial.active;
+  }
 
   function syncTutorialUi(snapshot: TutorialSnapshot): void {
     latestTutorialSnapshot = snapshot;
@@ -590,7 +616,15 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
         next.textContent = snapshot.lessonIndex === snapshot.lessonCount - 1 ? "Finish tutorial" : "Next lesson";
       }
     }
-
+    const menuTutorial = mount.querySelector<HTMLButtonElement>("[data-action='start-tutorial']");
+    if (menuTutorial) {
+      menuTutorial.textContent = snapshot.active
+        ? "Restart tutorial"
+        : snapshot.completedLessons.length > 0 && !snapshot.tutorialComplete
+          ? "Continue tutorial"
+          : "Start tutorial";
+    }
+    syncTutorialPrompt();
   }
 
   function textIn(root: HTMLElement, selector: string, value: string): void {
@@ -613,10 +647,12 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   }
 
   function stepFrames(count: number): void {
+    const wasPaused = timeline.paused;
     timeline.paused = true;
     const reports = timeline.stepFrames(count);
     lastReport = timeline.lastReport;
     if (reports.length > 0) processReports(reports);
+    if (wasPaused && count === 1) tutorial.recordUi("frame-stepped");
     interactionRenderKey = "";
   }
 

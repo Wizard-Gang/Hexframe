@@ -15,7 +15,7 @@ describe("Training accessibility and Debug contract", () => {
   it("keeps the compact Training bar and seven-item pause menu semantic", () => {
     const html = view();
     for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-control="speed"', 'id="debug-control"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
-    for (const item of ["Resume", "Restart", "Tutorial", "Move list", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
+    for (const item of ["Resume", "Restart", "Start tutorial", "Move list", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
     expect(html).not.toContain('role="tablist"');
   });
 
@@ -47,7 +47,10 @@ describe("Training accessibility and Debug contract", () => {
     const html = view(true);
     expect(html).toContain('id="combat-announcer" role="status" aria-live="polite"');
     expect(html).toContain('id="tutorial-hud" aria-live="polite"');
-    for (const action of ["skip-tutorial-lesson", "next-tutorial-lesson", "exit-tutorial"]) expect(html).toContain(`data-action="${action}"`);
+    expect(html).toContain('id="tutorial-prompt" aria-labelledby="tutorial-prompt-title" hidden');
+    for (const action of ["start-tutorial-prompt", "dismiss-tutorial-prompt", "next-tutorial-lesson", "exit-tutorial"]) expect(html).toContain(`data-action="${action}"`);
+    expect(html).not.toContain('data-action="skip-tutorial-lesson"');
+    expect(html.indexOf('id="tutorial-hud"')).toBeLessThan(html.indexOf('aria-label="Combat arena"'));
     expect(html.match(/data-gamepad-nav/g)?.length ?? 0).toBeGreaterThan(20);
   });
 

@@ -103,7 +103,7 @@ async function route(request: Request, env: Env, url: URL): Promise<Response> {
     return handleLogout(url);
   }
 
-  if (path === "/play") return redirect("/play/");
+  if (path === "/play") return redirect(url.searchParams.get("tutorial") === "1" ? "/play/?tutorial=1" : "/play/");
   if (path.startsWith("/play/")) return handleTraining(request, env, url);
 
   if (path === "/codex" || path.startsWith("/codex/")) return handleCodex(request, env, url);

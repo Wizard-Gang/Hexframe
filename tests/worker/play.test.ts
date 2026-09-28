@@ -26,14 +26,25 @@ describe("public Training route", () => {
     expect(paths).toEqual(["/play/index.html"]); expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
-  it("canonicalizes retired Training query flags away", async () => {
-    for (const search of ["?mode=training", "?debug=1", "?tutorial=1", "?mode=other&debug=1"]) {
+  it("preserves the tutorial entry query while canonicalizing retired flags", async () => {
+    const tutorialPaths: string[] = []; const tutorialUrl = new URL("https://hexframe.test/play/?tutorial=1");
+    const tutorialResponse = await handleTraining(new Request(tutorialUrl), environment(tutorialPaths), tutorialUrl);
+    expect(tutorialResponse.status).toBe(200);
+    expect(tutorialPaths).toEqual(["/play/index.html"]);
+
+    for (const search of ["?mode=training", "?debug=1", "?mode=other&debug=1"]) {
       const paths: string[] = []; const url = new URL(`https://hexframe.test/play/${search}`);
       const response = await handleTraining(new Request(url), environment(paths), url);
       expect(response.status).toBe(308);
       expect(response.headers.get("location")).toBe("/play/");
       expect(paths).toEqual([]);
     }
+
+    const mixedPaths: string[] = []; const mixedUrl = new URL("https://hexframe.test/play/?debug=1&tutorial=1");
+    const mixedResponse = await handleTraining(new Request(mixedUrl), environment(mixedPaths), mixedUrl);
+    expect(mixedResponse.status).toBe(308);
+    expect(mixedResponse.headers.get("location")).toBe("/play/?tutorial=1");
+    expect(mixedPaths).toEqual([]);
   });
 
   it("serves play assets without lab-path rewriting", async () => {
@@ -58,9 +69,11 @@ describe("public Training route", () => {
     expect(response.status).toBe(302); expect(response.headers.get("location")).toContain("/login?next=");
   });
 
-  it("keeps the canonical /play slash redirect and drops retired query flags", async () => {
-    const response = await worker.fetch(new Request("https://hexframe.test/play?debug=1"), environment([]));
-    expect(response.status).toBe(308); expect(response.headers.get("location")).toBe("/play/");
+  it("keeps the canonical /play slash redirect and preserves tutorial entry", async () => {
+    const retired = await worker.fetch(new Request("https://hexframe.test/play?debug=1"), environment([]));
+    expect(retired.status).toBe(308); expect(retired.headers.get("location")).toBe("/play/");
+    const tutorial = await worker.fetch(new Request("https://hexframe.test/play?tutorial=1"), environment([]));
+    expect(tutorial.status).toBe(308); expect(tutorial.headers.get("location")).toBe("/play/?tutorial=1");
   });
 
   it.each(["/training", "/campaign", "/fight", "/forge", "/settings"])("returns 404 for retired route %s", async (pathname) => {

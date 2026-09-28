@@ -328,3 +328,53 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
   .debug-inspection-grid, .settings-content { grid-template-columns: 1fr; }
   .pause-menu-list { grid-template-columns: repeat(4, minmax(120px, 1fr)); }
 }
+
+
+/* HF-158: tutorial guidance stays in document flow, clear of the fighter HUD. */
+.tutorial-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border: 1px solid #53606b;
+  background: #0e1419;
+}
+.tutorial-prompt[hidden], .tutorial-hud[hidden] { display: none; }
+.tutorial-prompt > div { display: flex; align-items: center; gap: 10px; }
+.tutorial-prompt strong { color: var(--acid); font: 800 10px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.tutorial-prompt span { color: #9da7af; font: 10px/1.45 ui-monospace, monospace; }
+.tutorial-prompt button { min-height: 38px; }
+
+.tutorial-hud {
+  position: static;
+  display: grid;
+  grid-template-columns: minmax(150px, .55fr) minmax(240px, 1fr) minmax(240px, 1.2fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid #53606b;
+  background: #0b1116;
+  box-shadow: none;
+}
+.tutorial-hud header { display: grid; gap: 3px; }
+.tutorial-hud header span { color: var(--acid); font: 800 8px ui-monospace, monospace; letter-spacing: .12em; }
+.tutorial-hud header strong { color: #edf0f2; font: 800 13px ui-monospace, monospace; }
+.tutorial-objective { display: grid; gap: 2px; }
+.tutorial-objective small { color: #737d86; font: 800 7px ui-monospace, monospace; letter-spacing: .14em; }
+.tutorial-objective b { color: #f4f6f7; font: 800 10px ui-monospace, monospace; }
+.tutorial-objective em { min-height: 1em; color: var(--acid); font: normal 800 8px ui-monospace, monospace; }
+.tutorial-hud > p { margin: 0; color: #9da7af; font: 10px/1.45 ui-monospace, monospace; }
+.tutorial-hud .tutorial-telegraph { min-width: 92px; }
+.tutorial-hud footer { justify-self: end; flex-wrap: nowrap; }
+.tutorial-hud footer button { min-width: 104px; }
+
+@media (max-width: 900px) {
+  .tutorial-prompt { align-items: stretch; flex-direction: column; }
+  .tutorial-prompt > div { justify-content: space-between; }
+  .tutorial-hud { grid-template-columns: 1fr 1fr; }
+  .tutorial-hud footer { justify-self: stretch; }
+}
