@@ -20,13 +20,22 @@ function swapRequired(source, first, second) {
     .replace("__FIRST__", second);
 }
 
-test("release workflow orders identity, clean reproduction, publication, then deployment", () => {
+test("release workflow orders guarded identity, clean reproduction, publication, then deployment", () => {
   assert.deepEqual(validateReleaseWorkflow(workflow), []);
 });
 
-test("release workflow remains exact semantic-tag driven only", () => {
-  const changed = replaceRequired(workflow, '      - "v[0-9]+.[0-9]+.[0-9]+"', '      - "v*"');
-  assert.match(validateReleaseWorkflow(changed).join("\n"), /target only semantic vX\.Y\.Z tags/);
+test("release workflow keeps exactly semantic-tag push plus exact-tag dispatch entry paths", () => {
+  const broadTag = replaceRequired(workflow, '      - "v[0-9]+.[0-9]+.[0-9]+"', '      - "v*"');
+  assert.match(validateReleaseWorkflow(broadTag).join("\n"), /target only semantic vX\.Y\.Z tags/);
+  const noDispatch = replaceRequired(workflow, "  workflow_dispatch:\n", "");
+  assert.match(validateReleaseWorkflow(noDispatch).join("\n"), /semantic tag push and exact-tag workflow dispatch/);
+});
+
+test("workflow dispatch cannot make a branch ref eligible for release", () => {
+  const withoutTypeGuard = replaceRequired(workflow, '          [ "$GITHUB_REF_TYPE" = "tag" ]', '          [ -n "$GITHUB_REF_TYPE" ]');
+  assert.match(validateReleaseWorkflow(withoutTypeGuard).join("\n"), /require a tag ref/);
+  const withoutRefGuard = replaceRequired(workflow, '          [ "$GITHUB_REF" = "refs/tags/$GITHUB_REF_NAME" ]', '          [ -n "$GITHUB_REF" ]');
+  assert.match(validateReleaseWorkflow(withoutRefGuard).join("\n"), /bind the exact tag ref/);
 });
 
 test("release reproduction keeps full Git and tag history", () => {
@@ -44,7 +53,6 @@ test("publication cannot run before release identity verification", () => {
 test("release reproduction cannot omit clean install or canonical acceptance", () => {
   const withoutInstall = replaceRequired(workflow, "          npm ci\n", "");
   assert.match(validateReleaseWorkflow(withoutInstall).join("\n"), /clean npm ci install/);
-
   const withoutCheck = replaceRequired(workflow, "          npm run check\n", "");
   assert.match(validateReleaseWorkflow(withoutCheck).join("\n"), /canonical npm run check/);
 });

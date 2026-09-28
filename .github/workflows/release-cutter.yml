@@ -1,0 +1,90 @@
+# A successful current-main CI run may cut exactly one immutable annotated release tag.
+name: Release Cutter
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  cut:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    env:
+      VALIDATED_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Validate current main and release candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --force origin main --tags
+          current_main="$(git rev-parse origin/main)"
+          if [ "$current_main" != "$VALIDATED_SHA" ]; then
+            echo "Validated CI head $VALIDATED_SHA is stale; current main is $current_main."
+            echo "cut=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          version="$(node -p "require('./package.json').version")"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::package version $version is not exact semantic X.Y.Z"
+            exit 1
+          fi
+          tag="v$version"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$VALIDATED_SHA" >> "$GITHUB_OUTPUT"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            git fetch --force --no-tags origin "refs/tags/$tag:refs/tags/$tag"
+            if [ "$(git cat-file -t "refs/tags/$tag")" != "tag" ]; then
+              echo "::error::$tag already exists but is not an annotated tag"
+              exit 1
+            fi
+            echo "$tag already exists as an annotated tag; no release mutation will occur."
+            echo "cut=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "cut=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create and verify immutable annotated tag
+        if: steps.candidate.outputs.cut == 'true'
+        shell: bash
+        env:
+          TAG: ${{ steps.candidate.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" "$VALIDATED_SHA" -m "$TAG"
+          git push origin "refs/tags/$TAG"
+
+          remote_object="$(git ls-remote --tags origin "refs/tags/$TAG" | awk '{print $1}')"
+          remote_commit="$(git ls-remote --tags origin "refs/tags/$TAG^{}" | awk '{print $1}')"
+          [ -n "$remote_object" ] || { echo "::error::remote tag object missing"; exit 1; }
+          [ -n "$remote_commit" ] || { echo "::error::$TAG is not an annotated remote tag"; exit 1; }
+          [ "$remote_commit" = "$VALIDATED_SHA" ] || { echo "::error::$TAG resolves to $remote_commit, expected $VALIDATED_SHA"; exit 1; }
+
+      - name: Dispatch Release at exact tag ref
+        if: steps.candidate.outputs.cut == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.candidate.outputs.tag }}
+        run: >-
+          gh api --method POST
+          "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/dispatches"
+          -f ref="$TAG"
