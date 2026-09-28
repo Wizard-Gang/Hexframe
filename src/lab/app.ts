@@ -69,8 +69,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const config: SimConfig = {
     characters: combatCharacters,
     startX: [px(-18), px(18)],
-    teams: [0, 1],
-    friendlyFire: false,
     seed: 0x5eed,
     stage: selectedStage,
   };
@@ -652,9 +650,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       const state = sim.getState();
       state.fighters[0].x = px(-18);
       state.fighters[1].x = px(18);
-      state.stage.arenaLocked = 0;
-      state.stage.bossActive = 0;
-      state.stage.bossActivatedFrame = 0;
     }
     lastPlayerInput = 0;
     lastReport = null;

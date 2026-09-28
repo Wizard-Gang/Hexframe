@@ -51,10 +51,9 @@ export function canStartMove(f: FighterState, c: CharacterDef, m: MoveDef): bool
 /**
  * Put the fighter into a move on its own frame 0.
  *
- * `hitFlags` is the aggregate "this move connected" record used by on-hit cancels.
- * `hitFlagsByTarget` stores the same hitbox ids separately for every possible defender so
- * one area attack may connect once with several fighters without multi-hitting any one of
- * them across active frames. Both belong to the move attempt and clear together.
+ * `hitFlags` records which hitboxes connected with the sole opposing fighter and is also
+ * the aggregate signal used by on-hit cancels. It belongs to the move attempt and clears
+ * when that attempt starts or ends.
  */
 export function startMove(f: FighterState, c: CharacterDef, m: MoveDef): void {
   const cost = staminaCostOf(c, m);
@@ -110,12 +109,9 @@ export function endMove(f: FighterState, m: MoveDef): void {
   );
 }
 
-/** Match-time stamina cost after immutable equipment perks are resolved. */
-export function staminaCostOf(c: CharacterDef, m: MoveDef): number {
-  let cost = m.staminaCost;
-  if (c.perks.venomEdge && m.tags.includes("poison")) cost -= 5;
-  if (c.perks.voidChannel && m.airOk) cost -= 5;
-  return Math.max(0, cost);
+/** Authored stamina cost for this move. */
+export function staminaCostOf(_c: CharacterDef, m: MoveDef): number {
+  return Math.max(0, m.staminaCost);
 }
 
 /** Whether the fighter's current move may be cancelled into `intoMoveId` on this frame. */
@@ -151,5 +147,4 @@ function applyMovementKeys(f: FighterState, m: MoveDef, frame: number): void {
 
 function clearHitFlags(f: FighterState): void {
   f.hitFlags = 0;
-  f.hitFlagsByTarget.fill(0);
 }

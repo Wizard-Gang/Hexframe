@@ -100,18 +100,14 @@ export function isBlocking(
 /**
  * Test every live attack box against every opponent hurtbox, and apply what connects.
  *
- * A hitbox connects at most once with each defender during a move attempt. The aggregate
- * `hitFlags` mask remains the on-hit-cancel signal, while `hitFlagsByTarget[defender]`
- * prevents repeat damage to that defender without stopping the same area hitbox from
- * touching other hostile fighters.
+ * A hitbox connects at most once with the opposing fighter during a move attempt.
+ * `hitFlags` is both the per-hitbox contact gate and the on-hit-cancel signal.
  */
 export function resolveContacts(
   state: SimState,
   chars: readonly CharacterDef[],
   inputs: readonly InputFrame[],
   report: FrameReport,
-  teams?: readonly number[],
-  friendlyFire = false,
 ): void {
   for (let a = 0; a < state.fighters.length; a++) {
     const attacker = state.fighters[a];
@@ -121,7 +117,6 @@ export function resolveContacts(
 
     for (let d = 0; d < state.fighters.length; d++) {
       if (d === a) continue;
-      if (!friendlyFire && (teams?.[a] ?? a) === (teams?.[d] ?? d)) continue;
       const defender = state.fighters[d];
       const defenderChar = chars[d];
 
@@ -131,7 +126,7 @@ export function resolveContacts(
         // bit 0 would make two hitboxes share a "already hit" flag.
         if (spec.id < 0 || spec.id > 30) continue;
         const bit = 1 << spec.id;
-        if ((attacker.hitFlagsByTarget[d] & bit) !== 0) continue;
+        if ((attacker.hitFlags & bit) !== 0) continue;
         if (isInvulnerable(defender, defenderChar, InvulKind.Strike)) continue;
 
         let touched = null;
@@ -148,7 +143,6 @@ export function resolveContacts(
         if (touched === null) continue;
 
         attacker.hitFlags |= bit;
-        attacker.hitFlagsByTarget[d] |= bit;
         const blocked = isBlocking(defender, defenderChar, attacker, inputs[d] ?? 0, spec.level);
         const overlap = intersection(aabb, touched) ?? aabb;
         const where = centerOf(overlap);
@@ -185,15 +179,8 @@ export function resolveContacts(
         } else {
           const move = attackerChar.moves.find((candidate) => candidate.id === attacker.moveId);
           const tags = move?.tags ?? [];
-          if (
-            attackerChar.perks.burningBrand &&
-            tags.includes("cashout") &&
-            defender.burnStacks > 0
-          ) {
-            appliedHitstun += 2;
-          }
-          rawDamage = spec.damage + consumeDebuffBonuses(defender, tags, spec.damage, defenderChar.resistances, a, d, report);
-          dealtDamage = armorMitigatedDamage(rawDamage, defenderChar.armor);
+          rawDamage = spec.damage + consumeDebuffBonuses(defender, tags, spec.damage, a, d, report);
+          dealtDamage = rawDamage;
           defender.health = Math.max(0, defender.health - dealtDamage);
           defender.comboCount++;
           attacker.vx = spec.pushbackHitAttacker * dir;
@@ -210,26 +197,17 @@ export function resolveContacts(
             defender.moveId = NO_MOVE;
             defender.moveFrame = 0;
             defender.hitFlags = 0;
-            defender.hitFlagsByTarget.fill(0);
             defender.armorHits = 0;
             enterState(defender, stunState);
             defender.vx = spec.pushbackHitDefender * dir;
           }
-          applyTaggedDebuffs(
-            defender,
-            tags,
-            defenderChar.resistances,
-            a,
-            d,
-            report,
-            attackerChar.perks.staticConductor ? 4 : 3,
-          );
+          applyTaggedDebuffs(defender, tags, a, d, report);
           if (defender.health === 0) {
             defender.stun = 0;
             defender.vx = 0;
             defender.vy = 0;
             enterState(defender, StateId.Defeat);
-            if (oneTeamRemains(state, teams)) state.roundOver = 1;
+            state.roundOver = 1;
           }
         }
 
@@ -267,22 +245,4 @@ export function resolveContacts(
       }
     }
   }
-}
-
-function oneTeamRemains(state: SimState, teams?: readonly number[]): boolean {
-  const living = new Set<number>();
-  for (let index = 0; index < state.fighters.length; index++) {
-    if (state.fighters[index].health > 0) living.add(teams?.[index] ?? index);
-  }
-  return living.size <= 1;
-}
-
-/**
- * Flat armor is authored as an integer and resolved through one deterministic curve.
- * Four hundred armor halves direct damage; every connecting hit still deals at least 1.
- */
-export function armorMitigatedDamage(damage: number, armor: number): number {
-  if (damage <= 0) return 0;
-  const rating = Math.max(0, Math.trunc(armor));
-  return Math.max(1, Math.trunc((damage * 400) / (400 + rating)));
 }

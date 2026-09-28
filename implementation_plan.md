@@ -14,16 +14,6 @@ Wave rules:
 
 ## Open tasks
 
-### HF-155 — [REFACTOR] Prune campaign-only engine features
-
-- Dependency: HF-153 and HF-154 delivered.
-- Why: The simulation, snapshots and renderer still carry Black Belfry entities, boss-arena state, multi-fighter teams and equipment perks that Training never exercises.
-- Scope: Remove stage entities (breakables, pickups, interactables, hazards), checkpoints, boss arena, gate and reward state and entity events; the Interact input bit and its E / RB bindings; boss telegraph and Black Belfry backdrop rendering; teams, friendly fire and support for more than two fighters; and equipment perks, flat armor mitigation and elemental resistances. Delete `black-belfry.ts` with its last consumers. Bump `SNAPSHOT_VERSION` for the smaller state.
-- Non-goals: Keep movement, dash, jump, guard, perfect guard, guard break, stamina, hitstop, pushback, invulnerability and hyper-armor move windows, statuses, snapshots, rollback and hashing. Do not change the move catalog or inputs (HF-156).
-- Acceptance: A match is exactly two fighters on the Training Grid; determinism, snapshot round-trip and rollback tests pass on the reduced state; no source or test references stage entities, checkpoints, bosses, teams, perks or Interact.
-- Validation: Standard validation plus the simulation, snapshot and rollback suites.
-- Authorities: `src/combat/types.ts`, `src/combat/simulation/simulation.ts`, `src/rollback/snapshots/snapshot.ts`, `src/renderer/svg/`, `docs/ARCHITECTURE.md`.
-
 ### HF-156 — [FEAT] Replace the sixteen-slot action banks with a four-button kit
 
 - Dependency: HF-155 delivered.

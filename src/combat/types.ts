@@ -51,8 +51,6 @@ export const InputBit = {
   Action14: 1 << 17,
   Action15: 1 << 18,
   Action16: 1 << 19,
-  /** Deterministic world interaction: doors, shrines, chests, forges and rewards. */
-  Interact: 1 << 20,
   // Compatibility names for authored 0.1 content and existing replay scripts.
   Light: 1 << 4,
   Medium: 1 << 5,
@@ -69,7 +67,7 @@ export function actionBit(slot: number): number {
 }
 
 /** Every bit the engine defines. Anything outside this mask is dropped on the way in. */
-export const INPUT_MASK = (1 << (ACTION_SLOT_COUNT + 5)) - 1;
+export const INPUT_MASK = (1 << (ACTION_SLOT_COUNT + 4)) - 1;
 
 /** All attack buttons, for "is any attack pressed" tests. */
 export const ATTACK_BUTTONS = ((1 << ACTION_SLOT_COUNT) - 1) << 4;
@@ -192,14 +190,6 @@ export interface CancelWindow {
   onHitOnly: boolean;
 }
 
-export interface TelegraphDef {
-  startFrame: number;
-  endFrame: number;
-  shape: "ground-band" | "vertical-sigil" | "floor-pulse" | "tracking-line";
-  pattern: "diagonal" | "rings" | "runes" | "chain";
-  cue: string;
-}
-
 /** A move: what the game *does*. Its `animation` is only a name the renderer resolves. */
 export interface MoveDef {
   id: number;
@@ -225,8 +215,6 @@ export interface MoveDef {
   armorWindows: ArmorWindow[];
   movement: MovementKey[];
   cancelWindows: CancelWindow[];
-  /** Presentation-only warning metadata; combat resolution never reads it. */
-  telegraph?: TelegraphDef;
 }
 
 /** How a player asks for a move. Motions are facing-relative numpad digits. */
@@ -251,16 +239,10 @@ export interface CommandDef {
 export interface CharacterDef {
   id: string;
   name: string;
-  /** Maximum health before equipment skills are resolved. */
+  /** Maximum health. */
   health: number;
-  /** Maximum stamina. The current combat prototype exposes it to builds before spending it. */
+  /** Maximum stamina. */
   stamina: number;
-  /** Flat armor rating. Direct-hit mitigation derives from this integer. */
-  armor: number;
-  /** Integer elemental/status resistance ratings resolved before the match. */
-  resistances: ElementalResistances;
-  /** Set-bonus behavior resolved from equipment before the deterministic match begins. */
-  perks: CombatPerks;
   walkForwardSpeed: number;
   walkBackwardSpeed: number;
   dashForward: DashProfile;
@@ -281,26 +263,6 @@ export interface CharacterDef {
   hurtboxesAir: Box[];
   moves: MoveDef[];
   commands: CommandDef[];
-}
-
-export interface ElementalResistances {
-  poison: number;
-  fire: number;
-  frost: number;
-  shock: number;
-}
-
-export interface CombatPerks {
-  /** Backdash startup ignores strikes while the Gravecloth set bonus is active. */
-  graveStep: boolean;
-  /** Poison-tagged techniques cost less stamina. */
-  venomEdge: boolean;
-  /** Shock can hold one additional stack. */
-  staticConductor: boolean;
-  /** Air techniques cost less stamina. */
-  voidChannel: boolean;
-  /** Cashouts gain two hitstun frames against a burning target. */
-  burningBrand: boolean;
 }
 
 /** Authored per-frame ground speed and cancel rules for one dash direction. */
@@ -392,87 +354,17 @@ export interface FighterState {
   shockFrames: number;
   bleedStacks: number;
   bleedFrames: number;
-  /**
-   * One hitbox bitmask per possible defender index. The simulation supports at most six
-   * fighters, so this fixed tuple lets an area attack connect once with every target
-   * without turning snapshot layout into a variable nested structure.
-   */
-  hitFlagsByTarget: [number, number, number, number, number, number];
-}
-
-/** A deterministic spawned entity — projectiles from 0.2. Present so rollback covers it. */
-export interface EntityState {
-  id: number;
-  kind: number;
-  /** Entity subtype or owning fighter, depending on kind. */
-  owner: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  hitFlags: number;
-  w: number;
-  h: number;
-  value: number;
-}
-
-export const EntityKind = {
-  Breakable: 0,
-  HealthPickup: 1,
-  StaminaPickup: 2,
-  MaterialPickup: 3,
-  Interactable: 4,
-  Hazard: 5,
-  Projectile: 6,
-} as const;
-
-export const InteractableKind = {
-  ArsenalShrine: 0,
-  Checkpoint: 1,
-  Forge: 2,
-  BossGate: 3,
-  Chest: 4,
-  BossReward: 5,
-} as const;
-
-export interface StageEntityDef {
-  id: number;
-  kind: number;
-  owner: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  value: number;
-  life?: number;
 }
 
 export interface StageDef {
-  id: string;
+  id: "training-grid";
   width: number;
-  spawnX: number;
   cameraBounds: { minX: number; maxX: number };
-  bossArena: { gateX: number; minX: number; maxX: number };
-  checkpoints: number[];
-  interactables: StageEntityDef[];
-  breakables: StageEntityDef[];
-  hazards: StageEntityDef[];
-  backdrop: string;
-  bossReward?: StageEntityDef;
 }
 
 export interface StageState {
   worldMinX: number;
   worldMaxX: number;
-  arenaMinX: number;
-  arenaMaxX: number;
-  arenaLocked: number;
-  bossActive: number;
-  checkpoint: number;
-  rewardSpawned: number;
-  /** Frame the arena gate sealed, keeping boss sequencing rollback-authoritative. */
-  bossActivatedFrame: number;
 }
 
 /** The complete authoritative state of a match on one frame. */
@@ -482,9 +374,8 @@ export interface SimState {
   rng: number;
   /** One entry per configured fighter, in fighter-index order. */
   fighters: FighterState[];
-  entities: EntityState[];
   stage: StageState;
-  /** 1 once only one living team remains. The lab does not stop the clock. */
+  /** 1 once either fighter has been defeated. The lab does not stop the clock. */
   roundOver: number;
   /**
    * The last `COMMAND_HISTORY_FRAMES` input frames per player, as a ring indexed by
@@ -514,7 +405,7 @@ export interface ContactEvent {
   hurtboxId: number;
   kind: ContactKindValue;
   level: HitLevelValue;
-  /** Damage after armor. `rawDamage` is the pre-armor authored/status result. */
+  /** Damage dealt by the authored move and status interactions. */
   damage: number;
   rawDamage: number;
   hitstun: number;
@@ -564,40 +455,21 @@ export interface FrameReport {
   moveStarts: { player: number; moveId: number }[];
   /** A fighter's state changed this frame, for the lab's state log. */
   stateChanges: { player: number; from: StateIdValue; to: StateIdValue }[];
-  entityEvents: EntityEvent[];
 }
 
-export const EntityEventKind = {
-  Broken: 0,
-  PickedUp: 1,
-  Interacted: 2,
-  Damaged: 3,
-  Spawned: 4,
-} as const;
-
-export interface EntityEvent {
-  entityId: number;
-  kind: number;
-  entityKind: number;
-  owner: number;
-  value: number;
-  player: number;
-}
 
 // ---------------------------------------------------------------------------
 // Simulation configuration
 // ---------------------------------------------------------------------------
 
 export interface SimConfig {
-  /** One authored definition per fighter. Two-player rollback may still use exactly two. */
+  /** Exactly two authored fighter definitions: player and Training dummy. */
   characters: readonly CharacterDef[];
-  /** Starting ground origins in sim units. */
+  /** Exactly two starting ground origins in sim units. */
   startX: readonly number[];
-  /** Fighters sharing a team cannot damage one another unless friendly fire is enabled. */
-  teams?: readonly number[];
-  friendlyFire?: boolean;
   /** Seed for the deterministic RNG. */
   seed: number;
+  /** Optional Training Grid presentation/bounds definition. */
   stage?: StageDef;
 }
 

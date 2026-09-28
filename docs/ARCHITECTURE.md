@@ -28,7 +28,7 @@ L1   combat/state/machine · combat/collision/aabb · content/validate
 L2   combat/commands/resolve · combat/movement/physics · content/loader
      input/parser/command-parser · rollback/hashing/fnv · rollback/snapshots/ring
 L3   combat/collision/boxes · content/test-fighter · renderer/animation/animator
-L4   combat/collision/pushbox · combat/hit-resolution/resolve · combat/entities/resolve
+L4   combat/collision/pushbox · combat/hit-resolution/resolve
 L5   combat/simulation/simulation · worker/index
 L6   combat/index · rollback/replay/rollback-session
 L7+  renderer/** · game/** · lab/** · client/**
@@ -36,6 +36,8 @@ L7+  renderer/** · game/** · lab/** · client/**
 
 `src/combat`, `src/rollback`, `src/input` and `src/game` import **nothing** from
 `src/renderer`, `src/lab` or `src/client`. That is checked, not assumed.
+
+Training is the complete game-state surface for the MVP: every simulation contains exactly two fighters on the Training Grid. Campaign entities, teams, equipment-derived combat modifiers, and campaign stage progression are not part of authoritative state.
 
 ## Determinism
 

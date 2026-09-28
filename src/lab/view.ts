@@ -66,7 +66,7 @@ export function buildLabView({ character, preferences, dummyOptions, publicPlay 
 }
 
 function fighterHudMarkup(health: number, stamina: number): string {
-  return `<div class="hud-team hud-team-party"><div class="hud-player hud-party-member"><span>YOU</span><div class="hud-meter-stack"><div class="health-track"><i id="health-p1"></i></div><div class="stamina-track"><i id="stamina-p1"></i></div></div><strong><b id="health-text-p1">${health}</b><small id="stamina-text-p1">${stamina} STA</small></strong></div></div><div class="hud-player hud-player-right"><strong><b id="health-text-p2">${health}</b><small id="stamina-text-p2">${stamina} STA</small></strong><div class="hud-meter-stack"><div class="health-track"><i id="health-p2"></i></div><div class="stamina-track"><i id="stamina-p2"></i></div></div><span>DUMMY</span></div>`;
+  return `<div class="hud-side hud-side-party"><div class="hud-player hud-party-member"><span>YOU</span><div class="hud-meter-stack"><div class="health-track"><i id="health-p1"></i></div><div class="stamina-track"><i id="stamina-p1"></i></div></div><strong><b id="health-text-p1">${health}</b><small id="stamina-text-p1">${stamina} STA</small></strong></div></div><div class="hud-player hud-player-right"><strong><b id="health-text-p2">${health}</b><small id="stamina-text-p2">${stamina} STA</small></strong><div class="hud-meter-stack"><div class="health-track"><i id="health-p2"></i></div><div class="stamina-track"><i id="stamina-p2"></i></div></div><span>DUMMY</span></div>`;
 }
 
 function pauseMenuTabs(developerTools: boolean): string {

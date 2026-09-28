@@ -26,18 +26,14 @@ describe("simulation snapshots", () => {
     const sim = createSim();
     const copy = cloneState(sim.getState());
     copy.fighters[0].x = 99;
-    copy.fighters[0].hitFlagsByTarget[1] = 7;
     copy.inputHistory[0][0] = InputBit.Heavy;
     expect(sim.getState().fighters[0].x).not.toBe(99);
-    expect(sim.getState().fighters[0].hitFlagsByTarget[1]).toBe(0);
     expect(sim.getState().inputHistory[0][0]).toBe(0);
 
     const ring = new SnapshotRing(2);
     ring.save(0, sim.getState());
     const first = ring.load(0)!;
     first.fighters[0].health = 1;
-    first.fighters[0].hitFlagsByTarget[1] = 9;
     expect(ring.load(0)!.fighters[0].health).not.toBe(1);
-    expect(ring.load(0)!.fighters[0].hitFlagsByTarget[1]).toBe(0);
   });
 });

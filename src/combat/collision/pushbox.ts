@@ -49,22 +49,17 @@ function atWall(f: FighterState, c: CharacterDef, minX: number, maxX: number): b
  * pressure mean anything.
  */
 export function resolvePushboxes(state: SimState, chars: readonly CharacterDef[]): void {
-  const fighters = state.fighters;
-  const minX = state.stage.arenaLocked === 1 ? state.stage.arenaMinX : state.stage.worldMinX;
-  const maxX = state.stage.arenaLocked === 1 ? state.stage.arenaMaxX : state.stage.worldMaxX;
-  for (let a = 0; a < fighters.length; a++) {
-    for (let b = a + 1; b < fighters.length; b++) {
-      separatePair(fighters[a], chars[a], a, fighters[b], chars[b], b);
-    }
-  }
+  const a = state.fighters[0];
+  const b = state.fighters[1];
+  const charA = chars[0];
+  const charB = chars[1];
+  const minX = state.stage.worldMinX;
+  const maxX = state.stage.worldMaxX;
 
-  for (let p = 0; p < fighters.length; p++) clampToStage(fighters[p], chars[p], minX, maxX);
-
-  for (let a = 0; a < fighters.length; a++) {
-    for (let b = a + 1; b < fighters.length; b++) {
-      separatePairAtWalls(fighters[a], chars[a], fighters[b], chars[b], minX, maxX);
-    }
-  }
+  separatePair(a, charA, 0, b, charB, 1);
+  clampToStage(a, charA, minX, maxX);
+  clampToStage(b, charB, minX, maxX);
+  separatePairAtWalls(a, charA, b, charB, minX, maxX);
 }
 
 function separatePair(

@@ -25,14 +25,7 @@ export interface StageCatalogEntry {
 const TRAINING_GRID: StageDef = {
   id: "training-grid",
   width: px(960),
-  spawnX: 0,
   cameraBounds: { minX: px(-480), maxX: px(480) },
-  bossArena: { gateX: px(-480), minX: px(-480), maxX: px(480) },
-  checkpoints: [],
-  interactables: [],
-  breakables: [],
-  hazards: [],
-  backdrop: "training-grid",
 };
 
 export const STAGE_CATALOG: Record<StageId, StageCatalogEntry> = {

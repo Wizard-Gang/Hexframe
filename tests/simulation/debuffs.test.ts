@@ -12,10 +12,8 @@ import { InputBit } from "../../src/combat/types";
 import { TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim } from "../helpers/harness";
 
-const NO_RESISTANCE = { poison: 0, fire: 0, frost: 0, shock: 0 } as const;
-
 function report(): FrameReport {
-  return { frame: 0, contacts: [], debuffs: [], moveStarts: [], stateChanges: [], entityEvents: [] };
+  return { frame: 0, contacts: [], debuffs: [], moveStarts: [], stateChanges: [] };
 }
 
 describe("tag-driven debuffs", () => {
@@ -23,8 +21,8 @@ describe("tag-driven debuffs", () => {
     const sim = createSim();
     const target = sim.getState().fighters[1];
     const events = report();
-    applyTaggedDebuffs(target, ["burn"], NO_RESISTANCE, 0, 1, events);
-    for (let stack = 0; stack < 3; stack++) applyTaggedDebuffs(target, ["poison"], NO_RESISTANCE, 0, 1, events);
+    applyTaggedDebuffs(target, ["burn"], 0, 1, events);
+    for (let stack = 0; stack < 3; stack++) applyTaggedDebuffs(target, ["poison"], 0, 1, events);
 
     const health = target.health;
     tickDebuffs(sim.getState(), events);
@@ -38,16 +36,16 @@ describe("tag-driven debuffs", () => {
     const target = sim.getState().fighters[1];
     target.facing = 1;
     const events = report();
-    applyTaggedDebuffs(target, ["freeze"], NO_RESISTANCE, 0, 1, events);
+    applyTaggedDebuffs(target, ["freeze"], 0, 1, events);
     applyGroundMotion(target, TEST_FIGHTER, InputBit.Right);
     expect(target.vx).toBe(Math.trunc((TEST_FIGHTER.walkForwardSpeed * 3) / 4));
 
     target.state = StateId.Idle;
-    applyTaggedDebuffs(target, ["freeze"], NO_RESISTANCE, 0, 1, events);
+    applyTaggedDebuffs(target, ["freeze"], 0, 1, events);
     applyGroundMotion(target, TEST_FIGHTER, InputBit.Right);
     expect(target.vx).toBe(Math.trunc(TEST_FIGHTER.walkForwardSpeed / 2));
 
-    applyTaggedDebuffs(target, ["freeze"], NO_RESISTANCE, 0, 1, events);
+    applyTaggedDebuffs(target, ["freeze"], 0, 1, events);
     expect(isFrozen(target)).toBe(true);
     expect(target.freezeFrames).toBe(24);
   });
@@ -55,42 +53,16 @@ describe("tag-driven debuffs", () => {
   it("consumes shock and bleed setups for explicit finisher bonuses", () => {
     const target = createSim().getState().fighters[1];
     const events = report();
-    applyTaggedDebuffs(target, ["shock"], NO_RESISTANCE, 0, 1, events);
-    applyTaggedDebuffs(target, ["shock"], NO_RESISTANCE, 0, 1, events);
-    expect(consumeDebuffBonuses(target, ["heavy"], 100, NO_RESISTANCE, 0, 1, events)).toBe(16);
+    applyTaggedDebuffs(target, ["shock"], 0, 1, events);
+    applyTaggedDebuffs(target, ["shock"], 0, 1, events);
+    expect(consumeDebuffBonuses(target, ["heavy"], 100, 0, 1, events)).toBe(16);
     expect(target.shockStacks).toBe(0);
 
-    applyTaggedDebuffs(target, ["bleed"], NO_RESISTANCE, 0, 1, events);
-    applyTaggedDebuffs(target, ["bleed"], NO_RESISTANCE, 0, 1, events);
-    expect(consumeDebuffBonuses(target, ["execute"], 70, NO_RESISTANCE, 0, 1, events)).toBe(16);
+    applyTaggedDebuffs(target, ["bleed"], 0, 1, events);
+    applyTaggedDebuffs(target, ["bleed"], 0, 1, events);
+    expect(consumeDebuffBonuses(target, ["execute"], 70, 0, 1, events)).toBe(16);
     expect(target.bleedStacks).toBe(0);
   });
 
-  it("uses elemental resistance to shorten matching status effects", () => {
-    const target = createSim().getState().fighters[1];
-    const events = report();
-    const resistant = { poison: 25, fire: 25, frost: 25, shock: 25 };
-    applyTaggedDebuffs(target, ["burn", "poison", "freeze", "shock"], resistant, 0, 1, events);
-    expect(target.burnFrames).toBe(67);
-    expect(target.poisonFrames).toBe(135);
-    expect(target.freezeFrames).toBe(112);
-    expect(target.shockFrames).toBe(135);
-  });
 
-  it("does not end a team round when damage over time defeats only one teammate", () => {
-    const sim = createSim();
-    const state = sim.getState();
-    state.fighters.push(structuredClone(state.fighters[0]));
-    state.inputHistory.push(new Array(state.inputHistory[0].length).fill(0));
-    const target = state.fighters[0];
-    target.health = 1;
-    target.poisonStacks = 1;
-    target.poisonFrames = 180;
-
-    tickDebuffs(state, report(), [0, 1, 0]);
-
-    expect(target.health).toBe(0);
-    expect(target.state).toBe(StateId.Defeat);
-    expect(state.roundOver).toBe(0);
-  });
 });

@@ -39,7 +39,7 @@ export class DebugPanel {
           <div><dt>timers</dt><dd>stop ${fighter.hitstop} · stun ${fighter.stun}</dd></div>
           <div><dt>health</dt><dd>${fighter.health} / ${character.health}</dd></div>
           <div><dt>stamina</dt><dd>${fighter.stamina} / ${character.stamina} · regen ${fighter.staminaRegenDelay}</dd></div>
-          <div><dt>armor</dt><dd>${fighter.armorHits} hit(s) absorbed</dd></div>
+          <div><dt>hyper armor</dt><dd>${fighter.armorHits} hit(s) absorbed</dd></div>
           <div><dt>status</dt><dd>burn ${fighter.burnStacks} · poison ${fighter.poisonStacks} · freeze ${fighter.freezeStacks} · shock ${fighter.shockStacks} · bleed ${fighter.bleedStacks}</dd></div>
         </dl>
       </article>`;
@@ -59,7 +59,6 @@ export class DebugPanel {
     replaceTrustedMarkup(this.mount, `<div class="debug-summary">
       <span>frame <strong>${state.frame}</strong></span>
       <span>hash <code>${hashToHex(hash)}</code></span>
-      <span>entities <strong>${state.entities.length}</strong></span>
     </div>
     <div class="debug-fighters">${fighterCards.join("")}</div>
     <p class="debug-contact">${contacts}</p>`);
