@@ -2,7 +2,7 @@
 
 Hexframe is organised around one idea: **the simulation is the only authority.** One frame
 of inputs goes in, one frame of authoritative state comes out, and everything else —
-rendering, tooling, the server, the AI — is downstream of that.
+rendering, tooling and the Worker — is downstream of that.
 
 ## Authority model
 
@@ -11,9 +11,11 @@ rendering, tooling, the server, the AI — is downstream of that.
 | What happened in a frame | `src/combat/simulation/simulation.ts` | Reads `FrameReport`; cannot change the outcome |
 | What a fighter looks like | Derived from authoritative state | The renderer draws it; it never decides it |
 | Whether an attack hit | The browser simulation | The Worker has no opinion and never has |
-| Preferences and tutorial progress | Browser device storage | The Worker holds no player record |
+| Preferences, tutorial progress and Debug visibility | Browser device storage | The Worker holds no player record |
 
-The Worker is a router. It authenticates private developer surfaces and routes requests; it holds no combat logic and no player persistence.
+The Worker is a small public router. It serves hardened static assets, canonicalizes
+`/play` to `/play/`, and returns a JSON 404 for `/api/*`. It holds no combat logic,
+player persistence, application credentials or sessions.
 
 ## Module layers
 
@@ -24,7 +26,7 @@ and it is why every commit in this repository builds on its own.
 L0   combat/types · combat/constants · content/raw-types · worker/env
 L1   combat/state/machine · combat/collision/aabb · content/validate
      input/buffer/{history,input-buffer} · input/parser/numpad
-     rollback/snapshots/snapshot · worker/auth/session
+     rollback/snapshots/snapshot
 L2   combat/commands/resolve · combat/movement/physics · content/loader
      input/parser/command-parser · rollback/hashing/fnv · rollback/snapshots/ring
 L3   combat/collision/boxes · content/test-fighter · renderer/animation/animator
@@ -37,7 +39,9 @@ L7+  renderer/** · game/** · lab/** · client/**
 `src/combat`, `src/rollback`, `src/input` and `src/game` import **nothing** from
 `src/renderer`, `src/lab` or `src/client`. That is checked, not assumed.
 
-Training is the complete game-state surface for the MVP: every simulation contains exactly two fighters on the Training Grid. Campaign entities, teams, equipment-derived combat modifiers, and campaign stage progression are not part of authoritative state.
+Training is the complete game-state surface for the MVP: every simulation contains exactly
+two fighters on the Training Grid. The fixed four-button kit, public Debug tools, dummy,
+tutorial and replay tools all operate on that same deterministic browser simulation.
 
 ## Determinism
 
@@ -63,22 +67,38 @@ contain no `Math.random`, `Date.now`, `performance.now` or `crypto.getRandomValu
 
 ## Document and interactive-client boundary
 
-Hexframe has two presentation modes with deliberately different responsibilities:
+The root overview and public Training document are HTML documents rendered from React 19 TSX
+during the Vite build. Their useful headings, navigation, explanatory copy and fallback
+content exist in the built HTML before browser JavaScript runs.
 
-- The root overview, public direct Training document, and authenticated Move Codex document are HTML documents rendered from React 19 TSX during the Vite build. Their useful headings, navigation, explanatory copy, and fallback content exist in the built HTML before browser JavaScript runs.
-- Combat, simulation, training controls, animation, developer inspection, and interactive Codex demonstrations are a browser client application. Those capabilities intentionally require JavaScript because they execute and inspect the deterministic game runtime rather than decorate an otherwise complete document.
+Combat, simulation, Training controls, animation and inspection tools are a browser client
+application. Those capabilities intentionally require JavaScript because they execute and
+inspect the deterministic game runtime rather than decorate an otherwise complete document.
 
-React is the document-presentation authority, not the combat authority. The build-time document components do not own game state, hit resolution, input parsing, persistence, or routing. They are rendered with `react-dom/server` and are not hydrated merely to satisfy a React architecture.
+React is the document-presentation authority, not the combat authority. Build-time document
+components do not own game state, hit resolution, input parsing, persistence or routing.
+They are rendered with `react-dom/server` and are not hydrated merely to satisfy a React
+architecture.
 
-The Worker remains the routing and developer-authentication boundary. Workers Static Assets serves the Vite output. Training constructs the Test Fighter from the authored default loadout with no equipment, while preferences and tutorial progress remain device-local. Authoritative combat remains in the browser simulation exactly as described above; moving document rendering to React does not move simulation authority into React or the Worker.
+Workers Static Assets serves the Vite output through the Worker so the same hardened response
+headers apply to documents, assets and 404s. Training constructs the Test Fighter from
+bundled authored content, while preferences, tutorial progress and Debug visibility remain
+device-local. Authoritative combat remains in the browser simulation.
 
-This client-application boundary is Hexframe's explicit WG-ARCH-001 exception to the normal expectation that a product document remain fully operable without JavaScript: the documents remain useful without JavaScript, while the game itself necessarily requires the browser client.
+This client-application boundary is Hexframe's explicit WG-ARCH-001 exception to the normal
+expectation that a product document remain fully operable without JavaScript: the documents
+remain useful without JavaScript, while the game itself necessarily requires the browser
+client.
 
-Imperative interactive views that emit internal HTML strings may cross exactly one audited raw-markup parser boundary: `src/client/trusted-markup.ts`. That boundary rejects script elements, style elements, inline style attributes, inline event handlers, and JavaScript URLs before parsing. Direct HTML parser sinks elsewhere in application source are prohibited by `npm run validate:presentation-security`.
+Imperative interactive views that emit internal HTML strings may cross exactly one audited
+raw-markup parser boundary: `src/client/trusted-markup.ts`. That boundary rejects script
+elements, style elements, inline style attributes, inline event handlers and JavaScript URLs
+before parsing. Direct HTML parser sinks elsewhere in application source are prohibited by
+`npm run validate:presentation-security`.
 
 ## What is deliberately not here
 
-- **No server authority over combat.** Networked play, when it arrives, relays inputs.
-- **No floats below `src/combat`.** Two machines disagreeing in the last bit disagree about
-  whether an attack hit.
+- **No server authority over combat.** The Worker cannot alter a hit or a frame.
+- **No application authentication or session state.** The current product is public.
+- **No floats below `src/combat`.** Two machines disagreeing in the last bit disagree about whether an attack hit.
 - **No ambient randomness anywhere the simulation can see it.**

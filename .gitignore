@@ -4,8 +4,8 @@ dist/
 *.tsbuildinfo
 .DS_Store
 
-# Credentials. None of these may ever be committed: the repository-root .env is the
-# local source of truth. `.dev.vars` is the owner-only local Wrangler secret handoff.
+# Credential-shaped local files remain ignored even though Hexframe local development
+# requires neither `.env` nor `.dev.vars`. Provider credentials stay outside the checkout.
 .env
 .env.*
 !.env.example

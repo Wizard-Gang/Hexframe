@@ -41,7 +41,7 @@ assert.match(localDeploy, /verify:release-identity/, "production deploy must reu
 assert.match(localDeploy, /"wrangler", "deploy"/, "production deploy mechanics must live in the repository CLI");
 assert.match(localDeploy, /"deployments", "list"/, "authenticated live-version verification must live in the repository CLI");
 assert.match(localDeploy, /"--dry-run"/, "dry run should validate production configuration");
-assert.doesNotMatch(localDeploy, /sync-secrets|ADMIN_PASSWORD|ADMIN_SESSION_SECRET/);
+assert.doesNotMatch(localDeploy, /sync-secrets|ADMIN_/);
 
 const releaseIdentity = read("scripts/release-identity.mjs");
 assert.doesNotMatch(
@@ -51,7 +51,8 @@ assert.doesNotMatch(
 );
 
 const localSecrets = read("scripts/sync-secrets.mjs");
-assert.doesNotMatch(localSecrets, /wrangler|secret\s+put|loadRootEnv|CLOUDFLARE/i, "local secret helper must not mutate provider state");
+assert.match(localSecrets, /no application secrets to synchronize/i, "retired application secrets must not retain a local sync path");
+assert.doesNotMatch(localSecrets, /ADMIN_|wrangler|secret\s+put|loadRootEnv|CLOUDFLARE/i, "local secret helper must not contain retired bindings or mutate provider state");
 
 const release = read(".github/workflows/release.yml");
 assert.match(release, /push:\s*\n\s+tags:\s*\n\s+- "v\[0-9\]\+\.\[0-9\]\+\.\[0-9\]\+"/);

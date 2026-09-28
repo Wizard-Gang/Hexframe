@@ -14,20 +14,8 @@ Wave rules:
 
 ## Open tasks
 
-### HF-159 — [SEC] Retire the private developer surface
-
-- Dependency: HF-157 delivered; the debug tools are public in Training and the move list is in the game.
-- Why: With Debug public and the Codex replaced, the sign-in stack guards only a username echo and a desync log.
-- Scope: Delete `/login`, `/logout`, `/lab`, `/codex`, `/api/lab/*`, the Training debug-flag gate, the session and credential modules, the `ADMIN_*` bindings, the standalone Codex bundle, document and styles, and the move-demonstration code. Reduce the Vite inputs to the overview and Training. Make `npm run dev` start without `.env` or `.dev.vars` while keeping its process-ownership and cleanup guarantees, and update the CI dev smoke, `.env.example`, the `sync-secrets.mjs` stub and its release-boundary assertion. Update README, `SECURITY.md`, the security model and architecture for a public static game behind hardened headers.
-- Non-goals: Do not change provider secrets, remove the tracked-secret scans, or weaken release and deployment controls.
-- Acceptance: The Worker serves only hardened static assets, the `/play` slash redirect and a JSON 404 for `/api/*`; route tests cover each remaining route and a 404 for each retired one; `npm run dev` and the CI dev smoke pass with no credentials file; secret scanning and release-boundary validation still pass.
-- Risk: High. Removes authentication. The production `ADMIN_*` secrets become unused but are not deleted here.
-- Validation: Standard validation plus the CI dev smoke and a local `npm run dev` start and stop.
-- Authorities: `src/worker/`, `scripts/dev.mjs`, `scripts/dev-smoke.mjs`, `scripts/validate-release-boundary.mjs`, `vite.config.ts`, `SECURITY.md`, `docs/SECURITY-MODEL.md`.
-
 ### HF-160 — [DOCS] Consolidate documentation for the MVP
 
-- Dependency: HF-159 delivered.
 - Why: After the reset, the documentation should describe one small product without leftover history or duplication.
 - Scope: Fold `docs/LICENSING.md` into the README and update the documentation validator. Rewrite README, `docs/ARCHITECTURE.md` and `docs/SECURITY-MODEL.md` around the two public routes, the four-button kit, the Debug toggle and the reduced Worker. Trim the README command map to commands that still exist. Remove stale comments in `wrangler.jsonc` and the Worker sources, and sweep the remaining styles, copy and tests for removed features.
 - Non-goals: Do not change `AGENTS.md`, `CONTRIBUTING.md`, the change-management or release-management rules, or the required checks.

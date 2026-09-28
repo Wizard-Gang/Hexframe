@@ -163,27 +163,27 @@ test("spawned but unproven ownership never reaches a signal operation", async ()
   assert.equal(signaled, false);
 });
 
-test("npm start path keeps skip-build behavior while dev still builds", async () => {
-  const values = {
-    ADMIN_USERNAME: "test-u",
-    ADMIN_PASSWORD: "test-p",
-    ADMIN_SESSION_SECRET: "test-s",
-  };
+test("npm start keeps skip-build behavior while dev remains credential-free", async () => {
   const builds = [];
+  const commandSpecs = [];
   const shared = {
-    loadRootEnv: () => values,
-    requireEnv: () => {},
     run: (command, args) => builds.push([command, args]),
-    prepareLocalWrangler: () => ({ command: "node", args: ["wrangler.js"] }),
-    runLocalWrangler: async () => ({ exitCode: 0 }),
+    localWranglerCommand: () => ({ command: "node", args: ["wrangler.js", "dev", "--port", "8788"] }),
+    runLocalWrangler: async (spec) => {
+      commandSpecs.push(spec);
+      return { exitCode: 0 };
+    },
   };
 
   await runDev([], shared);
   assert.deepEqual(builds, [["npm", ["run", "build"]]]);
+  assert.deepEqual(commandSpecs, [{ command: "node", args: ["wrangler.js", "dev", "--port", "8788"] }]);
 
   builds.length = 0;
+  commandSpecs.length = 0;
   await runDev(["--skip-build"], shared);
   assert.deepEqual(builds, []);
+  assert.deepEqual(commandSpecs, [{ command: "node", args: ["wrangler.js", "dev", "--port", "8788"] }]);
 });
 
 function processAlive(pid) {

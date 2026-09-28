@@ -64,10 +64,6 @@ describe("public Training route", () => {
     expect(response.status).toBe(200); expect(paths).toEqual(["/index.html"]); expect(await response.text()).toContain("Open training");
   });
 
-  it.each(["/codex/", "/codex/moves/3/"])("routes the protected Codex surface at %s through operator sign in", async (pathname) => {
-    const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment([]));
-    expect(response.status).toBe(302); expect(response.headers.get("location")).toContain("/login?next=");
-  });
 
   it("keeps the canonical /play slash redirect and preserves tutorial entry", async () => {
     const retired = await worker.fetch(new Request("https://hexframe.test/play?debug=1"), environment([]));

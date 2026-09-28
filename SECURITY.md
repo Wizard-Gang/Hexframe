@@ -29,11 +29,12 @@ documentation, or in any built asset. This includes API tokens, Cloudflare or Gi
 tokens, passwords, private keys, SSH material, certificates, account identifiers, private
 infrastructure hostnames, and private administrative URLs.
 
-Local credentials live in an untracked repository-root `.env`, templated by `.env.example`
-with empty values. `npm run dev` copies only the required local admin bindings into the ignored
-`.dev.vars` file with owner-only permissions before Wrangler starts; secret values must not be
-placed in process arguments or logs. Production values are held as platform secrets and are
-readable only by the server runtime — never by the browser and never by a built asset.
+Local development has no application credential file. `npm run dev` does not read or create
+`.env` or `.dev.vars`; it builds the public application and starts the owned local Worker
+directly. Production deployment credentials remain only in the protected GitHub production
+environment/provider and are injected by the immutable tag-driven deployment workflow. The
+Worker runtime has no application username, password, signing secret, or session binding.
+No provider credential is ever sent to the browser or built into an asset.
 
 `npm run check` includes a bounded scan of tracked files and reachable Git history.
 It reports credential patterns by path and object ID without printing values. The
