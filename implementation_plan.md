@@ -14,16 +14,6 @@ Wave rules:
 
 ## Open tasks
 
-### HF-156 — [FEAT] Replace the sixteen-slot action banks with a four-button kit
-
-- Dependency: HF-155 delivered.
-- Why: Sixteen modifier-banked slots over a 29-move catalog are the main source of control and UI complexity; the MVP needs one readable set of attacks.
-- Scope: Reduce the action slots to four: the arrow keys and Y / X / B / A each fire one fixed kit move, with no Shift, Ctrl/⌘ or trigger banks and no loadout. Stop capturing modified arrow keys. Delete the other catalog moves with their animations and particle profiles, keeping `standing_light` and `crouching_light` only as schema-validated engine fixtures. Author the kit's on-hit cancels so Ember Palm → Ashen Sweep → Phoenix Drive works. Remove the poison, shock and bleed statuses; burn and freeze remain. Point the dummy's counterattack and reversal modes at the kit. Delete the action-bank, loadout, route-grammar and move-filter helpers and `docs/TEST_FIGHTER.md`. Adapt the existing tutorial and control legend to the four buttons, dropping the modifier lesson, so both stay usable until HF-157 and HF-158.
-- Non-goals: Do not redesign the training screen (HF-157) or the tutorial lessons (HF-158).
-- Acceptance: Each kit move starts from keyboard and gamepad without modifiers; a headless test lands the three-hit route; no source or test references action banks, loadouts, removed moves or removed statuses.
-- Validation: Standard validation plus the input, command, content, move-effect and animation suites and a browser check with keyboard and gamepad.
-- Authorities: `src/combat/types.ts`, `src/content/test-fighter.ts`, `src/content/additional-moves.ts`, `src/input/`, `src/lab/dummy/dummy.ts`, `schemas/`.
-
 ### HF-157 — [FEAT] Rebuild Training around an on-screen Debug toggle
 
 - Dependency: HF-156 delivered.

@@ -29,11 +29,9 @@ export const PLAYER_AIR_GUARD: PlayerArmPose = {
   arm_lower_r: { rotation: 26 },
 };
 
-const AIR_MOVES = new Set(["astral_jab", "witch_knee", "meteor_heel", "void_dive"]);
-
 /** Give every authored move a readable transition from and back to its neutral stance. */
 export function normalizeMovePresentation(animation: RawAnimation): RawAnimation {
-  const guard = AIR_MOVES.has(animation.name) ? PLAYER_AIR_GUARD : animation.name === "crouching_light" ? PLAYER_CROUCH_GUARD : PLAYER_STANDING_GUARD;
+  const guard = animation.name === "crouching_light" ? PLAYER_CROUCH_GUARD : PLAYER_STANDING_GUARD;
   return withBoundaryGuard(animation, guard);
 }
 

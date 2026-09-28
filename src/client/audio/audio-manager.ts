@@ -1,6 +1,6 @@
 import type { LabPreferences } from "../../lab/preferences";
 
-export type AudioCue = "navigate" | "confirm" | "hit" | "block" | "burn" | "poison" | "freeze" | "shock" | "bleed";
+export type AudioCue = "navigate" | "confirm" | "hit" | "block" | "burn" | "freeze";
 
 export const AUDIO_CAPTIONS: Record<AudioCue, string> = {
   navigate: "Menu focus moves",
@@ -8,10 +8,7 @@ export const AUDIO_CAPTIONS: Record<AudioCue, string> = {
   hit: "Heavy impact",
   block: "Attack blocked",
   burn: "Burn applied",
-  poison: "Poison applied",
   freeze: "Freeze builds",
-  shock: "Shock primed",
-  bleed: "Bleed applied",
 };
 
 const NOTES = [110, 146.83, 164.81, 220, 246.94, 293.66];
@@ -138,10 +135,7 @@ function cueShape(cue: AudioCue): [number, number, number] {
   if (cue === "hit") return [170, 75, 0.16];
   if (cue === "block") return [145, 55, 0.15];
   if (cue === "burn") return [260, 620, 0.18];
-  if (cue === "poison") return [220, 150, 0.2];
-  if (cue === "freeze") return [740, 920, 0.16];
-  if (cue === "shock") return [880, 430, 0.11];
-  return [310, 110, 0.2];
+  return [740, 920, 0.16];
 }
 
 export const gameAudio = new AudioManager();

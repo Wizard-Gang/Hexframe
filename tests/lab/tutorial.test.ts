@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import { InputBit, StateId } from "../../src/combat/types";
-import { TutorialController } from "../../src/lab/tutorial";
+import { TUTORIAL_LESSONS, TutorialController } from "../../src/lab/tutorial";
 import { createSim } from "../helpers/harness";
 
 describe("interactive tutorial objectives", () => {
+  it("uses the fixed-kit lesson flow without a modifier lesson", () => {
+    expect(TUTORIAL_LESSONS.map((lesson) => lesson.id)).toEqual([
+      "movement", "defense", "directions", "first-route", "status", "codex",
+    ]);
+  });
+
   it("advances movement only from authoritative fighter states", () => {
     const snapshots: ReturnType<TutorialController["snapshot"]>[] = [];
     const tutorial = new TutorialController((snapshot) => snapshots.push(snapshot));

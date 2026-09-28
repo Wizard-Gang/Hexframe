@@ -61,9 +61,9 @@ describe("HF-154 save retirement", () => {
     expect(wrangler).toContain('"deleted_classes": ["PlayerSaveObject"]');
   });
 
-  it("keeps Training on the default authored loadout and device-local preferences/tutorial progress", () => {
+  it("keeps Training on the fixed authored kit and device-local preferences/tutorial progress", () => {
     const app = readFileSync(join(root, "src/lab/app.ts"), "utf8");
-    expect(app).toContain("testFighterWithLoadout(DEFAULT_MOVE_LOADOUT)");
+    expect(app).toContain("createTestFighter()");
     expect(app).not.toMatch(/loadPlayerSave|buildStateFromPlayerSave|testFighterWithBuild/);
 
     const preferences = readFileSync(join(root, "src/lab/preferences.ts"), "utf8");

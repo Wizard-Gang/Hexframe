@@ -59,18 +59,6 @@ const BUTTON_BITS: Record<RawButton, number> = {
   action2: actionBit(1),
   action3: actionBit(2),
   action4: actionBit(3),
-  action5: actionBit(4),
-  action6: actionBit(5),
-  action7: actionBit(6),
-  action8: actionBit(7),
-  action9: actionBit(8),
-  action10: actionBit(9),
-  action11: actionBit(10),
-  action12: actionBit(11),
-  action13: actionBit(12),
-  action14: actionBit(13),
-  action15: actionBit(14),
-  action16: actionBit(15),
 };
 
 /**

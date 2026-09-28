@@ -14,22 +14,16 @@ export type TutorialLessonId =
   | "movement"
   | "defense"
   | "directions"
-  | "modifiers"
   | "first-route"
   | "status"
-  | "arsenal"
   | "codex";
 
 export type TutorialUiEvent =
-  | "arsenal-opened"
-  | "move-replaced"
-  | "returned-to-combat"
-  | "replacement-used"
   | "codex-opened"
   | "demo-played"
   | "demo-mode-changed"
   | "demo-scrubbed"
-  | "route-inspected";
+  | "frame-inspected";
 
 interface TutorialStep {
   objective: string;
@@ -92,19 +86,9 @@ export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
     hint: "The arrow-key diamond mirrors Y / X / B / A.",
     steps: [
       { objective: "Press ↑ / Y for the Fire starter", success: "Ember Palm started" },
-      { objective: "Press ← / X for the Poison starter", success: "Venom Fang started" },
+      { objective: "Press ← / X for Ashen Sweep", success: "Ashen Sweep started" },
       { objective: "Press → / B for the Freeze starter", success: "Frost Heel started" },
-      { objective: "Press ↓ / A for the Shock starter", success: "Storm Knuckle started" },
-    ],
-  },
-  {
-    id: "modifiers",
-    title: "Modifier banks",
-    hint: "Stay on one direction. The modifier advances that route.",
-    steps: [
-      { objective: "Press ↑ / Y — Starter", success: "Starter ready" },
-      { objective: "Press LT + ↑ / Shift + ↑ — Link", success: "Link ready" },
-      { objective: "Press RT + ↑ / Ctrl/⌘ + ↑ — Cashout", success: "Cashout ready" },
+      { objective: "Press ↓ / A for Phoenix Drive", success: "Phoenix Drive started" },
     ],
   },
   {
@@ -127,17 +111,6 @@ export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
     ],
   },
   {
-    id: "arsenal",
-    title: "Arsenal",
-    hint: "Follow the lesson steps in order.",
-    steps: [
-      { objective: "Open Arsenal", success: "Arsenal opened" },
-      { objective: "Replace one technique", success: "Technique replaced" },
-      { objective: "Return to combat", success: "Build applied" },
-      { objective: "Use the replacement", success: "Replacement tested" },
-    ],
-  },
-  {
     id: "codex",
     title: "Codex",
     hint: "The demonstration is a deterministic mini-match using the same engine.",
@@ -146,13 +119,12 @@ export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
       { objective: "Play the demonstration", success: "Demonstration played" },
       { objective: "Switch Hit / Block", success: "Scenario changed" },
       { objective: "Scrub one frame", success: "Frame inspected" },
-      { objective: "Inspect or equip its route", success: "Codex complete" },
+      { objective: "Inspect its authored frame data", success: "Codex complete" },
     ],
   },
 ];
 
-const DIRECTION_MOVES = [MoveId.EmberPalm, MoveId.VenomFang, MoveId.FrostHeel, MoveId.StormKnuckle];
-const MODIFIER_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.PhoenixDrive];
+const DIRECTION_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.FrostHeel, MoveId.PhoenixDrive];
 const ROUTE_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.PhoenixDrive];
 const DEFENSE_LEVELS = [HitLevel.Mid, HitLevel.Low, HitLevel.Overhead];
 
@@ -172,7 +144,7 @@ export class TutorialController {
 
   constructor(
     onChange: (snapshot: TutorialSnapshot) => void,
-    defenseActions: readonly [number, number, number] = [actionBit(0), actionBit(4), actionBit(2)],
+    defenseActions: readonly [number, number, number] = [actionBit(0), actionBit(1), actionBit(2)],
   ) {
     this.onChange = onChange;
     this.defenseActions = defenseActions;
@@ -225,7 +197,6 @@ export class TutorialController {
 
     if (lesson.id === "movement") success = movementSuccess(this.stepIndex, input, state);
     if (lesson.id === "directions") success = moveStarted(reports, DIRECTION_MOVES[this.stepIndex]);
-    if (lesson.id === "modifiers") success = moveStarted(reports, MODIFIER_MOVES[this.stepIndex]);
     if (lesson.id === "first-route") {
       success = moveConnected(reports, ROUTE_MOVES[this.stepIndex]);
       if (this.stepIndex > 0) {
@@ -252,9 +223,6 @@ export class TutorialController {
         this.resetRequested = true;
       }
     }
-    if (lesson.id === "arsenal" && this.stepIndex === 3) {
-      success = reports.some((report) => report.moveStarts.some((event) => event.player === 0));
-    }
     if (success) this.completeStep();
   }
 
@@ -262,8 +230,7 @@ export class TutorialController {
     if (!this.active || this.lessonComplete) return;
     const lesson = TUTORIAL_LESSONS[this.lessonIndex];
     const expected: Partial<Record<TutorialLessonId, readonly TutorialUiEvent[]>> = {
-      arsenal: ["arsenal-opened", "move-replaced", "returned-to-combat"],
-      codex: ["codex-opened", "demo-played", "demo-mode-changed", "demo-scrubbed", "route-inspected"],
+      codex: ["codex-opened", "demo-played", "demo-mode-changed", "demo-scrubbed", "frame-inspected"],
     };
     if (expected[lesson.id]?.[this.stepIndex] === event) this.completeStep();
   }

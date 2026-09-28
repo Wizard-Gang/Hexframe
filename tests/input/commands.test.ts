@@ -4,28 +4,29 @@ import { MoveId } from "../../src/content/test-fighter";
 import { createSim, runFrames } from "../helpers/harness";
 
 describe("command parsing", () => {
-  const basics = [MoveId.StandingLight, MoveId.CrouchingLight, ...Array.from({ length: 14 }, () => MoveId.StandingLight)];
-
-  it("starts the standing normal from a light press", () => {
-    const sim = createSim(undefined, basics);
-    const reports = runFrames(sim, 1, (_frame, player) =>
-      player === 0 ? InputBit.Light : 0,
-    );
-    expect(reports[0].moveStarts).toEqual([{ player: 0, moveId: MoveId.StandingLight }]);
+  it("starts each fixed kit move from one independent action bit", () => {
+    const cases = [
+      [InputBit.Action1, MoveId.EmberPalm],
+      [InputBit.Action2, MoveId.AshenSweep],
+      [InputBit.Action3, MoveId.FrostHeel],
+      [InputBit.Action4, MoveId.PhoenixDrive],
+    ] as const;
+    for (const [input, moveId] of cases) {
+      const reports = runFrames(createSim(), 1, (_frame, player) => player === 0 ? input : 0);
+      expect(reports[0].moveStarts).toEqual([{ player: 0, moveId }]);
+    }
   });
 
-  it("selects the higher-priority crouching normal while down is held", () => {
-    const sim = createSim(undefined, basics);
-    const reports = runFrames(sim, 1, (_frame, player) =>
-      player === 0 ? InputBit.Down | InputBit.Action2 : 0,
+  it("keeps schema fixture normals outside the playable command set", () => {
+    const reports = runFrames(createSim(), 1, (_frame, player) =>
+      player === 0 ? InputBit.Down | InputBit.Action1 : 0,
     );
-    expect(reports[0].moveStarts).toEqual([{ player: 0, moveId: MoveId.CrouchingLight }]);
+    expect(reports[0].moveStarts).toEqual([{ player: 0, moveId: MoveId.EmberPalm }]);
   });
 
   it("does not turn one held button into repeated moves", () => {
-    const sim = createSim(undefined, basics);
-    const reports = runFrames(sim, 40, (_frame, player) =>
-      player === 0 ? InputBit.Light : 0,
+    const reports = runFrames(createSim(), 40, (_frame, player) =>
+      player === 0 ? InputBit.Action1 : 0,
     );
     expect(reports.flatMap((report) => report.moveStarts)).toHaveLength(1);
   });

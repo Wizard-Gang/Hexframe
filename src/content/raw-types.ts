@@ -33,7 +33,7 @@ export type RawButton =
   | "medium"
   | "heavy"
   | "throw"
-  | `action${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16}`;
+  | `action${1 | 2 | 3 | 4}`;
 
 /** What a fighter cannot be touched by. Maps onto `InvulKind` in the loader. */
 export type RawInvulKind = "full" | "strike" | "throw";

@@ -1,24 +1,15 @@
 import { toPixels } from "../combat/constants";
 import type { CharacterDef, MoveDef } from "../combat/types";
 import { HitLevel, InvulKind } from "../combat/types";
-import { ACTION_SLOT_LABELS } from "../input/action-layout";
 import { STATUS_RULES } from "../content/status-rules";
 import { deriveMoveFrameData, movePhase } from "./inspector";
 
-export const ACTION_BANKS = [
-  { name: "Neutral", role: "Normals / neutral", input: "Base" },
-  { name: "Setup", role: "Mobility / setup", input: "LT" },
-  { name: "Power", role: "Power / specials", input: "RT" },
-  { name: "Finale", role: "Finishers / utility", input: "LT+RT" },
-] as const;
-
-export const MOVE_ROLES = ["starter", "link", "cashout", "reversal"] as const;
-export const MOVE_FAMILIES = ["fire", "poison", "freeze", "shock", "bleed", "void"] as const;
-
+export const MOVE_ROLES = ["starter", "link", "cashout"] as const;
+export const MOVE_FAMILIES = ["fire", "freeze"] as const;
 export type MoveRole = (typeof MOVE_ROLES)[number];
 export type MoveFamily = (typeof MOVE_FAMILIES)[number];
 
-const ROLE_RANK: Record<MoveRole, number> = { starter: 0, link: 1, cashout: 2, reversal: 3 };
+const KIT_INPUTS = ["↑ / Y", "← / X", "→ / B", "↓ / A"] as const;
 
 export function moveName(move: MoveDef): string {
   return move.key.replaceAll("_", " ");
@@ -51,91 +42,9 @@ export function moveLevel(move: MoveDef): "low" | "overhead" | "mid" {
   return "mid";
 }
 
-export function actionSlotLabel(slot: number): string {
-  const label = ACTION_SLOT_LABELS[slot];
-  const bank = ACTION_BANKS[Math.trunc(slot / 4)];
-  if (!label || !bank) return `Slot ${slot + 1}`;
-  return `${bank.name} / ${label.gamepad}`;
-}
-
-export function actionSlotInput(slot: number): string {
-  const label = ACTION_SLOT_LABELS[slot];
-  return label ? `${label.gamepad} · ${label.keyboard}` : `Slot ${slot + 1}`;
-}
-
-export function equippedSlots(loadout: readonly number[], moveId: number): number[] {
-  const slots: number[] = [];
-  loadout.forEach((equippedMoveId, slot) => {
-    if (equippedMoveId === moveId) slots.push(slot);
-  });
-  return slots;
-}
-
-export function equippedSummary(loadout: readonly number[], moveId: number): string {
-  const slots = equippedSlots(loadout, moveId);
-  if (slots.length === 0) return "NOT EQUIPPED";
-  return `EQUIPPED × ${slots.length} · ${slots.map(actionSlotLabel).join(" · ")}`;
-}
-
-/** Follows the authored cancel graph around one move instead of maintaining a second route table. */
-export function routeForMove(move: MoveDef, character: CharacterDef): MoveDef[] {
-  const byId = new Map(character.moves.map((candidate) => [candidate.id, candidate]));
-  const incoming = (target: MoveDef): MoveDef[] => character.moves.filter((candidate) =>
-    candidate.cancelWindows.some((window) => window.into.includes(target.id)),
-  );
-  const outgoing = (source: MoveDef): MoveDef[] => [...new Set(source.cancelWindows.flatMap((window) => window.into))]
-    .map((id) => byId.get(id))
-    .filter((candidate): candidate is MoveDef => candidate !== undefined);
-  const familyScore = (candidate: MoveDef, reference: MoveDef): number =>
-    moveFamilies(candidate).filter((family) => moveFamilies(reference).includes(family)).length;
-  const chooseIncoming = (target: MoveDef): MoveDef | undefined => incoming(target)
-    .sort((a, b) => {
-      const lowerA = ROLE_RANK[moveRole(a)] < ROLE_RANK[moveRole(target)] ? 1 : 0;
-      const lowerB = ROLE_RANK[moveRole(b)] < ROLE_RANK[moveRole(target)] ? 1 : 0;
-      return lowerB - lowerA || familyScore(b, target) - familyScore(a, target) || b.id - a.id;
-    })[0];
-  const chooseOutgoing = (source: MoveDef, seen: ReadonlySet<number>): MoveDef | undefined => outgoing(source)
-    .filter((candidate) => !seen.has(candidate.id))
-    .sort((a, b) => {
-      const advanceA = ROLE_RANK[moveRole(a)] > ROLE_RANK[moveRole(source)] ? 1 : 0;
-      const advanceB = ROLE_RANK[moveRole(b)] > ROLE_RANK[moveRole(source)] ? 1 : 0;
-      return advanceB - advanceA || familyScore(b, source) - familyScore(a, source) || a.id - b.id;
-    })[0];
-
-  const before: MoveDef[] = [];
-  let cursor = move;
-  while (before.length < 2 && moveRole(cursor) !== "starter") {
-    const previous = chooseIncoming(cursor);
-    if (!previous || previous.id === move.id || before.some((candidate) => candidate.id === previous.id)) break;
-    before.unshift(previous);
-    cursor = previous;
-  }
-
-  const route = [...before, move];
-  const seen = new Set(route.map((candidate) => candidate.id));
-  cursor = move;
-  while (route.length < 4) {
-    const next = chooseOutgoing(cursor, seen);
-    if (!next) break;
-    route.push(next);
-    seen.add(next.id);
-    cursor = next;
-  }
-  return route;
-}
-
-export function routeTopologyMarkup(move: MoveDef, character: CharacterDef, loadout: readonly number[]): string {
-  const route = routeForMove(move, character);
-  const routeIds = route.slice(0, 3).map((candidate) => candidate.id).join(",");
-  return `<section class="route-topology" aria-label="Authored route containing ${escapeHtml(moveName(move))}">
-    <header><span>AUTHORED ROUTE</span><em>${route.every((candidate) => equippedSlots(loadout, candidate.id).length > 0) ? "COMPLETE" : "INCOMPLETE"}</em></header>
-    <div>${route.map((candidate, index) => {
-      const slots = equippedSlots(loadout, candidate.id);
-      const active = candidate.id === move.id;
-      return `${index === 0 ? "" : '<i aria-hidden="true">↓</i>'}<article class="${active ? "selected" : ""}"><b>${escapeHtml(moveName(candidate))}</b><span>${slots.length > 0 ? `✓ ${slots.map(actionSlotLabel).join(" · ")}` : "✕ NOT EQUIPPED"}</span></article>`;
-    }).join("")}</div>
-    ${route.length >= 2 ? `<footer class="equip-route"><button type="button" data-gamepad-nav data-equip-route="${routeIds}">Equip route</button><div data-equip-route-chooser hidden><span>CHOOSE DIRECTION</span>${["↑ / Y", "← / X", "→ / B", "↓ / A"].map((label, column) => `<button type="button" data-gamepad-nav data-equip-route-column="${column}" data-route-moves="${routeIds}">${label}</button>`).join("")}</div></footer>` : ""}
-  </section>`;
+function fixedInput(move: MoveDef, character: CharacterDef): string {
+  const slot = character.commands.findIndex((command) => command.moveId === move.id);
+  return KIT_INPUTS[slot] ?? "Engine fixture";
 }
 
 export function describeMoveFrame(move: MoveDef, frame: number, character?: CharacterDef): string {
@@ -158,7 +67,7 @@ export function describeMoveFrame(move: MoveDef, frame: number, character?: Char
   return lines.join("\n");
 }
 
-export function codexMoveDetailMarkup(move: MoveDef, character: CharacterDef, loadout: readonly number[]): string {
+export function codexMoveDetailMarkup(move: MoveDef, character: CharacterDef): string {
   const hitbox = primaryHitbox(move);
   const frameData = deriveMoveFrameData(move);
   const role = moveRole(move);
@@ -172,12 +81,11 @@ export function codexMoveDetailMarkup(move: MoveDef, character: CharacterDef, lo
   const launch = hitbox && hitbox.launchVelocityY > 0 ? `${toPixels(hitbox.launchVelocityY)} upward` : "None";
   const armor = move.armorWindows.length > 0 ? move.armorWindows.map((window) => `${window.hits} hit · F${window.startFrame + 1}–${window.endFrame + 1}`).join(" · ") : "None";
   const invul = move.invulWindows.length > 0 ? move.invulWindows.map((window) => `${invulName(window.kind)} · F${window.startFrame + 1}–${window.endFrame + 1}`).join(" · ") : "None";
-  const route = routeForMove(move, character);
 
-  return `<header class="codex-detail-heading"><div><p>${role.toUpperCase()} · ${(families.length > 0 ? families : ["PHYSICAL"]).join(" · ").toUpperCase()}</p><h2>${escapeHtml(moveName(move))}</h2><span>${escapeHtml(move.description)}</span></div><strong data-equipped-move="${move.id}">${equippedSummary(loadout, move.id)}</strong></header>
+  return `<header class="codex-detail-heading"><div><p>${role.toUpperCase()} · ${(families.length > 0 ? families : ["PHYSICAL"]).join(" · ").toUpperCase()}</p><h2>${escapeHtml(moveName(move))}</h2><span>${escapeHtml(move.description)}</span></div><strong>${escapeHtml(fixedInput(move, character))}</strong></header>
     <div class="codex-detail-groups">
       ${detailGroup("IDENTITY", [
-        ["Input / bank", equippedSlots(loadout, move.id).map((slot) => `${actionSlotLabel(slot)} (${actionSlotInput(slot)})`).join(" · ") || "Not equipped"],
+        ["Input", fixedInput(move, character)],
         ["Ground / air", move.airOk ? "Air" : move.requiresCrouch ? "Ground · crouching" : "Ground"],
         ["Attack level", moveLevel(move)],
         ["Stamina", String(move.staminaCost)],
@@ -193,15 +101,11 @@ export function codexMoveDetailMarkup(move: MoveDef, character: CharacterDef, lo
         ["Pushback", hitbox ? `${signed(toPixels(hitbox.pushbackHitAttacker))} / ${signed(toPixels(hitbox.pushbackHitDefender))}` : "None"],
         ["Launch", launch], ["Status", statuses.map((rule) => `${rule.name}: ${rule.primer}`).join(" · ") || "None"],
       ])}
-      ${detailGroup("ROUTE", [
-        ["Role", role], ["Family", families.join(" · ") || "Universal"],
+      ${detailGroup("CANCELS", [
         ["Cancels into", cancelIds.map((id) => moveName(character.moves.find((candidate) => candidate.id === id) ?? move)).join(" · ") || "None"],
         ["Cancels from", cancelsFrom.map(moveName).join(" · ") || "None"],
-        ["Recommended", route.map(moveName).join(" → ")],
-        ["Equipped", equippedSummary(loadout, move.id)],
       ])}
-    </div>
-    ${routeTopologyMarkup(move, character, loadout)}`;
+    </div>`;
 }
 
 function detailGroup(title: string, rows: readonly (readonly [string, string])[]): string {

@@ -17,7 +17,7 @@ describe("Training session routing", () => {
     expect(readGameSession(new URL("https://hexframe.test/play/"))).toBeNull();
     expect(readGameSession(new URL("https://hexframe.test/play/?mode=other"))).toBeNull();
 
-    const restored = readGameSession(new URL("https://hexframe.test/play/?mode=training&stage=elsewhere&encounter=other&loadout=old"));
+    const restored = readGameSession(new URL("https://hexframe.test/play/?mode=training&stage=elsewhere&encounter=other"));
     expect(restored).toEqual(defaultSession());
   });
 
