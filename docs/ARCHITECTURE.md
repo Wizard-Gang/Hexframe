@@ -65,7 +65,7 @@ contain no `Math.random`, `Date.now`, `performance.now` or `crypto.getRandomValu
 
 Hexframe has two presentation modes with deliberately different responsibilities:
 
-- The root overview, public Training entry document, and authenticated Move Codex document are HTML documents rendered from React 19 TSX during the Vite build. Their useful headings, navigation, explanatory copy, and fallback content exist in the built HTML before browser JavaScript runs.
+- The root overview, public direct Training document, and authenticated Move Codex document are HTML documents rendered from React 19 TSX during the Vite build. Their useful headings, navigation, explanatory copy, and fallback content exist in the built HTML before browser JavaScript runs.
 - Combat, simulation, training controls, animation, developer inspection, and interactive Codex demonstrations are a browser client application. Those capabilities intentionally require JavaScript because they execute and inspect the deterministic game runtime rather than decorate an otherwise complete document.
 
 React is the document-presentation authority, not the combat authority. The build-time document components do not own game state, hit resolution, input parsing, persistence, or routing. They are rendered with `react-dom/server` and are not hydrated merely to satisfy a React architecture.

@@ -5,17 +5,12 @@ export type ColorVisionMode = "default" | "deuteranopia" | "protanopia" | "trita
 export interface LabPreferences {
   audio: {
     master: number;
-    music: number;
     sfx: number;
     ui: number;
-    ambience: number;
     captions: boolean;
-    mono: boolean;
     muteUnfocused: boolean;
-    dynamicRange: "night" | "balanced" | "wide";
   };
   video: {
-    quality: "performance" | "balanced" | "cinematic";
     particles: "off" | "reduced" | "full";
     cameraShake: number;
     combatFlashes: "off" | "reduced" | "full";
@@ -37,16 +32,14 @@ export interface LabPreferences {
     glyphs: "auto" | "keyboard" | "xbox";
     stickDeadzone: number;
     vibration: number;
-    menuWrap: boolean;
-    holdToConfirm: boolean;
   };
 }
 
 export const DEFAULT_PREFERENCES: LabPreferences = {
-  audio: { master: 0.8, music: 0, sfx: 0.85, ui: 0.7, ambience: 0.35, captions: true, mono: false, muteUnfocused: true, dynamicRange: "balanced" },
-  video: { quality: "cinematic", particles: "full", cameraShake: 0.35, combatFlashes: "reduced", damageNumbers: true, hudOpacity: 0.92 },
+  audio: { master: 0.8, sfx: 0.85, ui: 0.7, captions: true, muteUnfocused: true },
+  video: { particles: "full", cameraShake: 0.35, combatFlashes: "reduced", damageNumbers: true, hudOpacity: 0.92 },
   accessibility: { theme: "system", contrast: "normal", motion: "system", textScale: 1, colorVision: "default", statusPatterns: true, dyslexiaFont: false, strongFocus: true, screenReaderCombat: false },
-  controls: { glyphs: "auto", stickDeadzone: 0.45, vibration: 0.7, menuWrap: true, holdToConfirm: false },
+  controls: { glyphs: "auto", stickDeadzone: 0.45, vibration: 0.7 },
 };
 
 const STORAGE_KEY = "hexframe.preferences.v1";
@@ -92,7 +85,6 @@ export function applyPreferences(preferences: LabPreferences): void {
   root.dataset.particles = video.particles;
   root.dataset.damageNumbers = video.damageNumbers ? "on" : "off";
   root.dataset.cameraShake = video.cameraShake <= 0 ? "off" : video.cameraShake < 0.5 ? "reduced" : "full";
-  root.dataset.quality = video.quality;
   root.dataset.glyphs = preferences.controls.glyphs;
   root.style.setProperty("--font-scale", String(clamp(accessibility.textScale, 0.9, 1.6)));
   root.style.setProperty("--hud-opacity", String(clamp(video.hudOpacity, 0.45, 1)));

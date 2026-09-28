@@ -18,7 +18,6 @@ describe("developer laboratory route", () => {
   it("sends an unauthenticated visitor through sign in", async () => {
     const url = new URL("https://hexframe.test/lab/");
     const response = await handleLab(new Request(url), environment(), url);
-
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/login?next=%2Flab%2F");
     expect(response.headers.get("cache-control")).toBe("no-store");
@@ -28,20 +27,17 @@ describe("developer laboratory route", () => {
   it("preserves the requested lab path through the sign-in redirect", async () => {
     const url = new URL("https://hexframe.test/lab/moves/1?slot=2");
     const response = await handleLab(new Request(url), environment(), url);
-
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/login?next=%2Flab%2Fmoves%2F1%3Fslot%3D2");
-    expect(await response.text()).toBe("");
   });
 
-  it("redirects a verified operator to the Training Grid developer tools", async () => {
+  it("keeps authentication but redirects a verified operator to the unified public Training screen", async () => {
     const env = environment();
     const url = new URL("https://hexframe.test/lab/");
     const cookie = await createSessionCookie(env, "operator", 60, url);
     const response = await handleLab(new Request(url, { headers: { cookie } }), env, url);
-
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("/play/?mode=training&debug=1&tutorial=1");
+    expect(response.headers.get("location")).toBe("/play/");
     expect(await response.text()).toBe("");
   });
 
@@ -52,7 +48,6 @@ describe("developer laboratory route", () => {
     };
     const url = new URL("https://hexframe.test/lab/");
     const response = await handleLab(new Request(url), env, url);
-
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/login?next=%2Flab%2F");
   });

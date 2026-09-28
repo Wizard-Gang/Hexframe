@@ -1,68 +1,67 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-
 import { createTestFighter } from "../../src/content/test-fighter";
 import { DEFAULT_PREFERENCES } from "../../src/lab/preferences";
 import { buildLabView } from "../../src/lab/view";
 
-function view(publicPlay = true, developerTools = false): string {
-  return buildLabView({
-    character: createTestFighter(),
-    preferences: DEFAULT_PREFERENCES,
-    dummyOptions: [[0, "Stand"]],
-    publicPlay,
-    developerTools,
-  });
+const appSource = readFileSync(new URL("../../src/lab/app.ts", import.meta.url), "utf8");
+const preferencesSource = readFileSync(new URL("../../src/lab/preferences.ts", import.meta.url), "utf8");
+
+function view(debugEnabled = false): string {
+  return buildLabView({ character: createTestFighter(), preferences: DEFAULT_PREFERENCES, dummyOptions: [[0, "Stand"]], debugEnabled });
 }
 
-describe("lab accessibility contract", () => {
-  it("keeps ordinary Training controls, frame tools, settings and live regions semantic", () => {
+describe("Training accessibility and Debug contract", () => {
+  it("keeps the compact Training bar and seven-item pause menu semantic", () => {
     const html = view();
-    expect(html).toContain('class="lab-shell public-play"');
-    expect(html).toContain("Hit. Pause. Inspect.");
-    expect(html).toContain('role="dialog" aria-modal="true"');
-    expect(html.match(/role="tablist"/g)).toHaveLength(2);
-    expect(html).toContain('id="page-training"');
-    expect(html).toContain('id="page-settings"');
-    expect(html).toContain('id="combat-announcer" role="status" aria-live="polite"');
-    expect(html).toContain('aria-label="Frame transport controls"');
-    expect(html).toContain('id="frame-inspector"');
-    expect(html).toContain('id="move-timeline-console"');
-    expect(html).toContain('id="interaction-history"');
-    expect(html).toContain('data-action="scenario-capture"');
-    expect(html).toContain("Pause on contact");
+    for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-control="speed"', 'id="debug-control"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
+    for (const item of ["Resume", "Restart", "Tutorial", "Move list", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
+    expect(html).not.toContain('role="tablist"');
   });
 
-  it("shows the fixed four-button legend without modifier controls", () => {
+  it("exposes the complete Debug suite publicly behind one remembered toggle", () => {
+    const hidden = view(false); const visible = view(true);
+    expect(hidden).toContain('id="debug-tools" aria-label="Debug tools" hidden');
+    expect(visible).toContain('id="debug-tools" aria-label="Debug tools" >');
+    for (const surface of ["hitboxes", "hurtboxes", "pushboxes", "origins", "skeleton"]) expect(visible).toContain(`data-debug="${surface}"`);
+    for (const marker of ['id="frame-readout"', 'data-action="back-10"', 'data-action="back"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="frame-inspector"', 'id="move-timeline-console"', 'id="interaction-history"', 'class="save-states"', 'data-action="scenario-capture"', 'data-action="scenario-replay"', 'data-action="scenario-export"', 'data-control="scenario-import"']) expect(visible).toContain(marker);
+    expect(appSource).toContain('const DEBUG_STORAGE_KEY = "hexframe.debug.v1"');
+    expect(appSource).toContain('event.code === "Backquote"');
+    const toggleBody = appSource.match(/function setDebugEnabled[\s\S]*?\n  }/)?.[0] ?? "";
+    expect(toggleBody).not.toContain("timeline.paused");
+  });
+
+  it("shows the fixed four-button move list with authoritative frame data", () => {
+    const html = view(); const fighter = createTestFighter(); const inputs = ["↑ / Y", "← / X", "→ / B", "↓ / A"];
+    fighter.commands.forEach((command, index) => {
+      const move = fighter.moves.find((candidate) => candidate.id === command.moveId);
+      expect(move).toBeDefined();
+      expect(html).toContain(`data-move-id="${command.moveId}"`);
+      expect(html).toContain(`<strong>${inputs[index]}</strong>`);
+      expect(html).toContain(`<td>${move?.startup}</td><td>${move?.active}</td><td>${move?.recovery}</td>`);
+      expect(html).toContain(`<td>${move?.hitboxes[0]?.damage}</td>`);
+    });
+  });
+
+  it("keeps live regions, tutorial controls, and gamepad navigation hooks", () => {
+    const html = view(true);
+    expect(html).toContain('id="combat-announcer" role="status" aria-live="polite"');
+    expect(html).toContain('id="tutorial-hud" aria-live="polite"');
+    for (const action of ["skip-tutorial-lesson", "next-tutorial-lesson", "exit-tutorial"]) expect(html).toContain(`data-action="${action}"`);
+    expect(html.match(/data-gamepad-nav/g)?.length ?? 0).toBeGreaterThan(20);
+  });
+
+  it("retains only settings that still have Training behavior", () => {
+    const html = view();
+    for (const retired of ["Mono audio", "Music", "Ambience", "Dynamic range", "Visual quality", "Menu wrap", "Crafting confirmation"]) expect(html).not.toContain(retired);
+    for (const retiredKey of ["music", "ambience", "mono", "dynamicRange", "quality", "menuWrap", "holdToConfirm"]) expect(preferencesSource).not.toMatch(new RegExp(`\\b${retiredKey}\\s*:`));
+  });
+
+  it("shows the unchanged fixed four-button legend", () => {
     const html = view();
     expect(html).toContain("<b>↑ / Y</b> Ember Palm");
     expect(html).toContain("<b>← / X</b> Ashen Sweep");
     expect(html).toContain("<b>→ / B</b> Frost Heel");
     expect(html).toContain("<b>↓ / A</b> Phoenix Drive");
-    expect(html).not.toContain("<b>SETUP</b>");
-    expect(html).not.toContain("<b>POWER</b>");
-    expect(html).not.toContain("<b>FINALE</b>");
-  });
-
-  it("keeps developer tools inline without exposing the developer tab publicly", () => {
-    const publicHtml = view();
-    expect(publicHtml).not.toContain('data-menu-tab="debug"');
-    expect(publicHtml).not.toContain('class="frame-console"');
-    expect(publicHtml).not.toContain('action="/logout"');
-
-    const developerHtml = view(false, true);
-    expect(developerHtml).toContain("Combat operating system.");
-    expect(developerHtml).toContain('class="frame-console"');
-    expect(developerHtml).toContain('class="geometry-controls"');
-    expect(developerHtml).toContain('data-menu-tab="debug"');
-    expect(developerHtml).toContain('action="/logout"');
-    expect(developerHtml).toContain('id="debug-panel"');
-  });
-
-  it("keeps the tutorial HUD and its lesson controls in the Training document", () => {
-    const html = view();
-    expect(html).toContain('id="tutorial-hud"');
-    expect(html).toContain('data-action="skip-tutorial-lesson"');
-    expect(html).toContain('data-action="next-tutorial-lesson"');
-    expect(html).toContain('data-action="exit-tutorial"');
   });
 });

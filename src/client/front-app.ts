@@ -7,7 +7,7 @@ import {
   TEST_FIGHTER_PLAYBACK,
   TEST_FIGHTER_RIG,
 } from "../content/test-fighter-assets";
-import { defaultSession, sessionUrl, STAGE_CATALOG } from "../game/session";
+import { STAGE_CATALOG } from "../game/session";
 import type { DebugToggles } from "../renderer/svg/debug-overlay";
 import { Renderer } from "../renderer/svg/renderer";
 import { replaceTrustedMarkup } from "./trusted-markup";
@@ -33,23 +33,13 @@ export function desktopOnlyMarkup(): string {
   return `<main class="desktop-only-gate" id="main"><a class="route-brand" href="/" aria-label="WizardGang Hexframe home">${WIZARDGANG_BRAND}</a><section role="note" aria-labelledby="desktop-only-title"><p>DEVICE SUPPORT</p><h1 id="desktop-only-title">Desktop only.</h1><p>Hexframe requires a desktop browser with a keyboard or gamepad. Mobile and tablet support is not planned.</p><div><a class="desktop-only-primary" href="https://github.com/Wizard-Gang/Hexframe" target="_blank" rel="noopener noreferrer">View source ↗</a><a href="https://wizardgang.ai/projects/hexframe/">Read the case study ↗</a></div></section><footer><span>WIZARD GANG · HEXFRAME</span><span>KEYBOARD + GAMEPAD</span></footer></main>`;
 }
 
-/** Enhances the build-time React document with game previews and launch behavior. */
+/** Enhances the build-time overview with the live Training renderer. */
 export async function startFrontApp(mount: HTMLElement): Promise<() => void> {
   if (isUnsupportedMobileDevice()) replaceTrustedMarkup(mount, desktopOnlyMarkup());
   mount.removeAttribute("aria-busy");
 
   const previewRenderers = mountTrainingStages(mount);
-  const click = (event: Event): void => {
-    const target = event.target instanceof Element ? event.target.closest<HTMLButtonElement>("button") : null;
-    if (!target?.dataset.launchTraining) return;
-    const session = defaultSession("training");
-    session.options.tutorial = target.dataset.tutorial === "true";
-    window.location.href = sessionUrl(session);
-  };
-
-  mount.addEventListener("click", click);
   return () => {
-    mount.removeEventListener("click", click);
     for (const renderer of previewRenderers) renderer.dispose();
   };
 }

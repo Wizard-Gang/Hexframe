@@ -4,7 +4,7 @@ import { renderDocument, type HexframeDocument } from "./src/documents/site-docu
 
 function documentFor(filename: string): HexframeDocument {
   const normalized = filename.replaceAll("\\", "/");
-  if (normalized.endsWith("/lab/index.html")) return "lab";
+  if (normalized.endsWith("/play/index.html")) return "play";
   if (normalized.endsWith("/codex/index.html")) return "codex";
   return "root";
 }
@@ -26,18 +26,18 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL("./index.html", import.meta.url)),
-        lab: fileURLToPath(new URL("./lab/index.html", import.meta.url)),
+        play: fileURLToPath(new URL("./play/index.html", import.meta.url)),
         codex: fileURLToPath(new URL("./codex/index.html", import.meta.url)),
       },
       output: {
         entryFileNames: (chunk) => {
-          if (chunk.name === "lab") return "lab/assets/[name]-[hash].js";
+          if (chunk.name === "play") return "play/assets/[name]-[hash].js";
           if (chunk.name === "codex") return "codex/assets/[name]-[hash].js";
           return "assets/[name]-[hash].js";
         },
         assetFileNames: (asset) => {
           if (asset.names.some((name) => name.startsWith("codex"))) return "codex/assets/[name]-[hash][extname]";
-          if (asset.names.some((name) => name.startsWith("lab"))) return "lab/assets/[name]-[hash][extname]";
+          if (asset.names.some((name) => name.startsWith("lab") || name.startsWith("play"))) return "play/assets/[name]-[hash][extname]";
           return "assets/[name]-[hash][extname]";
         },
       },
