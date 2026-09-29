@@ -79,6 +79,7 @@ Production mutation is supported only by the tag-driven GitHub Actions release p
 
 - `.github/workflows/deploy.yml` is callable only from the Release workflow.
 - The deploy job runs inside the protected `production` GitHub environment.
+- The Release caller passes `secrets: inherit` to the reusable Deploy workflow so the called job can resolve the Cloudflare secrets from its protected `production` environment after approval. Removing this handoff causes empty credential bindings and must fail the release/deploy contract tests.
 - The deployment checkout is the caller's immutable tag ref.
 - The deploy workflow invokes the repository-owned `npm run deploy:production` command inside the protected environment. That command fails closed unless it is running in GitHub Actions for this repository's exact semantic release tag from an authorized tag-push or exact-tag Release dispatch event, receives the same expected tag from the Release workflow, has the protected Cloudflare credentials, and passes the shared release-identity CLI again before mutation.
 - The guarded production command builds with the validated tag, performs the Wrangler production deployment, and verifies the uploaded Version ID is the live deployment serving 100% of traffic. The workflow retains provider protection, secret injection, sequencing, and public `version.json` evidence.
@@ -89,5 +90,7 @@ Production mutation is supported only by the tag-driven GitHub Actions release p
 ## Corrections and rollback
 
 Published releases are never edited to conceal a defect or vulnerability. A correction is made forward through a new HF controlled change and, when appropriate, a later semantic-version release.
+
+The v0.8.0 GitHub Release was published, but its protected deployment failed because the reusable workflow received empty Cloudflare credential bindings. Its tag and Release remain immutable; the corrected workflow ships from the next patch tag instead of rerunning or rewriting v0.8.0.
 
 Rollback means redeploying an earlier valid immutable release tag through the authorized production mechanism. Release identity is not changed in place.
