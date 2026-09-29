@@ -30,6 +30,7 @@ function validateReleaseDeployContract({ release, deploy, deployCli, versionStam
   requireText(failures, release, "    needs: reproduce", "production deploy must wait for successful GitHub Release publication");
   requireText(failures, release, "    uses: ./.github/workflows/deploy.yml", "release must delegate production to the reusable deploy workflow");
   requireText(failures, release, "      tag: ${{ github.ref_name }}", "release must hand the exact event tag to production deploy");
+  requireText(failures, release, "    secrets: inherit", "release must pass protected production secrets to the reusable deploy workflow");
 
   requireText(failures, deploy, "    environment: production", "production deploy must remain in the protected production environment");
   requireText(failures, deploy, "          ref: ${{ github.ref }}", "production checkout must use the immutable caller tag ref");
@@ -82,6 +83,9 @@ test("release publication and handoff drift fail the contract", () => {
 
   const wrongTag = mutate("release", "      tag: ${{ github.ref_name }}", "      tag: v0.0.0");
   assert.match(validateReleaseDeployContract(wrongTag).join("\n"), /exact event tag/);
+
+  const missingSecrets = mutate("release", "    secrets: inherit", "");
+  assert.match(validateReleaseDeployContract(missingSecrets).join("\n"), /protected production secrets/);
 });
 
 test("deploy event authorization drift fails the contract", () => {

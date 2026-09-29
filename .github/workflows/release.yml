@@ -54,3 +54,5 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     with:
       tag: ${{ github.ref_name }}
+    # Preserve the called job's protected production environment secret context.
+    secrets: inherit
