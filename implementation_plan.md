@@ -2,6 +2,20 @@
 
 ## Open tasks
 
-The queue is empty. Select no implementation task.
+### HF-167 — [DOCS] Clarify connected GitHub delivery guidance
 
-The next instruction must fill this queue through a controlled, plan-only change before implementation begins. Fetch current `main`, inspect open pull requests and reservations, and use the repository's next valid unassigned controlled ID. Keep this file tracked; do not delete it when the queue is empty.
+**Goal**
+
+Align the shared agent contract with the wording accepted in wizardgang-architecture-demo as DEMO-390.
+
+**Scope**
+
+- Update `AGENTS.md` to distinguish ordinary connected GitHub PR delivery from settings administration.
+- Update the portfolio-contract hash for `AGENTS.md` in `scripts/check-portfolio-contract.mjs`.
+- Preserve the controlled PR, exact-head CI, squash-merge, and post-merge verification requirements.
+
+**Acceptance**
+
+- The agent contract and hash match the accepted shared wording.
+- Pinned local validation and the separate dependency advisory gate pass.
+- The task retires through one controlled PR with required exact-head and post-merge CI green; the branch is deleted after merge.
