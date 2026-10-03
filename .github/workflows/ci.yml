@@ -42,9 +42,6 @@ jobs:
       - name: Production config dry run
         run: npm run deploy:dry-run
 
-      - name: Local dev lifecycle smoke
-        if: github.event_name == 'pull_request'
-        run: npm run test:dev-smoke
 
   change-id:
     # Every controlled change carries exactly one permanent ID and one primary type.

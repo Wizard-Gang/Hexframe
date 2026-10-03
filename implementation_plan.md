@@ -70,24 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-171 — [BUILD] Run local development on the Vite dev server
-
-**Goal:** `npm run dev` starts in seconds with hot reload and no wrapper.
-
-**Scope**
-- `dev` runs Vite, serving `/` and `/play/`. Remove `start`.
-- Delete `scripts/dev.mjs`, `dev-lifecycle.mjs`, `dev-lifecycle-cases.mjs`, `dev-process-ownership.mjs`, `dev-process-ownership-cases.mjs` and `dev-smoke.mjs`, with their `package.json` scripts, their `check` entries and the CI "Local dev lifecycle smoke" step.
-- Keep what `scripts/deploy.mjs` needs from `scripts/env.mjs`, moving it into `deploy.mjs` if `env.mjs` empties.
-- Update the README run instructions and command map, and `SECURITY.md` where it describes the wrapper.
-
-**Non-goals:** Required check names and the release and deploy scripts are unchanged.
-
-**Acceptance:** `npm run dev` serves a playable `/play/` with hot reload; CI `verify` passes without the smoke step.
-
-**Validation:** Local `npm run dev` browser check; `npm run check`.
-
----
-
 ### HF-172 — [REFACTOR] Delete scenario capture and the unused rollback session
 
 **Goal:** Remove replay tooling players never need.
