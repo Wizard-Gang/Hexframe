@@ -70,20 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-169 — [REFACTOR] Delete dead code and stubs
-
-**Goal:** Remove code that nothing runs.
-
-**Scope**
-- Delete `src/lab/debugger/panel.ts`, which has no importer.
-- Delete the throw-only `scripts/sync-secrets.mjs` and its assertion in `scripts/validate-release-boundary.mjs`.
-
-**Acceptance:** No source, script or test references the deleted files.
-
-**Validation:** `npm run typecheck`; `npm run validate:release-boundary`.
-
----
-
 ### HF-170 — [TEST] Delete retirement-guard and copy-pinning tests
 
 **Goal:** Tests prove behavior, not that deleted code stays deleted or that copy and CSS keep exact values.
