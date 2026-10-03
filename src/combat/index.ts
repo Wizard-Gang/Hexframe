@@ -5,7 +5,6 @@
 export * from "./types";
 export * from "./constants";
 export { Simulation } from "./simulation/simulation";
-export { nextRandom, randomRange } from "./simulation/rng";
 export { overlaps, intersection, boxToWorld, centerOf } from "./collision/aabb";
 export {
   activeMoveOf,

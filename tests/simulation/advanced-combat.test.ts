@@ -15,7 +15,7 @@ function report(): FrameReport {
 }
 
 function config(player: CharacterDef, dummy = TEST_FIGHTER): ConstructorParameters<typeof Simulation>[0] {
-  return { characters: [player, dummy], startX: [px(-18), px(18)], seed: 0x5eed };
+  return { characters: [player, dummy], startX: [px(-18), px(18)] };
 }
 
 describe("stamina economy", () => {

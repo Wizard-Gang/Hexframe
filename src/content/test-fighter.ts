@@ -66,10 +66,9 @@ export function createTestFighter(): CharacterDef {
 
 export const TEST_FIGHTER: CharacterDef = createTestFighter();
 
-export function testFighterSimConfig(seed = 0x5eed): SimConfig {
+export function testFighterSimConfig(): SimConfig {
   return {
     characters: [TEST_FIGHTER, TEST_FIGHTER],
     startX: [px(-120), px(120)],
-    seed,
   };
 }

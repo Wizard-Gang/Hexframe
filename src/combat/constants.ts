@@ -5,9 +5,9 @@
  * ## The integer rule
  *
  * Every quantity the simulation stores or arithmetics on is a 32-bit integer. There are
- * no floats anywhere below `src/combat`, `src/input` or `src/rollback`, because two
- * machines that disagree in the last bit of a double will disagree about whether an
- * attack hit, and a rollback that re-runs the same frames must land on the same bits.
+ * no floats anywhere below `src/combat` or `src/input`, because two machines that
+ * disagree in the last bit of a double can disagree about whether an attack hit. Fixed
+ * integer arithmetic keeps the same inputs producing the same state.
  *
  * Positions are stored in *sim units*. One world pixel is `SCALE` sim units, so the
  * simulation carries 1/100th-pixel precision while still being exact integer maths.
@@ -54,10 +54,3 @@ export const STAMINA_REGEN_DELAY = 36;
 
 /** How many past input frames the command parser can see when matching motions. */
 export const COMMAND_HISTORY_FRAMES = 32;
-
-/** Snapshot format tag. Bump when the serialised layout changes; readers reject others. */
-export const SNAPSHOT_VERSION = 11;
-
-/** FNV-1a 32-bit parameters, used for every determinism hash in the project. */
-export const FNV_OFFSET_BASIS = 0x811c9dc5;
-export const FNV_PRIME = 0x01000193;

@@ -3,14 +3,12 @@
  *
  * `step()` is the whole game. It takes both players' inputs for a frame and advances the
  * match by exactly one 60Hz tick using integer arithmetic. It reads no clock, generates no
- * randomness of its own, touches no DOM and holds no state outside `SimState` — which is
- * what makes it possible to run it, snapshot it, throw the result away, restore an older
- * snapshot, run it again with the same inputs and land on the same bits.
+ * randomness, touches no DOM and holds no state outside `SimState`. Given the same
+ * starting state and the same input sequence, it follows the same path to the same state.
  *
  * Command parsing happens *inside* this loop rather than in front of it. That is why
- * `SimState` carries the input history: if parsing lived in the caller, a rollback would
- * depend on the caller faithfully re-running a parser the simulation cannot see, and the
- * first disagreement would surface frames later as an unexplained divergence.
+ * `SimState` carries the input history: parsing is part of the deterministic simulation
+ * instead of hidden caller state.
  */
 
 import type {
@@ -115,7 +113,6 @@ export class Simulation {
     const stage = config.stage;
     return {
       frame: 0,
-      rng: config.seed,
       fighters,
       stage: {
         worldMinX: stage?.cameraBounds.minX ?? -STAGE_HALF_WIDTH,
@@ -130,7 +127,7 @@ export class Simulation {
     return this.state;
   }
 
-  /** Replace the state wholesale. Rollback and the lab's load-state both arrive here. */
+  /** Replace the state wholesale for a Training reset. */
   setState(next: SimState): void {
     this.state = next;
   }
@@ -275,9 +272,7 @@ export class Simulation {
 
     // 15-17. A state entered during this frame is on its frame 0 for the whole of it and
     //        ages at the end, which is what lets the checks at the top of the next frame
-    //        read `stateFrame` as "frames already spent here". The snapshot and the hash
-    //        are the caller's to take — the lab wants one every frame, a rollback session
-    //        wants one per predicted frame, a test wants one at a moment of its choosing.
+    //        read `stateFrame` as "frames already spent here".
     for (let p = 0; p < s.fighters.length; p++) {
       if (!frozen[p]) s.fighters[p].stateFrame++;
       const from = before[p];
@@ -291,10 +286,10 @@ export class Simulation {
   /**
    * Leave hitstun or blockstun.
    *
-   * The stance is read from the state being left rather than from live input, so the
-   * recovery a rollback replays is the one it produced the first time. A fighter still in
-   * the air goes back to falling; the combo counter resets here because this is the exact
-   * moment the defender is free again.
+   * The stance is read from the state being left rather than from live input so recovery
+   * is determined by authoritative simulation state. A fighter still in the air goes back
+   * to falling; the combo counter resets here because this is the exact moment the defender
+   * is free again.
    */
   private recoverFromStun(f: FighterState): void {
     if (f.airborne === 1) {
@@ -309,9 +304,7 @@ export class Simulation {
    * Leave the ground at the end of a jump squat.
    *
    * The direction the jump carries is the one that was held when the squat began, read
-   * back out of the input history rather than kept in a field of its own. The history is
-   * already snapshotted and already rolled back, so this costs no state and cannot fall
-   * out of step with a re-simulation.
+   * back out of the authoritative input history rather than kept in a field of its own.
    */
   private launch(s: SimState, player: number, f: FighterState, c: CharacterDef): void {
     const enteredAt = s.frame - f.stateFrame;
