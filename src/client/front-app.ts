@@ -8,19 +8,9 @@ import {
   TEST_FIGHTER_RIG,
 } from "../content/test-fighter-assets";
 import { STAGE_CATALOG } from "../game/session";
-import type { DebugToggles } from "../renderer/svg/debug-overlay";
 import { Renderer } from "../renderer/svg/renderer";
 import { replaceTrustedMarkup } from "./trusted-markup";
 
-const PREVIEW_TOGGLES: DebugToggles = {
-  hitboxes: false,
-  hurtboxes: false,
-  pushboxes: false,
-  origins: false,
-  skeleton: false,
-  boneNames: false,
-  velocity: false,
-};
 
 const DESKTOP_ONLY_QUERY = "(pointer: coarse), (max-width: 960px)";
 const WIZARDGANG_BRAND = `<span class="wizardgang-mark" aria-hidden="true"></span><span class="wizardgang-brand-copy"><strong>WIZARDGANG</strong><small>Hexframe</small></span>`;
@@ -63,7 +53,7 @@ function mountTrainingStages(mount: HTMLElement): Renderer[] {
       presentationScale: 1.45,
     };
     const renderer = new Renderer(stageMount, [player, dummy], { fighters: [fighter, fighter], stage });
-    renderer.render(simulation.getState(), null, PREVIEW_TOGGLES);
+    renderer.render(simulation.getState(), null, false);
     const svg = stageMount.querySelector("svg");
     svg?.setAttribute("aria-hidden", "true");
     svg?.removeAttribute("role");

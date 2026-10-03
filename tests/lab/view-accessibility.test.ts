@@ -6,30 +6,37 @@ import { buildLabView } from "../../src/lab/view";
 
 const appSource = readFileSync(new URL("../../src/lab/app.ts", import.meta.url), "utf8");
 const preferencesSource = readFileSync(new URL("../../src/lab/preferences.ts", import.meta.url), "utf8");
+const rigSource = readFileSync(new URL("../../src/renderer/character/rig.ts", import.meta.url), "utf8");
+const overlaySource = readFileSync(new URL("../../src/renderer/svg/debug-overlay.ts", import.meta.url), "utf8");
 
-function view(debugEnabled = false): string {
-  return buildLabView({ character: createTestFighter(), preferences: DEFAULT_PREFERENCES, dummyOptions: [[0, "Stand"]], debugEnabled });
+function view(hitboxesEnabled = false, slowMotionEnabled = false): string {
+  return buildLabView({ character: createTestFighter(), preferences: DEFAULT_PREFERENCES, dummyOptions: [[0, "Stand"]], hitboxesEnabled, slowMotionEnabled });
 }
 
-describe("Training accessibility and Debug contract", () => {
+describe("Training accessibility and study controls", () => {
   it("keeps the compact Training bar and seven-item pause menu semantic", () => {
     const html = view();
-    for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-control="speed"', 'id="debug-control"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
+    for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-action="slow-mo"', 'data-action="hitboxes"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
     for (const item of ["Resume", "Restart", "Start tutorial", "Move list", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
+    for (const removed of ['data-control="speed"', 'id="debug-control"', 'id="debug-tools"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="move-timeline-console"', 'id="interaction-history"']) expect(html).not.toContain(removed);
     expect(html).not.toContain('role="tablist"');
   });
 
-  it("keeps the HF-174 Debug surfaces behind one remembered toggle", () => {
-    const hidden = view(false); const visible = view(true);
-    expect(hidden).toContain('id="debug-tools" aria-label="Debug tools" hidden');
-    expect(visible).toContain('id="debug-tools" aria-label="Debug tools" >');
-    for (const surface of ["hitboxes", "hurtboxes", "pushboxes", "origins", "skeleton"]) expect(visible).toContain(`data-debug="${surface}"`);
-    for (const marker of ['id="frame-readout"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="move-timeline-console"', 'id="interaction-history"']) expect(visible).toContain(marker);
-    for (const removed of ['data-action="back-10"', 'data-action="back"', 'id="frame-inspector"', 'class="save-states"', 'data-save=', 'data-load=']) expect(visible).not.toContain(removed);
-    expect(appSource).toContain('const DEBUG_STORAGE_KEY = "hexframe.debug.v1"');
+  it("remembers Hitboxes and Slow-mo while deleting the old Debug drawing paths", () => {
+    const off = view(false, false);
+    const on = view(true, true);
+    expect(off).toContain('data-action="hitboxes" data-gamepad-nav aria-pressed="false"');
+    expect(off).toContain('data-action="slow-mo" data-gamepad-nav aria-pressed="false"');
+    expect(on).toContain('data-action="hitboxes" data-gamepad-nav aria-pressed="true"');
+    expect(on).toContain('data-action="slow-mo" data-gamepad-nav aria-pressed="true"');
+    expect(appSource).toContain('const TRAINING_VIEW_STORAGE_KEY = "hexframe.training.view.v1"');
+    expect(appSource).toContain('localStorage.setItem(TRAINING_VIEW_STORAGE_KEY, JSON.stringify(state))');
     expect(appSource).toContain('event.code === "Backquote"');
-    const toggleBody = appSource.match(/function setDebugEnabled[\s\S]*?\n  }/)?.[0] ?? "";
-    expect(toggleBody).not.toContain("timeline.paused");
+    expect(appSource).toContain('timeline.speed = enabled ? 25 : 100');
+    expect(rigSource).not.toContain("bone-name");
+    expect(overlaySource).not.toContain("debug-origin");
+    expect(overlaySource).not.toContain("debug-velocity");
+    for (const volume of ["debug-hitbox", "debug-hurtbox", "debug-pushbox"]) expect(overlaySource).toContain(volume);
   });
 
   it("shows the fixed four-button move list with authoritative frame data", () => {

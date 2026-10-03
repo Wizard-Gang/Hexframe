@@ -70,22 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-174 — [FEAT] Replace the Debug panel with Hitboxes and Slow-mo toggles
-
-**Goal:** Two on-screen toggles replace the engineering panel.
-
-**Scope**
-- The Training bar holds Pause, Reset, Dummy, Slow-mo (25%) and Hitboxes. `` ` `` toggles Hitboxes. Both toggles are remembered on the device.
-- Hitboxes shows hitboxes, hurtboxes and pushboxes together.
-- Delete the Debug toggle and panel, frame transport (back and ±10), pause-on-contact, the speed selector, the move frame timeline, contact history, origin, velocity and bone-name drawing, and `src/lab/inspector.ts`. Removing bone-name drawing fixes the label leak seen in production v0.8.1.
-- Delete the tutorial's Inspect lesson and its UI events, leaving four lessons.
-
-**Acceptance:** With Hitboxes off, no debug geometry or label renders; Slow-mo plays at 25%; the tutorial completes.
-
-**Validation:** `npm test -- tests/lab tests/renderer`; browser check with each toggle on and off.
-
----
-
 ### HF-175 — [REFACTOR] Remove statuses and give the kit plain names
 
 **Goal:** Moves do what they look like; there are no burn or freeze rules.

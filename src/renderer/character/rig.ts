@@ -43,12 +43,6 @@ export function buildFighterNode(model: string, rig: RawRig): FighterNode {
     wrapper.dataset.bone = part.name;
     wrapper.setAttribute("transform", boneTransform(part, undefined));
     wrapper.appendChild(document.importNode(source, true));
-    const label = document.createElementNS(SVG_NS, "text");
-    label.setAttribute("class", "bone-name");
-    label.setAttribute("x", "3");
-    label.setAttribute("y", "-3");
-    label.textContent = part.name;
-    wrapper.appendChild(label);
     bones.set(part.name, wrapper);
   }
 
