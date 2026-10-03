@@ -41,7 +41,7 @@ npm ci
 npm run dev
 ```
 
-Local development needs no application credentials. The dev wrapper owns the Wrangler process tree it starts, refuses unsafe ownership states, and cleans up only processes it can prove belong to the checkout.
+Local development needs no application credentials. Vite serves both `/` and `/play/` directly with hot reload.
 
 ## Command map
 
@@ -50,7 +50,7 @@ Local development needs no application credentials. The dev wrapper owns the Wra
 | Purpose | Command | Boundary |
 | --- | --- | --- |
 | Install exact dependencies | `npm ci` | Local dependency install from the committed lockfile |
-| Start local Training | `npm run dev` | Credential-free local Wrangler lifecycle |
+| Start local Training | `npm run dev` | Credential-free Vite dev server with hot reload for `/` and `/play/` |
 | Repository acceptance | `npm run check` | Credential-free history, secrets, types, tests, build, document, security, and release-boundary validation |
 | Documentation authority | `npm run validate:documentation-authority` | Verifies the current docs set, README references/commands, and retired vocabulary sweep |
 | Dependency advisory gate | `npm run audit:dependencies` | Read-only npm registry query; fails closed on high/critical findings or an untrustworthy response |

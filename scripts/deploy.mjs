@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROOT_DIR } from "./env.mjs";
 
+const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPOSITORY = "Wizard-Gang/Hexframe";
 const VERSION_ID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 

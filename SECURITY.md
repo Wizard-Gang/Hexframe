@@ -29,9 +29,8 @@ documentation, or in any built asset. This includes API tokens, Cloudflare or Gi
 tokens, passwords, private keys, SSH material, certificates, account identifiers, private
 infrastructure hostnames, and private administrative URLs.
 
-Local development has no application credential file. `npm run dev` does not read or create
-`.env` or `.dev.vars`; it builds the public application and starts the owned local Worker
-directly. Production deployment credentials remain only in the protected GitHub production
+Local development has no application credential file. `npm run dev` runs the Vite dev
+server directly and does not read or create `.env` or `.dev.vars`. Production deployment credentials remain only in the protected GitHub production
 environment/provider and are injected by the immutable tag-driven deployment workflow. The
 Worker runtime has no application username, password, signing secret, or session binding.
 No provider credential is ever sent to the browser or built into an asset.
