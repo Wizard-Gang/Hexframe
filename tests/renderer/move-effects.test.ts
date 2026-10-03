@@ -8,10 +8,10 @@ describe("move particle profiles", () => {
     expect(Object.keys(MOVE_VISUALS)).toEqual([
       "standing_light",
       "crouching_light",
-      "ember_palm",
-      "frost_heel",
-      "ashen_sweep",
-      "phoenix_drive",
+      "jab",
+      "overhead",
+      "sweep",
+      "uppercut",
     ]);
     const signatures = Object.keys(MOVE_VISUALS).map((key) => {
       const move = TEST_FIGHTER.moves.find((candidate) => candidate.key === key)!;
@@ -22,10 +22,10 @@ describe("move particle profiles", () => {
   });
 
   it("keeps technique-specific visuals for the fixed kit", () => {
-    expect(moveEffectProfile(3, ["fire", "burn"], "ember_palm").effect).toBe("palm_burst");
-    expect(moveEffectProfile(11, ["fire", "burn"], "ashen_sweep").effect).toBe("ground_arc");
-    expect(moveEffectProfile(5, ["cold", "freeze"], "frost_heel").effect).toBe("heel_comet");
-    expect(moveEffectProfile(18, ["fire", "burn"], "phoenix_drive").effect).toBe("rising_spiral");
+    expect(moveEffectProfile(3, [], "jab").effect).toBe("jab_flash");
+    expect(moveEffectProfile(11, [], "sweep").effect).toBe("ground_arc");
+    expect(moveEffectProfile(5, [], "overhead").effect).toBe("overhead_arc");
+    expect(moveEffectProfile(18, [], "uppercut").effect).toBe("rising_spiral");
   });
 
   it("authors exact non-overlapping windows for every retained profile", () => {

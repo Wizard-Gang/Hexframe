@@ -26,7 +26,6 @@ import {
   isCrouching,
   isInHitstun,
 } from "../state/machine";
-import { applyTaggedDebuffs, consumeDebuffBonuses } from "../status/debuffs";
 import { pressedOn } from "../../input/buffer/history";
 
 export const PERFECT_GUARD_WINDOW = 3;
@@ -177,9 +176,7 @@ export function resolveContacts(
           attacker.hitstop = Math.max(attacker.hitstop, perfectGuard ? 5 : 4);
           defender.hitstop = Math.max(defender.hitstop, perfectGuard ? 5 : 4);
         } else {
-          const move = attackerChar.moves.find((candidate) => candidate.id === attacker.moveId);
-          const tags = move?.tags ?? [];
-          rawDamage = spec.damage + consumeDebuffBonuses(defender, tags, spec.damage, a, d, report);
+          rawDamage = spec.damage;
           dealtDamage = rawDamage;
           defender.health = Math.max(0, defender.health - dealtDamage);
           defender.comboCount++;
@@ -201,7 +198,6 @@ export function resolveContacts(
             enterState(defender, stunState);
             defender.vx = spec.pushbackHitDefender * dir;
           }
-          applyTaggedDebuffs(defender, tags, a, d, report);
           if (defender.health === 0) {
             defender.stun = 0;
             defender.vx = 0;

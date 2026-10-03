@@ -6,10 +6,10 @@ import { createSim, runFrames } from "../helpers/harness";
 describe("command parsing", () => {
   it("starts each fixed kit move from one independent action bit", () => {
     const cases = [
-      [InputBit.Action1, MoveId.EmberPalm],
-      [InputBit.Action2, MoveId.AshenSweep],
-      [InputBit.Action3, MoveId.FrostHeel],
-      [InputBit.Action4, MoveId.PhoenixDrive],
+      [InputBit.Action1, MoveId.Jab],
+      [InputBit.Action2, MoveId.Sweep],
+      [InputBit.Action3, MoveId.Overhead],
+      [InputBit.Action4, MoveId.Uppercut],
     ] as const;
     for (const [input, moveId] of cases) {
       const reports = runFrames(createSim(), 1, (_frame, player) => player === 0 ? input : 0);
@@ -21,7 +21,7 @@ describe("command parsing", () => {
     const reports = runFrames(createSim(), 1, (_frame, player) =>
       player === 0 ? InputBit.Down | InputBit.Action1 : 0,
     );
-    expect(reports[0].moveStarts).toEqual([{ player: 0, moveId: MoveId.EmberPalm }]);
+    expect(reports[0].moveStarts).toEqual([{ player: 0, moveId: MoveId.Jab }]);
   });
 
   it("does not turn one held button into repeated moves", () => {

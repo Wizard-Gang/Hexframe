@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-175 — [REFACTOR] Remove statuses and give the kit plain names
-
-**Goal:** Moves do what they look like; there are no burn or freeze rules.
-
-**Scope**
-- Delete `src/combat/status/debuffs.ts`, `src/content/status-rules.ts`, the fighters' burn and freeze fields, debuff events, status lanes and chips, their audio cues, and the Status patterns setting and styles.
-- Rename Ember Palm, Ashen Sweep, Frost Heel and Phoenix Drive to Jab, Sweep, Overhead and Uppercut everywhere: keys, clip names, tags, move list, legend, tutorial copy, and the README and architecture kit tables. Drop the elemental tags.
-- Delete `tests/simulation/debuffs.test.ts`.
-
-**Acceptance:** No status code or elemental naming remains; the combo still routes Jab → Sweep → Uppercut.
-
-**Validation:** `npm test -- tests/simulation tests/content tests/lab`.
-
----
-
 ### HF-176 — [REFACTOR] Remove stamina, guard break and perfect guard
 
 **Goal:** Blocking is holding away; attacks cost nothing.

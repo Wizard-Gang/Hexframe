@@ -11,7 +11,7 @@ import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim, placeFighters, runFrames } from "../helpers/harness";
 
 function report(): FrameReport {
-  return { frame: 0, contacts: [], debuffs: [], moveStarts: [], stateChanges: [] };
+  return { frame: 0, contacts: [], moveStarts: [], stateChanges: [] };
 }
 
 function config(player: CharacterDef, dummy = TEST_FIGHTER): ConstructorParameters<typeof Simulation>[0] {
@@ -36,7 +36,7 @@ describe("stamina economy", () => {
   });
 
   it("gates a retained technique by its authored stamina cost", () => {
-    const move = moveOf(TEST_FIGHTER, MoveId.FrostHeel)!;
+    const move = moveOf(TEST_FIGHTER, MoveId.Overhead)!;
     expect(staminaCostOf(TEST_FIGHTER, move)).toBe(move.staminaCost);
     const fighter = new Simulation(config(TEST_FIGHTER)).getState().fighters[0];
     fighter.stamina = move.staminaCost - 1;
@@ -50,8 +50,8 @@ describe("stamina economy", () => {
 
 describe("hyper armor engine contract", () => {
   it("still absorbs the authored number of strikes before hitstun", () => {
-    const attack = moveOf(TEST_FIGHTER, MoveId.EmberPalm)!;
-    const base = moveOf(TEST_FIGHTER, MoveId.PhoenixDrive)!;
+    const attack = moveOf(TEST_FIGHTER, MoveId.Jab)!;
+    const base = moveOf(TEST_FIGHTER, MoveId.Uppercut)!;
     const armoredMove: MoveDef = {
       ...base,
       id: 99,

@@ -43,7 +43,6 @@ import {
 import { pressedOn, readInput, writeInput } from "../../input/buffer/history";
 import { commandPressFrame, resolveCommand } from "../../input/parser/command-parser";
 import { isBackward, isForward } from "../../input/parser/numpad";
-import { isFrozen, tickDebuffs } from "../status/debuffs";
 
 export class Simulation {
   readonly config: SimConfig;
@@ -98,10 +97,6 @@ export class Simulation {
         // consumed yet" and the very first button of a match is not swallowed.
         bufferConsumedFrame: -1,
         dashForward: 1,
-        burnStacks: 0,
-        burnFrames: 0,
-        freezeStacks: 0,
-        freezeFrames: 0,
       });
     }
 
@@ -150,23 +145,18 @@ export class Simulation {
     const report: FrameReport = {
       frame: s.frame,
       contacts: [],
-      debuffs: [],
       moveStarts: [],
       stateChanges: [],
     };
 
     const before: StateIdValue[] = s.fighters.map((f) => f.state);
     const frozen: boolean[] = s.fighters.map(() => false);
-    const statusFrozen: boolean[] = s.fighters.map(isFrozen);
 
     // 1. Read input frames. Everything downstream reads the history rather than the
     //    argument, so a re-simulated frame and a live one take exactly the same path.
     for (let p = 0; p < s.fighters.length; p++) {
       writeInput(s, p, s.frame, inputs[p] ?? 0);
     }
-
-    // Status timers and damage-over-time are simulation time, never wall-clock time.
-    tickDebuffs(s, report);
 
     // 2-3. Resolve commands, and update fighter states.
     //
@@ -181,18 +171,11 @@ export class Simulation {
       const f = s.fighters[p];
       const c = this.chars[p];
 
-      // A frozen fighter does nothing at all except come out of the freeze. Its move
-      // frame, its state frame and its stun all hang exactly where they were.
       if (f.hitstop > 0) {
         tickTimers(f);
         frozen[p] = true;
         continue;
       }
-      if (statusFrozen[p]) {
-        frozen[p] = true;
-        continue;
-      }
-
       if (f.state === StateId.Attack) {
         advanceMove(f, c);
       } else if (f.state === StateId.Dash && f.stateFrame >= this.dashProfile(f, c).velocities.length) {
