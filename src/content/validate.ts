@@ -389,8 +389,6 @@ function readCancelWindow(value: unknown, path: string): RawCancelWindow {
 const COMMAND_KEYS = [
   "moveId",
   "buttons",
-  "motion",
-  "motionWindow",
   "requiresCrouch",
   "requiresAir",
   "priority",
@@ -417,20 +415,10 @@ function readCommand(value: unknown, path: string): RawCommand {
     throw new ContentError(buttonsPath, "must not repeat a button");
   }
 
-  const motionPath = field(path, "motion");
-  const motionItems = requireArray(source, path, "motion", 0);
-  const motion = motionItems.map((item, i) => {
-    if (typeof item !== "number" || !Number.isInteger(item) || item < 1 || item > 9) {
-      throw new ContentError(at(motionPath, i), "must be a numpad digit, 1 to 9");
-    }
-    return item;
-  });
 
   return {
     moveId: requireIntegerAtLeast(source, path, "moveId", 1),
     buttons,
-    motion,
-    motionWindow: requireIntegerAtLeast(source, path, "motionWindow", 0),
     requiresCrouch: requireBoolean(source, path, "requiresCrouch"),
     requiresAir: requireBoolean(source, path, "requiresAir"),
     priority: requireInteger(source, path, "priority"),

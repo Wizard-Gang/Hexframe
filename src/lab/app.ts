@@ -9,7 +9,7 @@ import { gameAudio } from "../client/audio/audio-manager";
 import { GamepadController } from "../input/controller/gamepad";
 import type { GamepadUiState } from "../input/controller/gamepad";
 import { KeyboardController } from "../input/controller/keyboard";
-import { DEFAULT_ACTION_KEYMAP, DEFAULT_KEYMAP_P1, DEFAULT_KEYMAP_P2, NO_ACTION_KEYMAP } from "../input/controller/keymap";
+import { DEFAULT_ACTION_KEYMAP, DEFAULT_KEYMAP_P1 } from "../input/controller/keymap";
 import { Renderer } from "../renderer/svg/renderer";
 import { DummyController, DummyMode } from "./dummy/dummy";
 import type { DummyModeValue } from "./dummy/dummy";
@@ -31,11 +31,9 @@ interface TrainingViewState {
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex='-1'])";
 
 const DUMMY_OPTIONS: readonly [DummyModeValue, string][] = [
-  [DummyMode.Stand, "Stand"], [DummyMode.Crouch, "Crouch"], [DummyMode.Jump, "Jump"],
-  [DummyMode.BlockNone, "Block none"], [DummyMode.BlockAll, "Block all"],
-  [DummyMode.BlockAfterFirstHit, "Block after first hit"], [DummyMode.Record, "Record P2"],
-  [DummyMode.Playback, "Playback"], [DummyMode.Counterattack, "Counterattack"],
-  [DummyMode.Reversal, "Reversal"],
+  [DummyMode.Stand, "Stand"],
+  [DummyMode.Block, "Block"],
+  [DummyMode.FightBack, "Fight back"],
 ];
 
 type MenuDetail = "moves" | "settings" | "controls";
@@ -76,7 +74,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const dummy = new DummyController();
   const tutorial = new TutorialController(syncTutorialUi);
   const keyboard = new KeyboardController(window, DEFAULT_KEYMAP_P1, DEFAULT_ACTION_KEYMAP);
-  const secondKeyboard = new KeyboardController(window, DEFAULT_KEYMAP_P2, NO_ACTION_KEYMAP);
   const gamepad = new GamepadController();
   const renderer = new Renderer(required("stage"), sim.characters(), {
     fighters: [0, 1].map(() => ({ model: TEST_FIGHTER_MODEL, rig: TEST_FIGHTER_RIG, animations: TEST_FIGHTER_ANIMATIONS, playback: TEST_FIGHTER_PLAYBACK })),
@@ -87,8 +84,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     const playerInput = keyboard.sample() | gamepad.sample();
     lastPlayerInput = playerInput;
     if (tutorial.active) return [playerInput, tutorial.dummyInput(sim.getState())];
-    const secondPlayer = secondKeyboard.sample();
-    dummy.capture(secondPlayer);
     return [playerInput, dummy.inputFor(sim.getState(), enemyIndex, timeline.lastReport)];
   };
 
@@ -236,7 +231,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     document.removeEventListener("visibilitychange", visibility);
     motionQuery.removeEventListener("change", motionChange);
     keyboard.dispose();
-    secondKeyboard.dispose();
     renderer.dispose();
     gameAudio.setCaptionHandler(null);
     gameAudio.dispose();

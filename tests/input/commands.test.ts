@@ -17,11 +17,19 @@ describe("command parsing", () => {
     }
   });
 
-  it("keeps schema fixture normals outside the playable command set", () => {
-    const reports = runFrames(createSim(), 1, (_frame, player) =>
-      player === 0 ? InputBit.Down | InputBit.Action1 : 0,
-    );
-    expect(reports[0].moveStarts).toEqual([{ player: 0, moveId: MoveId.Jab }]);
+  it("starts every attack directly while an ordinary direction is held", () => {
+    const cases = [
+      [InputBit.Action1, MoveId.Jab],
+      [InputBit.Action2, MoveId.Sweep],
+      [InputBit.Action3, MoveId.Overhead],
+      [InputBit.Action4, MoveId.Uppercut],
+    ] as const;
+    for (const [button, moveId] of cases) {
+      const reports = runFrames(createSim(), 1, (_frame, player) =>
+        player === 0 ? InputBit.Right | button : 0,
+      );
+      expect(reports[0].moveStarts).toEqual([{ player: 0, moveId }]);
+    }
   });
 
   it("does not turn one held button into repeated moves", () => {

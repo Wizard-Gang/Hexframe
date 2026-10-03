@@ -70,22 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-178 — [REFACTOR] Remove motion inputs and P2 recording, and keep three dummy modes
-
-**Goal:** A command is a button plus stance, and the dummy has three readable modes.
-
-**Scope**
-- Delete numpad motion matching (`motion`, `motionWindow`, `motionSatisfied`); keep the direction helpers the step uses.
-- Delete `src/input/recording/recorder.ts`, the second keyboard and its IJKL map, and the Record and Playback modes.
-- Keep Stand, Block and Fight back (today's Counterattack). Delete Crouch, Jump, Block none, Block after first hit and Reversal.
-- Delete `tests/input/recording.test.ts`, and update the command and dummy tests.
-
-**Acceptance:** All four attacks start from keyboard and gamepad; each dummy mode behaves as named.
-
-**Validation:** `npm test -- tests/input tests/lab tests/simulation`.
-
----
-
 ### HF-179 — [FEAT] Replace per-move particles with clean hit and block sparks
 
 **Goal:** One clean, readable spark per hit and per block.

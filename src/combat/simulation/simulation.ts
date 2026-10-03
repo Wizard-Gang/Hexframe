@@ -41,7 +41,7 @@ import {
 } from "../state/machine";
 import { readInput, writeInput } from "../../input/buffer/history";
 import { commandPressFrame, resolveCommand } from "../../input/parser/command-parser";
-import { isBackward, isForward } from "../../input/parser/numpad";
+import { isBackward, isForward } from "../../input/parser/direction";
 
 export class Simulation {
   readonly config: SimConfig;

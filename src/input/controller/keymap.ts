@@ -16,13 +16,6 @@ export const DEFAULT_KEYMAP_P1: KeyMap = {
   KeyD: InputBit.Right,
 };
 
-export const DEFAULT_KEYMAP_P2: KeyMap = {
-  KeyI: InputBit.Up,
-  KeyJ: InputBit.Left,
-  KeyK: InputBit.Down,
-  KeyL: InputBit.Right,
-};
-
 /** Arrow diamond mirrors the standard gamepad Y / X / B / A face-button diamond. */
 export const DEFAULT_ACTION_KEYMAP: ActionKeyMap = {
   ArrowUp: 0,
@@ -30,5 +23,3 @@ export const DEFAULT_ACTION_KEYMAP: ActionKeyMap = {
   ArrowRight: 2,
   ArrowDown: 3,
 };
-
-export const NO_ACTION_KEYMAP: ActionKeyMap = {};

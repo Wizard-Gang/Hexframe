@@ -60,6 +60,16 @@ describe("keyboard input adapter", () => {
     keyboard.dispose();
   });
 
+  it("does not capture the retired IJKL second-player controls", () => {
+    const target = new EventTarget();
+    const keyboard = new KeyboardController(target, DEFAULT_KEYMAP_P1, DEFAULT_ACTION_KEYMAP);
+    for (const code of ["KeyI", "KeyJ", "KeyK", "KeyL"]) {
+      expect(key(target, "keydown", code)).toBe(true);
+      expect(keyboard.sample()).toBe(0);
+    }
+    keyboard.dispose();
+  });
+
   it("leaves modified action arrows to the page instead of selecting another attack", () => {
     for (const modifiers of [{ shift: true }, { ctrl: true }, { meta: true }, { shift: true, ctrl: true }]) {
       const target = new EventTarget();

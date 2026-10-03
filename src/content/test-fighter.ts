@@ -44,8 +44,6 @@ function fixedCommands(character: CharacterDef): CommandDef[] {
     return {
       moveId,
       buttons: actionBit(slot),
-      motion: [],
-      motionWindow: 0,
       requiresCrouch: false,
       requiresAir: false,
       priority: KIT_MOVE_IDS.length - slot,

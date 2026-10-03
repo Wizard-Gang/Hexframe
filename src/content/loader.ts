@@ -209,8 +209,6 @@ function loadCommand(raw: RawCharacter["commands"][number], moves: MoveDef[], pa
   return {
     moveId: raw.moveId,
     buttons,
-    motion: raw.motion.slice(),
-    motionWindow: raw.motionWindow,
     requiresCrouch: raw.requiresCrouch,
     requiresAir: raw.requiresAir,
     priority: raw.priority,
