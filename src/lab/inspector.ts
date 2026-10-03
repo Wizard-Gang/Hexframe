@@ -2,18 +2,10 @@ import { toPixels } from "../combat/constants";
 import type {
   CharacterDef,
   ContactEvent,
-  FighterState,
   FrameReport,
   MoveDef,
-  SimState,
-  StateIdValue,
 } from "../combat/types";
-import { ContactKind, HitLevel, StateId } from "../combat/types";
-import { hashToHex } from "../rollback/hashing/fnv";
-
-const STATE_NAMES = new Map<number, string>(
-  Object.entries(StateId).map(([name, value]) => [value, name.replace(/([a-z])([A-Z])/g, "$1 $2")]),
-);
+import { ContactKind, HitLevel } from "../combat/types";
 
 export type MovePhase = "STARTUP" | "ACTIVE" | "RECOVERY" | "COMPLETE";
 
@@ -56,44 +48,6 @@ export function movePhase(move: MoveDef | null, frame: number): MovePhase {
   if (frame < data.firstActive) return "STARTUP";
   if (data.activeFrames.has(frame)) return "ACTIVE";
   return "RECOVERY";
-}
-
-/** The frame-centric state cards shown beside the stage. */
-export function frameInspectorMarkup(
-  state: SimState,
-  characters: readonly CharacterDef[],
-  report: FrameReport | null,
-  hash: number,
-): string {
-  const fighters = state.fighters.map((fighter, player) => fighterMarkup(fighter, characters[player], player));
-  const contact = report?.contacts[0];
-  const eventLine = contact
-    ? `CONTACT ${String(report.frame).padStart(6, "0")} · ${contact.kind === ContactKind.Hit ? "HIT" : "BLOCK"} · P${contact.attacker + 1} → P${contact.defender + 1}`
-    : "NO CONTACT ON DISPLAYED STATE";
-  return `<header><span>AUTHORITATIVE STATE</span><code>${hashToHex(hash)}</code></header>
-    <div class="inspector-frame"><span>STATE FRAME</span><strong>${String(state.frame).padStart(6, "0")}</strong><em>${eventLine}</em></div>
-    <div class="fighter-inspector-grid">${fighters.join("")}</div>`;
-}
-
-function fighterMarkup(fighter: FighterState, character: CharacterDef, player: number): string {
-  const move = character.moves.find((candidate) => candidate.id === fighter.moveId) ?? null;
-  const phase = move ? movePhase(move, fighter.moveFrame) : "COMPLETE";
-  return `<article class="fighter-inspector">
-    <h3><span>${player === 0 ? "P1" : "DUMMY"}</span>${escapeHtml(character.name)}</h3>
-    <dl>
-      ${datum("STATE", `${stateName(fighter.state)} · ${fighter.stateFrame}f`)}
-      ${datum("MOVE", move ? escapeHtml(move.key) : "—")}
-      ${datum("MOVE FRAME", move ? `${String(fighter.moveFrame + 1).padStart(2, "0")} / ${String(move.duration).padStart(2, "0")}` : "—")}
-      ${datum("PHASE", move ? phase : "NEUTRAL", phase.toLowerCase())}
-      ${datum("POSITION", `${toPixels(fighter.x)}, ${toPixels(fighter.y)}`)}
-      ${datum("VELOCITY", `${toPixels(fighter.vx)}, ${toPixels(fighter.vy)}`)}
-      ${datum("FACING", fighter.facing === 1 ? "RIGHT" : "LEFT")}
-      ${datum("HITSTOP", `${fighter.hitstop}f`)}
-      ${datum("STUN", `${fighter.stun}f`)}
-      ${datum("STAMINA", `${fighter.stamina} / ${character.stamina}`)}
-      ${datum("ARMOR HITS", String(fighter.armorHits))}
-    </dl>
-  </article>`;
 }
 
 /** A discrete authored move timeline. Visual pose never decides any collision row. */
@@ -172,10 +126,6 @@ function inWindow(windows: readonly { startFrame: number; endFrame: number }[], 
 
 function phaseClass(move: MoveDef, frame: number): string {
   return `on phase-${movePhase(move, frame).toLowerCase()}`;
-}
-
-function stateName(state: StateIdValue): string {
-  return (STATE_NAMES.get(state) ?? String(state)).toUpperCase();
 }
 
 function levelName(level: number): string {

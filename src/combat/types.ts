@@ -352,8 +352,6 @@ export interface StageState {
 /** The complete authoritative state of a match on one frame. */
 export interface SimState {
   frame: number;
-  /** Deterministic RNG word. Part of the state, so a rollback replays the same rolls. */
-  rng: number;
   /** One entry per configured fighter, in fighter-index order. */
   fighters: FighterState[];
   stage: StageState;
@@ -449,8 +447,6 @@ export interface SimConfig {
   characters: readonly CharacterDef[];
   /** Exactly two starting ground origins in sim units. */
   startX: readonly number[];
-  /** Seed for the deterministic RNG. */
-  seed: number;
   /** Optional Training Grid presentation/bounds definition. */
   stage?: StageDef;
 }

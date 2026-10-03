@@ -55,9 +55,3 @@ export const STAMINA_REGEN_DELAY = 36;
 /** How many past input frames the command parser can see when matching motions. */
 export const COMMAND_HISTORY_FRAMES = 32;
 
-/** Snapshot format tag. Bump when the serialised layout changes; readers reject others. */
-export const SNAPSHOT_VERSION = 11;
-
-/** FNV-1a 32-bit parameters, used for every determinism hash in the project. */
-export const FNV_OFFSET_BASIS = 0x811c9dc5;
-export const FNV_PRIME = 0x01000193;

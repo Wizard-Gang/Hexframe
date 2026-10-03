@@ -115,7 +115,6 @@ export class Simulation {
     const stage = config.stage;
     return {
       frame: 0,
-      rng: config.seed,
       fighters,
       stage: {
         worldMinX: stage?.cameraBounds.minX ?? -STAGE_HALF_WIDTH,
@@ -130,7 +129,7 @@ export class Simulation {
     return this.state;
   }
 
-  /** Replace the state wholesale. Rollback and the lab's load-state both arrive here. */
+  /** Replace the state wholesale for a Training reset. */
   setState(next: SimState): void {
     this.state = next;
   }

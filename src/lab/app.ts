@@ -11,7 +11,6 @@ import { GamepadController } from "../input/controller/gamepad";
 import type { GamepadUiState } from "../input/controller/gamepad";
 import { KeyboardController } from "../input/controller/keyboard";
 import { DEFAULT_ACTION_KEYMAP, DEFAULT_KEYMAP_P1, DEFAULT_KEYMAP_P2, NO_ACTION_KEYMAP } from "../input/controller/keymap";
-import { hashState } from "../rollback/hashing/fnv";
 import type { DebugToggles } from "../renderer/svg/debug-overlay";
 import { Renderer } from "../renderer/svg/renderer";
 import { DummyController, DummyMode } from "./dummy/dummy";
@@ -20,7 +19,7 @@ import { applyPreferences, loadPreferences, persistPreferences, resetPreferences
 import type { LabPreferences } from "./preferences";
 import { Timeline } from "./timeline/timeline";
 import type { LabSpeed } from "./timeline/timeline";
-import { frameInspectorMarkup, interactionHistoryMarkup, moveTimelineMarkup } from "./inspector";
+import { interactionHistoryMarkup, moveTimelineMarkup } from "./inspector";
 import type { InteractionSelection } from "./inspector";
 import { buildLabView } from "./view";
 import { markTutorialPromptSeen, tutorialPromptSeen, tutorialRequested, TutorialController } from "./tutorial";
@@ -63,11 +62,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const config: SimConfig = {
     characters: combatCharacters,
     startX: [px(-18), px(18)],
-    seed: 0x5eed,
     stage: selectedStage,
   };
   const sim = new Simulation(config);
-  const timeline = new Timeline(sim, 900);
+  const timeline = new Timeline(sim);
   timeline.paused = false;
   timeline.pauseOnContact = false;
   const dummy = new DummyController();
@@ -115,7 +113,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   const render = (now = performance.now()): void => {
     const state = sim.getState();
-    const stateHash = hashState(state);
     renderer.render(state, lastReport ?? timeline.lastReport, debugEnabled ? toggles : NO_DEBUG_TOGGLES);
     const frameReadout = mount.querySelector<HTMLElement>("#frame-readout");
     const playState = mount.querySelector<HTMLElement>("#play-state");
@@ -123,9 +120,8 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (playState) playState.textContent = timeline.paused ? "PAUSED" : "LIVE";
     const pausedOverlay = required("paused-overlay");
     pausedOverlay.hidden = !timeline.paused || menuOpen();
-    const range = timeline.bufferedRange();
     const timelineStatus = mount.querySelector<HTMLElement>("#timeline-status");
-    if (timelineStatus) timelineStatus.textContent = timeline.lastMessage ?? `Frame ${state.frame} · ${timeline.paused ? "paused" : "live"} · buffer ${range.oldest}–${range.newest}`;
+    if (timelineStatus) timelineStatus.textContent = timeline.lastMessage ?? `Frame ${state.frame} · ${timeline.paused ? "paused" : "live"}`;
     required("controller-state").textContent = gamepad.connected ? `Gamepad · ${gamepad.name}` : "Keyboard ready · connect gamepad anytime";
     for (let player = 0; player < state.fighters.length; player++) {
       const fighter = state.fighters[player];
@@ -143,8 +139,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     required("active-move").textContent = move?.key.replaceAll("_", " ") ?? "Ready";
     required("active-tags").textContent = move?.tags.join(" · ") ?? "Move, strike, and inspect the result";
     for (const pause of mount.querySelectorAll<HTMLButtonElement>("[data-action='pause']")) pause.textContent = timeline.paused ? "Play" : "Pause";
-    const frameInspector = mount.querySelector<HTMLElement>("#frame-inspector");
-    if (frameInspector) replaceTrustedMarkup(frameInspector, frameInspectorMarkup(state, sim.characters(), lastReport ?? timeline.lastReport, stateHash));
     renderFrameTimeline(state.fighters[0].moveId, state.fighters[0].moveFrame);
     renderInteractionHistory();
   };
@@ -184,8 +178,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "menu") openMenu();
     if (action === "close-menu") closeMenu();
     if (action === "return-main") window.location.href = "/";
-    if (action === "back-10") stepFrames(-10);
-    if (action === "back") stepFrames(-1);
     if (action === "forward") stepFrames(1);
     if (action === "forward-10") stepFrames(10);
     if (action === "reset") resetMatch();
@@ -201,13 +193,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "exit-tutorial") exitTutorial();
     if (button.dataset.menuDetailTarget) showMenuDetail(button.dataset.menuDetailTarget as MenuDetail);
     if (button.dataset.contactFrame !== undefined && button.dataset.contactIndex !== undefined) inspectInteraction(Number(button.dataset.contactFrame), Number(button.dataset.contactIndex));
-    const save = button.dataset.save;
-    if (save) {
-      timeline.saveState(Number(save));
-      mount.querySelector<HTMLButtonElement>(`[data-load='${save}']`)!.disabled = false;
-    }
-    const load = button.dataset.load;
-    if (load && timeline.loadState(Number(load))) { timeline.paused = true; lastReport = null; }
     render();
   };
 
@@ -247,8 +232,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (event.code === "Escape") { event.preventDefault(); openMenu(); }
     else if ((event.code === "Space" || event.code === "KeyP") && !isFormControl(event.target)) {
       if (event.repeat) return; event.preventDefault(); timeline.paused = !timeline.paused;
-    } else if ((event.code === "Comma" || event.code === "BracketLeft") && !isFormControl(event.target)) { event.preventDefault(); stepFrames(-1); }
-    else if ((event.code === "Period" || event.code === "BracketRight") && !isFormControl(event.target)) { event.preventDefault(); stepFrames(1); }
+    } else if ((event.code === "Period" || event.code === "BracketRight") && !isFormControl(event.target)) { event.preventDefault(); stepFrames(1); }
     else return;
     render();
   };
@@ -417,10 +401,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   function inspectInteraction(frame: number, index: number): void {
     const report = timeline.reportAt(frame);
     if (!report || !report.contacts[index]) return;
-    timeline.paused = true;
-    if (!timeline.jumpToFrame(frame + 1)) return;
     selectedInteraction = { frame, index };
-    lastReport = report;
     interactionRenderKey = "";
   }
 
@@ -637,7 +618,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (!menuOpen()) {
       if (edge(now, previousUi, "start")) timeline.paused = !timeline.paused;
       if (edge(now, previousUi, "menu")) openMenu();
-      if (timeline.paused && edge(now, previousUi, "leftBumper")) stepFrames(-1);
       if (timeline.paused && edge(now, previousUi, "rightBumper")) stepFrames(1);
       if (timeline.paused && edge(now, previousUi, "up")) focusGamepadTarget("up");
       if (timeline.paused && edge(now, previousUi, "down")) focusGamepadTarget("down");

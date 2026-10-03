@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-173 — [REFACTOR] Delete rewind, save states, the frame inspector and state hashing
-
-**Goal:** Training runs forward only: play, pause, step one frame.
-
-**Scope**
-- Reduce `Timeline` to a forward clock (pause, single-frame step, speed), or fold it into `app.ts`. Delete its snapshot buffer and back-step.
-- Delete the save-state slots, the back-step buttons and the authoritative frame inspector.
-- Delete `src/rollback/` (snapshot, ring and FNV hash) and the seeded RNG (`rng.ts`, `SimState.rng`, `SimConfig.seed`), with their tests.
-
-**Acceptance:** Pause and step forward still work; no `src/rollback/` remains; same inputs still give the same state.
-
-**Validation:** `npm test`; browser check.
-
----
-
 ### HF-174 — [FEAT] Replace the Debug panel with Hitboxes and Slow-mo toggles
 
 **Goal:** Two on-screen toggles replace the engineering panel.
