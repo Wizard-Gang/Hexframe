@@ -12,12 +12,12 @@ Training opens directly at `/play/` with one fixed four-button kit:
 
 | Input | Move | Role |
 | --- | --- | --- |
-| ↑ / Y | Ember Palm | Mid |
-| ← / X | Ashen Sweep | Low |
-| → / B | Frost Heel | Overhead |
-| ↓ / A | Phoenix Drive | Launcher |
+| ↑ / Y | Jab | Mid |
+| ← / X | Sweep | Low |
+| → / B | Overhead | Overhead |
+| ↓ / A | Uppercut | Launcher |
 
-On hit, Ember Palm can route into Ashen Sweep and then Phoenix Drive.
+On hit, Jab can route into Sweep and then Uppercut.
 
 The public Debug toggle is always available on screen and with the backtick key. It reveals frame transport, combat geometry, authoritative frame inspection, contact history, save states, and deterministic scenario capture/replay without adding a server-side player record.
 

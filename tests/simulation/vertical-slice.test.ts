@@ -9,7 +9,7 @@ import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim, placeFighters } from "../helpers/harness";
 
 function emptyReport(): FrameReport {
-  return { frame: 0, contacts: [], debuffs: [], moveStarts: [], stateChanges: [] };
+  return { frame: 0, contacts: [], moveStarts: [], stateChanges: [] };
 }
 
 function guardedContact(stamina: number, perfect: boolean) {
@@ -42,10 +42,10 @@ describe("authored dash feel", () => {
     sim.step([0, 0]);
     sim.step([0, 0]);
     expect(fighter.stateFrame).toBe(3);
-    expect(canStartMove(fighter, TEST_FIGHTER, moveOf(TEST_FIGHTER, MoveId.EmberPalm)!)).toBe(true);
+    expect(canStartMove(fighter, TEST_FIGHTER, moveOf(TEST_FIGHTER, MoveId.Jab)!)).toBe(true);
     sim.step([InputBit.Action1, 0]);
     expect(fighter.state).toBe(StateId.Attack);
-    expect(fighter.moveId).toBe(MoveId.EmberPalm);
+    expect(fighter.moveId).toBe(MoveId.Jab);
   });
 
   it("covers the full 58px profile and transitions directly into held walk", () => {

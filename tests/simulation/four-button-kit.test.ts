@@ -5,7 +5,7 @@ import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim, placeFighters } from "../helpers/harness";
 
 describe("fixed-kit deterministic route", () => {
-  it("lands Ember Palm into Ashen Sweep into Phoenix Drive through authored on-hit cancels", () => {
+  it("lands Jab into Sweep into Uppercut through authored on-hit cancels", () => {
     const sim = createSim();
     placeFighters(sim, -18, 18);
     const landed: number[] = [];
@@ -19,10 +19,10 @@ describe("fixed-kit deterministic route", () => {
       if (opening) {
         input = InputBit.Action1;
         opening = false;
-      } else if (!ashenQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.AshenSweep)) {
+      } else if (!ashenQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.Sweep)) {
         input = InputBit.Action2;
         ashenQueued = true;
-      } else if (!phoenixQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.PhoenixDrive)) {
+      } else if (!phoenixQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.Uppercut)) {
         input = InputBit.Action4;
         phoenixQueued = true;
       }
@@ -34,9 +34,9 @@ describe("fixed-kit deterministic route", () => {
     }
 
     expect(landed.slice(0, 3)).toEqual([
-      MoveId.EmberPalm,
-      MoveId.AshenSweep,
-      MoveId.PhoenixDrive,
+      MoveId.Jab,
+      MoveId.Sweep,
+      MoveId.Uppercut,
     ]);
   });
 });

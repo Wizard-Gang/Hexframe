@@ -1,14 +1,12 @@
 import type { LabPreferences } from "../../lab/preferences";
 
-export type AudioCue = "navigate" | "confirm" | "hit" | "block" | "burn" | "freeze";
+export type AudioCue = "navigate" | "confirm" | "hit" | "block";
 
 export const AUDIO_CAPTIONS: Record<AudioCue, string> = {
   navigate: "Menu focus moves",
   confirm: "Selection confirmed",
   hit: "Heavy impact",
   block: "Attack blocked",
-  burn: "Burn applied",
-  freeze: "Freeze builds",
 };
 
 class AudioManager {
@@ -90,8 +88,7 @@ function cueShape(cue: AudioCue): [number, number, number] {
   if (cue === "confirm") return [440, 660, 0.1];
   if (cue === "hit") return [170, 75, 0.16];
   if (cue === "block") return [145, 55, 0.15];
-  if (cue === "burn") return [260, 620, 0.18];
-  return [740, 920, 0.16];
+  return [145, 55, 0.15];
 }
 
 export const gameAudio = new AudioManager();

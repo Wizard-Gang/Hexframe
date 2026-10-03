@@ -23,29 +23,29 @@ interface KitMoveBlueprint {
 
 const KIT_BLUEPRINTS: readonly KitMoveBlueprint[] = [
   {
-    id: 3, key: "ember_palm", tags: ["fire", "burn", "starter", "strike"],
-    description: "Fast palm that starts the fixed burn route.", level: "mid",
+    id: 3, key: "jab", tags: ["starter", "strike"],
+    description: "Fast jab that starts the fixed combo route.", level: "mid",
     damage: 38, startup: 6, active: 3, recovery: 13,
     box: { x: 24, y: 46, w: 50, h: 26 }, hitstun: 16, blockstun: 10,
     pushback: 3.1, staminaCost: 8, lunge: 1.2, cancelInto: [11],
   },
   {
-    id: 5, key: "frost_heel", tags: ["cold", "freeze", "starter", "kick"],
-    description: "Long overhead heel that builds the retained freeze status.", level: "overhead",
+    id: 5, key: "overhead", tags: ["starter", "kick"],
+    description: "Long overhead strike that checks crouching guard.", level: "overhead",
     damage: 44, startup: 9, active: 3, recovery: 16,
     box: { x: 28, y: 70, w: 62, h: 24 }, hitstun: 19, blockstun: 12,
     pushback: 3.8, staminaCost: 8,
   },
   {
-    id: 11, key: "ashen_sweep", tags: ["fire", "burn", "link", "low"],
-    description: "Low flame sweep that links Ember Palm into the launcher.", level: "low",
+    id: 11, key: "sweep", tags: ["link", "low"],
+    description: "Low sweep that links Jab into the launcher.", level: "low",
     damage: 36, startup: 8, active: 4, recovery: 14,
     box: { x: 18, y: 6, w: 72, h: 22 }, hitstun: 18, blockstun: 11,
     pushback: 3.6, staminaCost: 12, cancelInto: [18],
   },
   {
-    id: 18, key: "phoenix_drive", tags: ["fire", "burn", "cashout", "launch"],
-    description: "Blazing rising drive that launches at the end of the fixed route.", level: "mid",
+    id: 18, key: "uppercut", tags: ["cashout", "launch"],
+    description: "Rising uppercut that launches at the end of the fixed route.", level: "mid",
     damage: 55, startup: 9, active: 5, recovery: 22,
     box: { x: 14, y: 38, w: 60, h: 78 }, hitstun: 24, blockstun: 14,
     pushback: 4.5, staminaCost: 18, lunge: 2.2, launchVelocityY: 7.4,

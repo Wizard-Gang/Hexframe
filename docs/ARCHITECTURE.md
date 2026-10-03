@@ -17,12 +17,12 @@ Training contains the fixed four-button kit:
 
 | Input | Move |
 | --- | --- |
-| ↑ / Y | Ember Palm |
-| ← / X | Ashen Sweep |
-| → / B | Frost Heel |
-| ↓ / A | Phoenix Drive |
+| ↑ / Y | Jab |
+| ← / X | Sweep |
+| → / B | Overhead |
+| ↓ / A | Uppercut |
 
-Ember Palm can route on hit into Ashen Sweep and then Phoenix Drive. The dummy, five-lesson tutorial, frame transport, combat geometry, contact inspection, save states, and deterministic scenario replay all operate on the same browser simulation.
+Jab can route on hit into Sweep and then Uppercut. The dummy, five-lesson tutorial, frame transport, combat geometry, contact inspection, save states, and deterministic scenario replay all operate on the same browser simulation.
 
 ## Authority model
 
