@@ -1,7 +1,7 @@
 import type { MoveDef } from "../../combat/types";
 import { fmt, SVG_NS } from "./stage";
 
-export type MoveEffectKind = "fire" | "freeze" | "physical";
+export type MoveEffectKind = "physical";
 export type MoveEffectAnchor = "hand_near" | "hand_far" | "foot_near" | "foot_far" | "head" | "chest" | "pelvis" | "ground" | "hitbox_center";
 export type MoveEffectLayer = "telegraph" | "trail" | "residue";
 
@@ -58,10 +58,10 @@ function visual(
 export const MOVE_VISUALS: Readonly<Record<string, MoveVisualDefinition>> = {
   standing_light: visual("knuckle_flash", "short_speed_lines", "white_cross", "hand_near", 2, 0, [3, 12, 4, 0, 1, 3], [2, 3, 6, 10]),
   crouching_light: visual("low_streak", "floor_dust", "low_cross", "hand_near", 3, 2, [3, 14, 3, 8, 1, 3], [3, 4, 7, 12]),
-  ember_palm: visual("palm_burst", "embers", "fire_disc", "hand_near", 2, 0, [4, 18, 3, 12, 0, 4], [5, 6, 11, 16]),
-  frost_heel: visual("heel_comet", "ice_dust", "ice_star", "foot_near", 4, -1, [4, 22, -2, 42, 2, 4], [7, 8, 13, 19]),
-  ashen_sweep: visual("ground_arc", "flame_floor", "ember_spray", "ground", 42, -2, [4, 27, 2, 0, 1, 4], [6, 7, 13, 19]),
-  phoenix_drive: visual("rising_spiral", "phoenix_feathers", "fire_spiral", "chest", 12, -15, [5, 31, 5, 10, 2, 5], [7, 8, 15, 23]),
+  jab: visual("jab_flash", "short_lines", "impact_disc", "hand_near", 2, 0, [4, 18, 3, 12, 0, 4], [5, 6, 11, 16]),
+  overhead: visual("overhead_arc", "heavy_streak", "impact_star", "foot_near", 4, -1, [4, 22, -2, 42, 2, 4], [7, 8, 13, 19]),
+  sweep: visual("ground_arc", "floor_streak", "low_spray", "ground", 42, -2, [4, 27, 2, 0, 1, 4], [6, 7, 13, 19]),
+  uppercut: visual("rising_spiral", "rising_streaks", "impact_spiral", "chest", 12, -15, [5, 31, 5, 10, 2, 5], [7, 8, 15, 23]),
 };
 
 const DEFAULT_VISUAL: MoveVisualDefinition = {
@@ -85,18 +85,16 @@ export function moveVisualDefinition(moveKey: string): MoveVisualDefinition {
 }
 
 const COLORS: Record<MoveEffectKind, readonly [string, string]> = {
-  fire: ["#ff9a4d", "#ffd36a"],
-  freeze: ["#78dcff", "#e0f8ff"],
   physical: ["#f1d29a", "#ffffff"],
 };
 
 /** A stable authored visual signature. Combat never reads it. */
 export function moveEffectProfile(
   _moveId: number,
-  tags: readonly string[],
+  _tags: readonly string[],
   moveKey = "",
 ): MoveEffectProfile {
-  const kind = effectKind(tags);
+  const kind: MoveEffectKind = "physical";
   const colors = COLORS[kind];
   const visual = moveVisualDefinition(moveKey);
   return {
@@ -184,7 +182,7 @@ function drawTechniqueMotif(
   motif.style.color = profile.primary;
 
   const pulse = 1 + (frame % 6) * 0.05;
-  if (effect === "palm_burst") {
+  if (effect === "jab_flash") {
     motif.appendChild(ring(0, 0, 14 * pulse, profile.secondary));
     for (let i = 0; i < 4; i++) {
       motif.appendChild(ray(0, 0, 8, 25 + (i % 2) * 7, i * 90, i % 2 ? profile.secondary : profile.primary));
@@ -192,7 +190,7 @@ function drawTechniqueMotif(
   } else if (effect === "ground_arc") {
     motif.appendChild(curve("M -28 7 Q 8 -4 48 4", profile.primary, 4));
     motif.appendChild(curve("M -20 12 Q 12 2 40 9", profile.secondary, 2));
-  } else if (effect === "heel_comet") {
+  } else if (effect === "overhead_arc") {
     for (const [i, offset] of [0, 13, 25].entries()) {
       motif.appendChild(shard(offset, offset * 0.7, 7 + i * 2, 22 + i * 6, i % 2 ? profile.secondary : profile.primary, -8));
     }
@@ -247,11 +245,6 @@ function shard(x: number, y: number, width: number, height: number, color: strin
   return value;
 }
 
-function effectKind(tags: readonly string[]): MoveEffectKind {
-  if (tags.includes("fire") || tags.includes("burn")) return "fire";
-  if (tags.includes("cold") || tags.includes("freeze")) return "freeze";
-  return "physical";
-}
 
 function particleShape(
   profile: MoveEffectProfile,

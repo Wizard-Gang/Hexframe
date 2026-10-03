@@ -70,9 +70,9 @@ describe("Training accessibility and study controls", () => {
 
   it("shows the unchanged fixed four-button legend", () => {
     const html = view();
-    expect(html).toContain("<b>↑ / Y</b> Ember Palm");
-    expect(html).toContain("<b>← / X</b> Ashen Sweep");
-    expect(html).toContain("<b>→ / B</b> Frost Heel");
-    expect(html).toContain("<b>↓ / A</b> Phoenix Drive");
+    expect(html).toContain("<b>↑ / Y</b> Jab");
+    expect(html).toContain("<b>← / X</b> Sweep");
+    expect(html).toContain("<b>→ / B</b> Overhead");
+    expect(html).toContain("<b>↓ / A</b> Uppercut");
   });
 });

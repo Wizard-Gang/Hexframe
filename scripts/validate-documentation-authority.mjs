@@ -50,7 +50,7 @@ for (const match of readme.matchAll(/npm run ([a-z0-9:_-]+)/gi)) {
   );
 }
 
-for (const move of ["Ember Palm", "Ashen Sweep", "Frost Heel", "Phoenix Drive"]) {
+for (const move of ["Jab", "Sweep", "Overhead", "Uppercut"]) {
   assert.match(readme, new RegExp(move), `README must document ${move}`);
 }
 

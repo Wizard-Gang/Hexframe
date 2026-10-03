@@ -23,7 +23,6 @@ export interface LabPreferences {
     motion: MotionPreference;
     textScale: number;
     colorVision: ColorVisionMode;
-    statusPatterns: boolean;
     dyslexiaFont: boolean;
     strongFocus: boolean;
     screenReaderCombat: boolean;
@@ -38,7 +37,7 @@ export interface LabPreferences {
 export const DEFAULT_PREFERENCES: LabPreferences = {
   audio: { master: 0.8, sfx: 0.85, ui: 0.7, captions: true, muteUnfocused: true },
   video: { particles: "full", cameraShake: 0.35, combatFlashes: "reduced", damageNumbers: true, hudOpacity: 0.92 },
-  accessibility: { theme: "system", contrast: "normal", motion: "system", textScale: 1, colorVision: "default", statusPatterns: true, dyslexiaFont: false, strongFocus: true, screenReaderCombat: false },
+  accessibility: { theme: "system", contrast: "normal", motion: "system", textScale: 1, colorVision: "default", dyslexiaFont: false, strongFocus: true, screenReaderCombat: false },
   controls: { glyphs: "auto", stickDeadzone: 0.45, vibration: 0.7 },
 };
 
@@ -78,7 +77,6 @@ export function applyPreferences(preferences: LabPreferences): void {
     ? (systemReduced ? "reduced" : "full")
     : accessibility.motion;
   root.dataset.colorVision = accessibility.colorVision;
-  root.dataset.statusPatterns = accessibility.statusPatterns ? "on" : "off";
   root.dataset.dyslexia = accessibility.dyslexiaFont ? "on" : "off";
   root.dataset.strongFocus = accessibility.strongFocus ? "on" : "off";
   root.dataset.flashes = video.combatFlashes;

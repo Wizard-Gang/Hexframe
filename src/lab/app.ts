@@ -1,11 +1,10 @@
 import { replaceTrustedMarkup } from "../client/trusted-markup";
 import { px } from "../combat/constants";
-import type { FighterState, FrameReport, SimConfig } from "../combat/types";
-import { ContactKind, DebuffEventKind, DebuffKind } from "../combat/types";
+import type { FrameReport, SimConfig } from "../combat/types";
+import { ContactKind } from "../combat/types";
 import { Simulation } from "../combat/simulation/simulation";
 import { createTestFighter } from "../content/test-fighter";
 import { TEST_FIGHTER_ANIMATIONS, TEST_FIGHTER_MODEL, TEST_FIGHTER_PLAYBACK, TEST_FIGHTER_RIG } from "../content/test-fighter-assets";
-import { STATUS_RULES } from "../content/status-rules";
 import { gameAudio } from "../client/audio/audio-manager";
 import { GamepadController } from "../input/controller/gamepad";
 import type { GamepadUiState } from "../input/controller/gamepad";
@@ -124,7 +123,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       const staminaPercent = Math.max(0, Math.min(100, (fighter.stamina / maxStamina) * 100));
       required(`stamina-p${player + 1}`).style.width = `${staminaPercent}%`;
       required(`stamina-text-p${player + 1}`).textContent = `${fighter.stamina} STA`;
-      renderDebuffs(player, fighter);
     }
     const move = playerCharacter.moves.find((candidate) => candidate.id === state.fighters[0].moveId);
     required("active-move").textContent = move?.key.replaceAll("_", " ") ?? "Ready";
@@ -495,27 +493,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
               ? `Player ${contact.defender + 1} perfect guards.`
               : `Player ${contact.defender + 1} blocks and spends ${contact.guardStaminaDamage} stamina.`);
       }
-      for (const event of report.debuffs) {
-        if (event.kind === DebuffEventKind.Applied || event.kind === DebuffEventKind.Triggered) gameAudio.play(cueForDebuff(event.debuff));
-        if (event.kind !== DebuffEventKind.Tick) {
-          const rule = STATUS_RULES.find((candidate) => candidate.debuff === event.debuff);
-          announcements.push(`${rule?.name ?? "Status"} ${event.stacks} stack${event.stacks === 1 ? "" : "s"} on player ${event.target + 1}.`);
-        }
-      }
     }
     if (preferences.accessibility.screenReaderCombat && announcements.length > 0) required("combat-announcer").textContent = announcements.slice(-3).join(" ");
   }
 
-  function renderDebuffs(player: number, fighter: FighterState): void {
-    const statuses = [
-      ["burn", fighter.burnStacks, fighter.burnFrames],
-      ["freeze", fighter.freezeStacks, fighter.freezeFrames],
-    ] as const;
-    const active = statuses.filter(([, stacks, frames]) => stacks > 0 && frames > 0);
-    const lane = required(`debuff-p${player + 1}`);
-    replaceTrustedMarkup(lane, active.map(([tag, stacks, frames]) => `<span class="debuff-chip status-${tag}"><i aria-hidden="true">${STATUS_RULES.find((rule) => rule.tag === tag)?.glyph ?? "?"}</i><b>${tag}</b><em>×${stacks}</em><small>${Math.ceil(frames / 60)}s</small></span>`).join(""));
-    lane.setAttribute("aria-label", active.length > 0 ? active.map(([tag, stacks]) => `${tag}, ${stacks} stacks`).join("; ") : "No active debuffs");
-  }
 
   function showCaption(text: string): void {
     const caption = required("audio-caption");
@@ -652,8 +633,4 @@ function isFormControl(target: EventTarget | null): boolean {
 
 function centerOf(rect: DOMRect): { x: number; y: number } {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-}
-
-function cueForDebuff(debuff: number): "burn" | "freeze" {
-  return debuff === DebuffKind.Burn ? "burn" : "freeze";
 }

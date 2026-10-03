@@ -4,7 +4,7 @@ import { TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim, placeFighters, runFrames } from "../helpers/harness";
 
 describe("contact resolution", () => {
-  it("applies Ember Palm exactly once", () => {
+  it("applies Jab exactly once", () => {
     const sim = createSim();
     placeFighters(sim, -18, 18);
     const reports = runFrames(sim, 12, (frame, player) =>
@@ -34,7 +34,7 @@ describe("contact resolution", () => {
     expect(sim.getState().fighters[1].state).toBe(StateId.BlockstunStand);
   });
 
-  it("hits a standing guard with Ashen Sweep low", () => {
+  it("hits a standing guard with Sweep low", () => {
     const sim = createSim();
     placeFighters(sim, -18, 18);
     const reports = runFrames(sim, 14, (frame, player) => {

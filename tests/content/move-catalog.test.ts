@@ -11,10 +11,10 @@ describe("fixed four-button move catalog", () => {
     expect(TEST_FIGHTER.moves.map((move) => move.key)).toEqual([
       "standing_light",
       "crouching_light",
-      "ember_palm",
-      "frost_heel",
-      "ashen_sweep",
-      "phoenix_drive",
+      "jab",
+      "overhead",
+      "sweep",
+      "uppercut",
     ]);
     expect(TEST_FIGHTER.commands.map((command) => command.moveId)).toEqual([...KIT_MOVE_IDS]);
     expect(TEST_FIGHTER.commands.map((command) => command.buttons)).toEqual([
@@ -27,31 +27,31 @@ describe("fixed four-button move catalog", () => {
 
   it("retains only authored presentation clips for the playable kit", () => {
     expect(Object.keys(ADDITIONAL_ANIMATIONS)).toEqual([
-      "ember_palm",
-      "frost_heel",
-      "ashen_sweep",
-      "phoenix_drive",
+      "jab",
+      "overhead",
+      "sweep",
+      "uppercut",
     ]);
     for (const animation of Object.values(ADDITIONAL_ANIMATIONS)) {
       expect(animation.keyframes).toHaveLength(5);
     }
   });
 
-  it("authors only the Ember Palm to Ashen Sweep to Phoenix Drive cancel chain", () => {
-    const ember = TEST_FIGHTER.moves.find((move) => move.id === MoveId.EmberPalm)!;
-    const ashen = TEST_FIGHTER.moves.find((move) => move.id === MoveId.AshenSweep)!;
-    const frost = TEST_FIGHTER.moves.find((move) => move.id === MoveId.FrostHeel)!;
-    const phoenix = TEST_FIGHTER.moves.find((move) => move.id === MoveId.PhoenixDrive)!;
-    expect(ember.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.AshenSweep]);
-    expect(ashen.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.PhoenixDrive]);
+  it("authors only the Jab to Sweep to Uppercut cancel chain", () => {
+    const ember = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Jab)!;
+    const ashen = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Sweep)!;
+    const frost = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Overhead)!;
+    const phoenix = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Uppercut)!;
+    expect(ember.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.Sweep]);
+    expect(ashen.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.Uppercut]);
     expect(frost.cancelWindows).toHaveLength(0);
     expect(phoenix.cancelWindows).toHaveLength(0);
 
     const fighter = createSim().getState().fighters[0];
-    fighter.moveId = MoveId.EmberPalm;
+    fighter.moveId = MoveId.Jab;
     fighter.moveFrame = ember.cancelWindows[0].startFrame;
     fighter.hitFlags = 1;
-    expect(cancelAllowed(fighter, TEST_FIGHTER, MoveId.AshenSweep)).toBe(true);
-    expect(cancelAllowed(fighter, TEST_FIGHTER, MoveId.FrostHeel)).toBe(false);
+    expect(cancelAllowed(fighter, TEST_FIGHTER, MoveId.Sweep)).toBe(true);
+    expect(cancelAllowed(fighter, TEST_FIGHTER, MoveId.Overhead)).toBe(false);
   });
 });

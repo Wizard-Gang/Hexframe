@@ -43,15 +43,12 @@ export function applyGroundMotion(f: FighterState, c: CharacterDef, input: Input
     return;
   }
 
-  // One and two cold stacks slow ground movement to 75% and 50%. Three stacks are a
-  // full freeze handled by the frame loop before movement is reached.
-  const chillScale = Math.max(2, 4 - Math.min(2, f.freezeStacks));
   if (isForward(input, f.facing)) {
     enterState(f, StateId.WalkForward);
-    f.vx = Math.trunc((c.walkForwardSpeed * chillScale) / 4) * f.facing;
+    f.vx = c.walkForwardSpeed * f.facing;
   } else if (isBackward(input, f.facing)) {
     enterState(f, StateId.WalkBackward);
-    f.vx = -Math.trunc((c.walkBackwardSpeed * chillScale) / 4) * f.facing;
+    f.vx = -c.walkBackwardSpeed * f.facing;
   } else {
     enterState(f, StateId.Idle);
     f.vx = 0;

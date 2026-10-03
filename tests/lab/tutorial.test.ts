@@ -115,10 +115,10 @@ describe("interactive tutorial objectives", () => {
       if (opening) {
         input = InputBit.Action1;
         opening = false;
-      } else if (!ashenQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.AshenSweep)) {
+      } else if (!ashenQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.Sweep)) {
         input = InputBit.Action2;
         ashenQueued = true;
-      } else if (!phoenixQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.PhoenixDrive)) {
+      } else if (!phoenixQueued && fighter.hitstop === 0 && cancelAllowed(fighter, TEST_FIGHTER, MoveId.Uppercut)) {
         input = InputBit.Action4;
         phoenixQueued = true;
       }

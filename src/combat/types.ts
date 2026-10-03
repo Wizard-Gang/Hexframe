@@ -182,7 +182,7 @@ export interface MoveDef {
   id: number;
   key: string;
   animation: string;
-  /** Searchable move-tag vocabulary: fire, burn, projectile, guard-break, and so on. */
+  /** Searchable move-tag vocabulary for presentation and authored roles. */
   tags: string[];
   /** Short player-facing explanation of the authored technique. */
   description: string;
@@ -329,11 +329,6 @@ export interface FighterState {
   bufferConsumedFrame: number;
   /** 1 for a forward dash, 0 for a backdash. Meaningful only in `StateId.Dash`. */
   dashForward: number;
-  /** Deterministic stack counts and lifetimes for tag-driven status effects. */
-  burnStacks: number;
-  burnFrames: number;
-  freezeStacks: number;
-  freezeFrames: number;
 }
 
 export interface StageDef {
@@ -383,7 +378,7 @@ export interface ContactEvent {
   hurtboxId: number;
   kind: ContactKindValue;
   level: HitLevelValue;
-  /** Damage dealt by the authored move and status interactions. */
+  /** Damage dealt by the authored move. */
   damage: number;
   rawDamage: number;
   hitstun: number;
@@ -409,27 +404,11 @@ export interface ContactEvent {
   y: number;
 }
 
-export const DebuffKind = { Burn: 0, Freeze: 1 } as const;
-export type DebuffKindValue = (typeof DebuffKind)[keyof typeof DebuffKind];
-
-export const DebuffEventKind = { Applied: 0, Tick: 1, Consumed: 2, Triggered: 3 } as const;
-export type DebuffEventKindValue = (typeof DebuffEventKind)[keyof typeof DebuffEventKind];
-
-export interface DebuffEvent {
-  source: number;
-  target: number;
-  debuff: DebuffKindValue;
-  kind: DebuffEventKindValue;
-  stacks: number;
-  frames: number;
-  damage: number;
-}
 
 /** What one `step()` produced. Read by the renderer and the lab; never by the simulation. */
 export interface FrameReport {
   frame: number;
   contacts: ContactEvent[];
-  debuffs: DebuffEvent[];
   moveStarts: { player: number; moveId: number }[];
   /** A fighter's state changed this frame, for the lab's state log. */
   stateChanges: { player: number; from: StateIdValue; to: StateIdValue }[];

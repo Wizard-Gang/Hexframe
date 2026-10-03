@@ -24,17 +24,17 @@ const BASE_TEST_FIGHTER: CharacterDef = loadCharacter(validateCharacter(characte
 export const MoveId = {
   StandingLight: 1,
   CrouchingLight: 2,
-  EmberPalm: 3,
-  FrostHeel: 5,
-  AshenSweep: 11,
-  PhoenixDrive: 18,
+  Jab: 3,
+  Overhead: 5,
+  Sweep: 11,
+  Uppercut: 18,
 } as const;
 
 export const KIT_MOVE_IDS = [
-  MoveId.EmberPalm,
-  MoveId.AshenSweep,
-  MoveId.FrostHeel,
-  MoveId.PhoenixDrive,
+  MoveId.Jab,
+  MoveId.Sweep,
+  MoveId.Overhead,
+  MoveId.Uppercut,
 ] as const;
 
 function fixedCommands(character: CharacterDef): CommandDef[] {

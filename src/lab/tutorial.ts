@@ -74,26 +74,26 @@ export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
     title: "Attacks",
     hint: "Use each button in the fixed four-button kit.",
     steps: [
-      { objective: "Press ↑ / Y for Ember Palm", success: "Ember Palm started" },
-      { objective: "Press ← / X for Ashen Sweep", success: "Ashen Sweep started" },
-      { objective: "Press → / B for Frost Heel", success: "Frost Heel started" },
-      { objective: "Press ↓ / A for Phoenix Drive", success: "Phoenix Drive started" },
+      { objective: "Press ↑ / Y for Jab", success: "Jab started" },
+      { objective: "Press ← / X for Sweep", success: "Sweep started" },
+      { objective: "Press → / B for Overhead", success: "Overhead started" },
+      { objective: "Press ↓ / A for Uppercut", success: "Uppercut started" },
     ],
   },
   {
     id: "combo",
     title: "Combo",
-    hint: "Cancel on contact: Ember Palm → Ashen Sweep → Phoenix Drive.",
+    hint: "Cancel on contact: Jab → Sweep → Uppercut.",
     steps: [
-      { objective: "Land Ember Palm", success: "Starter connected" },
-      { objective: "Cancel into Ashen Sweep", success: "Link connected" },
-      { objective: "Cash out with Phoenix Drive", success: "Combo complete" },
+      { objective: "Land Jab", success: "Starter connected" },
+      { objective: "Cancel into Sweep", success: "Link connected" },
+      { objective: "Cash out with Uppercut", success: "Combo complete" },
     ],
   },
 ];
 
-const ATTACK_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.FrostHeel, MoveId.PhoenixDrive];
-const COMBO_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.PhoenixDrive];
+const ATTACK_MOVES = [MoveId.Jab, MoveId.Sweep, MoveId.Overhead, MoveId.Uppercut];
+const COMBO_MOVES = [MoveId.Jab, MoveId.Sweep, MoveId.Uppercut];
 const DEFENSE_LEVELS = [HitLevel.Mid, HitLevel.Low, HitLevel.Overhead];
 
 export class TutorialController {
