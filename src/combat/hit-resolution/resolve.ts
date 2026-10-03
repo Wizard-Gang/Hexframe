@@ -37,8 +37,8 @@ import {
  *
  * The stance has to suit the level, and a stance that does not suit it is a hit rather
  * than a failed block: holding back against a low while standing is precisely the mistake
- * lows exist to punish. Left and right held together cancel, matching the numpad
- * conversion, so a mashed stick guards nothing.
+ * lows exist to punish. Left and right held together cancel under the shared horizontal-direction rule, so a
+ * mashed stick guards nothing.
  *
  * On exactly equal x — two fighters somehow sharing an origin — "away" resolves to the
  * right. It is arbitrary and it is fixed, which is all determinism asks.

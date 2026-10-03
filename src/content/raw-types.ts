@@ -118,12 +118,10 @@ export interface RawMove {
   cancelWindows: RawCancelWindow[];
 }
 
-/** How a player asks for a move. Motions are facing-relative numpad digits. */
+/** How a player asks for a move: authored buttons plus optional stance requirements. */
 export interface RawCommand {
   moveId: number;
   buttons: RawButton[];
-  motion: number[];
-  motionWindow: number;
   requiresCrouch: boolean;
   requiresAir: boolean;
   priority: number;

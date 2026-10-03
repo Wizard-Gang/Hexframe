@@ -11,7 +11,7 @@ import type { CharacterDef, FighterState, InputFrame } from "../types";
 import { InputBit, StateId } from "../types";
 import { GROUND_Y } from "../constants";
 import { enterState, isActionable, isInHitstun, isInStun } from "../state/machine";
-import { isBackward, isForward } from "../../input/parser/numpad";
+import { isBackward, isForward } from "../../input/parser/direction";
 
 /**
  * Translate this frame's held direction into a stance and a walking velocity.

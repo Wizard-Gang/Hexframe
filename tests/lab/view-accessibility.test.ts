@@ -20,6 +20,14 @@ describe("Training accessibility and study controls", () => {
     for (const item of ["Resume", "Restart", "Start tutorial", "Move list", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
     for (const removed of ['data-control="speed"', 'id="debug-control"', 'id="debug-tools"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="move-timeline-console"', 'id="interaction-history"']) expect(html).not.toContain(removed);
     expect(html).not.toContain('role="tablist"');
+    expect(appSource).toContain('[DummyMode.Stand, "Stand"]');
+    expect(appSource).toContain('[DummyMode.Block, "Block"]');
+    expect(appSource).toContain('[DummyMode.FightBack, "Fight back"]');
+    for (const removed of [
+      "DummyMode.Crouch", "DummyMode.Jump", "DummyMode.BlockNone",
+      "DummyMode.BlockAll", "DummyMode.BlockAfterFirstHit", "DummyMode.Record",
+      "DummyMode.Playback", "DummyMode.Counterattack", "DummyMode.Reversal",
+    ]) expect(appSource).not.toContain(removed);
   });
 
   it("remembers Hitboxes and Slow-mo while deleting the old Debug drawing paths", () => {

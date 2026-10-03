@@ -202,7 +202,7 @@ export interface MoveDef {
   cancelWindows: CancelWindow[];
 }
 
-/** How a player asks for a move. Motions are facing-relative numpad digits. */
+/** How a player asks for a move: a button press plus optional stance requirements. */
 export interface CommandDef {
   moveId: number;
   /**
@@ -210,10 +210,6 @@ export interface CommandDef {
    * from released to pressed, within `INPUT_BUFFER_FRAMES` of that press.
    */
   buttons: number;
-  /** Numpad sequence, e.g. `[2, 3, 6]` for a quarter-circle forward. Empty for normals. */
-  motion: number[];
-  /** How many frames the whole motion may take. Ignored when `motion` is empty. */
-  motionWindow: number;
   requiresCrouch: boolean;
   requiresAir: boolean;
   /** Higher wins when several commands match on the same frame. */

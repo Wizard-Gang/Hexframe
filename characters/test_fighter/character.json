@@ -38,8 +38,6 @@
     {
       "moveId": 2,
       "buttons": ["light"],
-      "motion": [],
-      "motionWindow": 0,
       "requiresCrouch": true,
       "requiresAir": false,
       "priority": 20
@@ -47,8 +45,6 @@
     {
       "moveId": 1,
       "buttons": ["light"],
-      "motion": [],
-      "motionWindow": 0,
       "requiresCrouch": false,
       "requiresAir": false,
       "priority": 10
