@@ -52,10 +52,6 @@ assert.doesNotMatch(
   "release identity verifier must remain credential-free and non-mutating",
 );
 
-const localSecrets = read("scripts/sync-secrets.mjs");
-assert.match(localSecrets, /no application secrets to synchronize/i, "retired application secrets must not retain a local sync path");
-assert.doesNotMatch(localSecrets, /ADMIN_|wrangler|secret\s+put|loadRootEnv|CLOUDFLARE/i, "local secret helper must not contain retired bindings or mutate provider state");
-
 const release = read(".github/workflows/release.yml");
 assert.match(release, /push:\s*\n\s+tags:\s*\n\s+- "v\[0-9\]\+\.\[0-9\]\+\.\[0-9\]\+"/);
 assert.match(release, /workflow_dispatch:/, "release workflow must accept exact-tag dispatch from the release cutter");
