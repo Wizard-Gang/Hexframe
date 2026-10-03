@@ -21,7 +21,7 @@ import type {
   SimState,
   StateIdValue,
 } from "../types";
-import { InputBit, StateId } from "../types";
+import { StateId } from "../types";
 import {
   COMMAND_HISTORY_FRAMES,
   GROUND_Y,
@@ -39,7 +39,7 @@ import {
   isInStun,
   tickTimers,
 } from "../state/machine";
-import { pressedOn, readInput, writeInput } from "../../input/buffer/history";
+import { readInput, writeInput } from "../../input/buffer/history";
 import { commandPressFrame, resolveCommand } from "../../input/parser/command-parser";
 import { isBackward, isForward } from "../../input/parser/numpad";
 
@@ -93,7 +93,6 @@ export class Simulation {
         // -1 rather than 0, so that a press on frame 0 is still newer than "nothing
         // consumed yet" and the very first button of a match is not swallowed.
         bufferConsumedFrame: -1,
-        dashForward: 1,
       });
     }
 
@@ -175,9 +174,6 @@ export class Simulation {
       }
       if (f.state === StateId.Attack) {
         advanceMove(f, c);
-      } else if (f.state === StateId.Dash && f.stateFrame >= this.dashProfile(f, c).velocities.length) {
-        enterState(f, StateId.Idle);
-        f.vx = 0;
       } else if (isInStun(f) && f.stun === 0) {
         this.recoverFromStun(f);
       } else if (f.state === StateId.JumpSquat && f.stateFrame >= c.jumpSquatFrames) {
@@ -188,20 +184,13 @@ export class Simulation {
 
       tickTimers(f);
 
-      if (f.state === StateId.Dash) {
-        const profile = this.dashProfile(f, c);
-        const velocity = profile.velocities[Math.min(f.stateFrame, profile.velocities.length - 1)] ?? 0;
-        f.vx = velocity * (f.dashForward === 1 ? f.facing : -f.facing);
-      }
 
       // The stance is established before the command is matched. Crouching is a stance
       // rather than a move, and a command that requires it — every low in the game — has
       // to be judged against the direction being held now. Deferring the stance to the
       // movement step would mean holding down and pressing light on the same frame gives
       // the standing normal, which is a frame of lag the player did nothing to deserve.
-      if (!this.tryStartDash(s, p, f, c)) {
-        applyGroundMotion(f, c, readInput(s, p, s.frame));
-      }
+      applyGroundMotion(f, c, readInput(s, p, s.frame));
 
       const wanted = resolveCommand(s, p, c, f);
       if (wanted === NO_MOVE) continue;
@@ -293,32 +282,4 @@ export class Simulation {
     enterState(f, StateId.Airborne);
   }
 
-  /** Start a grounded authored dash when the same horizontal direction is tapped twice. */
-  private tryStartDash(s: SimState, player: number, f: FighterState, c: CharacterDef): boolean {
-    if (!isActionable(f) || f.airborne === 1) return false;
-    const directions = [InputBit.Left, InputBit.Right] as const;
-    for (const direction of directions) {
-      if (!pressedOn(s, player, s.frame, direction)) continue;
-      const sign = direction === InputBit.Left ? -1 : 1;
-      const forward = sign === f.facing;
-      const profile = forward ? c.dashForward : c.dashBackward;
-      let doubleTap = false;
-      for (let frame = s.frame - 2; frame >= Math.max(0, s.frame - profile.recognitionWindow); frame--) {
-        if (pressedOn(s, player, frame, direction)) {
-          doubleTap = true;
-          break;
-        }
-      }
-      if (!doubleTap) continue;
-      f.dashForward = forward ? 1 : 0;
-      f.vx = (profile.velocities[0] ?? 0) * sign;
-      enterState(f, StateId.Dash);
-      return true;
-    }
-    return false;
-  }
-
-  private dashProfile(f: FighterState, c: CharacterDef) {
-    return f.dashForward === 1 ? c.dashForward : c.dashBackward;
-  }
 }

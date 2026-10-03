@@ -28,30 +28,6 @@ export const STATE_ANIMATIONS: Record<string, RawAnimation> = {
       { frame: 36, bones: { pelvis: { y: -20 }, torso: { rotation: 12 }, head: { rotation: -8 }, arm_upper_l: { rotation: -30 }, arm_upper_r: { rotation: -34 } } },
     ],
   },
-  dash_forward: {
-    name: "dash_forward",
-    loop: false,
-    duration: 14,
-    note: "Aggressive commitment: deep lean, explosive step, low travel, braking plant.",
-    keyframes: [
-      { frame: 0, bones: { pelvis: { y: -5, x: -3 }, torso: { rotation: 18 }, head: { rotation: -12 }, leg_upper_l: { rotation: 28 }, leg_lower_l: { rotation: -40 }, leg_upper_r: { rotation: -30 }, leg_lower_r: { rotation: 18 }, arm_upper_l: { rotation: -46 }, arm_upper_r: { rotation: -34 } } },
-      { frame: 2, bones: { pelvis: { y: 3, x: 7 }, torso: { rotation: 29 }, head: { rotation: -20 }, leg_upper_l: { rotation: 58 }, leg_lower_l: { rotation: -70 }, foot_l: { rotation: 18 }, leg_upper_r: { rotation: -52 }, leg_lower_r: { rotation: 20 }, foot_r: { rotation: -8 }, arm_upper_l: { rotation: -74 }, arm_upper_r: { rotation: 22 } } },
-      { frame: 8, bones: { pelvis: { y: -9, x: 8 }, torso: { rotation: 34 }, head: { rotation: -26 }, leg_upper_l: { rotation: 18 }, leg_lower_l: { rotation: -48 }, foot_l: { rotation: 25 }, leg_upper_r: { rotation: -24 }, leg_lower_r: { rotation: 5 }, arm_upper_l: { rotation: -82 }, arm_upper_r: { rotation: -4 } } },
-      { frame: 14, bones: { pelvis: { y: -4, x: 1 }, torso: { rotation: 8 }, head: { rotation: -5 }, leg_upper_l: { rotation: -34 }, leg_lower_l: { rotation: 28 }, foot_l: { rotation: 6 }, leg_upper_r: { rotation: 35 }, leg_lower_r: { rotation: -42 }, foot_r: { rotation: 0 }, arm_upper_l: { rotation: -24 }, arm_upper_r: { rotation: -30 } } },
-    ],
-  },
-  dash_backward: {
-    name: "dash_backward",
-    loop: false,
-    duration: 14,
-    note: "Defensive disengagement: chest retreats first while the lead hand stays high.",
-    keyframes: [
-      { frame: 0, bones: { pelvis: { y: -3, x: 4 }, torso: { rotation: -15 }, head: { rotation: 11 }, arm_upper_l: { rotation: -4 }, arm_lower_l: { rotation: -78 }, arm_upper_r: { rotation: -12 }, arm_lower_r: { rotation: -72 }, leg_upper_l: { rotation: -24 }, leg_upper_r: { rotation: 20 } } },
-      { frame: 3, bones: { pelvis: { y: 2, x: -7 }, torso: { rotation: -24 }, head: { rotation: 16 }, arm_upper_l: { rotation: 8 }, arm_lower_l: { rotation: -86 }, arm_upper_r: { rotation: -8 }, arm_lower_r: { rotation: -80 }, leg_upper_l: { rotation: -48 }, leg_lower_l: { rotation: 22 }, foot_l: { rotation: -5 }, leg_upper_r: { rotation: 50 }, leg_lower_r: { rotation: -60 }, foot_r: { rotation: 14 } } },
-      { frame: 9, bones: { pelvis: { y: -6, x: -6 }, torso: { rotation: -20 }, head: { rotation: 13 }, arm_upper_l: { rotation: 2 }, arm_lower_l: { rotation: -82 }, arm_upper_r: { rotation: -6 }, arm_lower_r: { rotation: -78 }, leg_upper_l: { rotation: -20 }, leg_lower_l: { rotation: 8 }, leg_upper_r: { rotation: 25 }, leg_lower_r: { rotation: -42 } } },
-      { frame: 14, bones: { pelvis: { y: -3, x: 0 }, torso: { rotation: -7 }, head: { rotation: 4 }, arm_upper_l: { rotation: -8 }, arm_lower_l: { rotation: -58 }, arm_upper_r: { rotation: -18 }, arm_lower_r: { rotation: -62 }, leg_upper_l: { rotation: 24 }, leg_lower_l: { rotation: -32 }, foot_l: { rotation: 0 }, leg_upper_r: { rotation: -18 }, leg_lower_r: { rotation: 12 }, foot_r: { rotation: 0 } } },
-    ],
-  },
   jump_squat: {
     name: "jump_squat",
     loop: false,

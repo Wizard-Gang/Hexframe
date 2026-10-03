@@ -26,7 +26,6 @@ import type {
   RawCancelWindow,
   RawCharacter,
   RawCommand,
-  RawDashProfile,
   RawHitbox,
   RawHurtboxWindow,
   RawInvulWindow,
@@ -448,8 +447,6 @@ const CHARACTER_KEYS = [
   "health",
   "walkForwardSpeed",
   "walkBackwardSpeed",
-  "dashForward",
-  "dashBackward",
   "jumpVelocityY",
   "jumpVelocityXForward",
   "jumpVelocityXBackward",
@@ -465,28 +462,6 @@ const CHARACTER_KEYS = [
   "hurtboxesAir",
   "commands",
 ] as const;
-
-const DASH_PROFILE_KEYS = ["velocities", "attackCancelFrame", "recognitionWindow"] as const;
-
-function readDashProfile(value: unknown, path: string): RawDashProfile {
-  const source = requireObject(value, path);
-  requireNoExtraKeys(source, path, DASH_PROFILE_KEYS);
-  const velocities = requireArray(source, path, "velocities", 1).map((velocity, index) => {
-    if (typeof velocity !== "number" || !Number.isFinite(velocity) || velocity < 0) {
-      throw new ContentError(`${path}.velocities[${index}]`, "must be a finite number >= 0");
-    }
-    return velocity;
-  });
-  const attackCancelFrame = requireIntegerAtLeast(source, path, "attackCancelFrame", 0);
-  if (attackCancelFrame >= velocities.length) {
-    throw new ContentError(`${path}.attackCancelFrame`, "must name a frame inside velocities");
-  }
-  return {
-    velocities,
-    attackCancelFrame,
-    recognitionWindow: requireIntegerAtLeast(source, path, "recognitionWindow", 2),
-  };
-}
 
 /**
  * Validate a `character.json`. The optional `path` is a prefix for the error paths, so a
@@ -507,8 +482,6 @@ export function validateCharacter(raw: unknown, path = ""): RawCharacter {
     health: requireIntegerAtLeast(source, path, "health", 1),
     walkForwardSpeed: requireNumberAtLeast(source, path, "walkForwardSpeed", 0),
     walkBackwardSpeed: requireNumberAtLeast(source, path, "walkBackwardSpeed", 0),
-    dashForward: readDashProfile(requirePresent(source, path, "dashForward"), field(path, "dashForward")),
-    dashBackward: readDashProfile(requirePresent(source, path, "dashBackward"), field(path, "dashBackward")),
     jumpVelocityY: requireNumberAtLeast(source, path, "jumpVelocityY", 0),
     jumpVelocityXForward: requireNumber(source, path, "jumpVelocityXForward"),
     jumpVelocityXBackward: requireNumber(source, path, "jumpVelocityXBackward"),

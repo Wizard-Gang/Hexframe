@@ -66,9 +66,6 @@ export function sampleAnimation(anim: RawAnimation, frame: number): Pose {
 export function animationForState(f: FighterState, c: CharacterDef): string {
   if (f.state === StateId.Defeat) return "defeat";
   if (f.state === StateId.Attack) return moveOf(c, f.moveId)?.animation ?? "idle";
-  if (f.state === StateId.Dash) {
-    return f.dashForward === 1 ? "dash_forward" : "dash_backward";
-  }
   if (f.state === StateId.JumpSquat) return "jump_squat";
   if (f.state === StateId.Landing) return "landing";
   if (f.state === StateId.HitstunAir) return "hit_air";

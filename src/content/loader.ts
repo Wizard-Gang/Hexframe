@@ -244,14 +244,6 @@ export function loadCharacter(raw: RawCharacter, moves: RawMove[]): CharacterDef
     health: raw.health,
     walkForwardSpeed: px(raw.walkForwardSpeed),
     walkBackwardSpeed: px(raw.walkBackwardSpeed),
-    dashForward: {
-      ...raw.dashForward,
-      velocities: raw.dashForward.velocities.map(px),
-    },
-    dashBackward: {
-      ...raw.dashBackward,
-      velocities: raw.dashBackward.velocities.map(px),
-    },
     jumpVelocityY: px(raw.jumpVelocityY),
     jumpVelocityXForward: px(raw.jumpVelocityXForward),
     jumpVelocityXBackward: px(raw.jumpVelocityXBackward),

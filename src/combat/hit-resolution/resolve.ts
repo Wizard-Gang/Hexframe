@@ -56,7 +56,6 @@ export function isBlocking(
   if (
     defender.state === StateId.JumpSquat ||
     defender.state === StateId.Landing ||
-    defender.state === StateId.Dash ||
     defender.state === StateId.Knockdown
   ) {
     return false;

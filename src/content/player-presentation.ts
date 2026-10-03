@@ -55,7 +55,7 @@ export function normalizeWalkPresentation(animation: RawAnimation, backward = fa
   });
 }
 
-/** Only neutral state clips are normalized; blocks, hits and dashes keep authored poses. */
+/** Only neutral state clips are normalized; blocks and hits keep authored poses. */
 export function normalizeStatePresentation(name: string, animation: RawAnimation): RawAnimation {
   if (name === "crouch_idle") return withGuardOnEveryFrame(animation, PLAYER_CROUCH_GUARD);
   if (name === "jump_rise" || name === "jump_apex" || name === "jump_fall") return withGuardOnEveryFrame(animation, PLAYER_AIR_GUARD);

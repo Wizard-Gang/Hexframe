@@ -23,6 +23,25 @@ describe("walking", () => {
     expect(sim.getState().fighters[0].state).toBe(StateId.WalkBackward);
   });
 
+  it("treats a horizontal double-tap as ordinary walking", () => {
+    const sim = createSim();
+    const fighter = sim.getState().fighters[0];
+
+    sim.step([InputBit.Right, 0]);
+    sim.step([0, 0]);
+    const beforeSecondTap = fighter.x;
+
+    sim.step([InputBit.Right, 0]);
+    expect(fighter.state).toBe(StateId.WalkForward);
+    expect(fighter.vx).toBe(TEST_FIGHTER.walkForwardSpeed);
+    expect(fighter.x - beforeSecondTap).toBe(TEST_FIGHTER.walkForwardSpeed);
+
+    sim.step([InputBit.Right, 0]);
+    expect(fighter.state).toBe(StateId.WalkForward);
+    expect(fighter.vx).toBe(TEST_FIGHTER.walkForwardSpeed);
+    expect(fighter.x - beforeSecondTap).toBe(TEST_FIGHTER.walkForwardSpeed * 2);
+  });
+
   it("crouches rather than walking when down and a direction are held together", () => {
     const sim = createSim();
     runFrames(sim, 4, (_f, player) => (player === 0 ? InputBit.Down | InputBit.Right : 0));

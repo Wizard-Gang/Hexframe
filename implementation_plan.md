@@ -70,18 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-177 — [REFACTOR] Remove dash
-
-**Goal:** Movement is walk, crouch and jump.
-
-**Scope:** Delete double-tap recognition, dash state and profiles, dash cancels and the dash clip, with their tests and docs.
-
-**Acceptance:** Double-tapping a direction walks; the movement tests pass.
-
-**Validation:** `npm test -- tests/simulation tests/input`.
-
----
-
 ### HF-178 — [REFACTOR] Remove motion inputs and P2 recording, and keep three dummy modes
 
 **Goal:** A command is a button plus stance, and the dummy has three readable modes.
