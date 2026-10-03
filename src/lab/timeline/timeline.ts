@@ -6,12 +6,6 @@ import { deserializeState, serializeState } from "../../rollback/snapshots/snaps
 /** How fast the laboratory drives the simulation, as a percentage of real time. */
 export type LabSpeed = 25 | 50 | 100 | 200;
 
-/** One authoritative input row retained beside the snapshot it produced. */
-export interface RecordedInputFrame {
-  frame: number;
-  inputs: InputFrame[];
-}
-
 /** `speed` is a percentage, so one whole simulation frame is worth 100 units. */
 const SPEED_UNIT = 100;
 
@@ -142,35 +136,6 @@ export class Timeline {
     return this.reports(throughFrame + 1).filter((report) => report.contacts.length > 0);
   }
 
-  /** The exact input script from the beginning of this run through `throughFrame`. */
-  recordedInputs(throughFrame = this.sim.getState().frame): RecordedInputFrame[] {
-    return [...this.inputHistory.entries()]
-      .filter(([frame]) => frame < throughFrame)
-      .sort(([a], [b]) => a - b)
-      .map(([frame, inputs]) => ({ frame, inputs: inputs.slice() }));
-  }
-
-  /**
-   * Reset and execute a contiguous recorded input script without sampling live controls.
-   * Pause-on-contact is deliberately ignored: replay must reach the expected terminal
-   * state before its hash can be compared.
-   */
-  replay(recording: readonly RecordedInputFrame[]): FrameReport[] {
-    this.reset();
-    const reports: FrameReport[] = [];
-    for (const row of recording) {
-      if (row.frame !== this.sim.getState().frame) {
-        throw new RangeError(
-          `Timeline replay expected frame ${this.sim.getState().frame}, received ${row.frame}`,
-        );
-      }
-      reports.push(this.stepOnce(row.inputs));
-    }
-    this.paused = true;
-    this.lastMessage = `Replayed ${reports.length} deterministic frame${reports.length === 1 ? "" : "s"}.`;
-    return reports;
-  }
-
   /** Save the same canonical bytes used by rollback and determinism hashing. */
   saveState(slot: number): void {
     this.slots.set(slot, serializeState(this.sim.getState()));
@@ -222,12 +187,12 @@ export class Timeline {
   }
 
   /** Run exactly one frame, retaining the input, output report, and resulting state. */
-  private stepOnce(override?: readonly InputFrame[]): FrameReport {
+  private stepOnce(): FrameReport {
     const frame = this.sim.getState().frame;
     const recorded = this.inputHistory.get(frame);
-    const source = override ?? (frame < this.latestRecordedFrame && recorded
+    const source = frame < this.latestRecordedFrame && recorded
       ? recorded
-      : this.inputProvider(frame));
+      : this.inputProvider(frame);
     const inputs = Array.from({ length: this.sim.getState().fighters.length }, (_, player) => source[player] ?? 0);
 
     this.inputHistory.set(frame, inputs);

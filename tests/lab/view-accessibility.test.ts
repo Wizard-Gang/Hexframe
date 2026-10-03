@@ -24,7 +24,7 @@ describe("Training accessibility and Debug contract", () => {
     expect(hidden).toContain('id="debug-tools" aria-label="Debug tools" hidden');
     expect(visible).toContain('id="debug-tools" aria-label="Debug tools" >');
     for (const surface of ["hitboxes", "hurtboxes", "pushboxes", "origins", "skeleton"]) expect(visible).toContain(`data-debug="${surface}"`);
-    for (const marker of ['id="frame-readout"', 'data-action="back-10"', 'data-action="back"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="frame-inspector"', 'id="move-timeline-console"', 'id="interaction-history"', 'class="save-states"', 'data-action="scenario-capture"', 'data-action="scenario-replay"', 'data-action="scenario-export"', 'data-control="scenario-import"']) expect(visible).toContain(marker);
+    for (const marker of ['id="frame-readout"', 'data-action="back-10"', 'data-action="back"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="frame-inspector"', 'id="move-timeline-console"', 'id="interaction-history"', 'class="save-states"']) expect(visible).toContain(marker);
     expect(appSource).toContain('const DEBUG_STORAGE_KEY = "hexframe.debug.v1"');
     expect(appSource).toContain('event.code === "Backquote"');
     const toggleBody = appSource.match(/function setDebugEnabled[\s\S]*?\n  }/)?.[0] ?? "";
