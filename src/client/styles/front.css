@@ -55,7 +55,6 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 .overview-demo footer { border-top: 1px solid #333e47; }
 .overview-training-stage { height: clamp(380px, 46vw, 590px); background: #080a0f; }
 .overview-training-stage svg { display: block; width: 100%; height: 100%; }
-.overview-training-stage .bone-name { display: none; }
 .overview-training-stage .fighter-p1 { --fighter-body: #a8cf46; --fighter-near: #c4ed64; --fighter-near-dark: #8dac34; --fighter-far: #61792d; --fighter-far-dark: #465820; --fighter-accent: #efffc7; }
 .overview-training-stage .fighter-p2 { --fighter-body: #687bdf; --fighter-near: #8fa0ff; --fighter-near-dark: #5568c9; --fighter-far: #3d487f; --fighter-far-dark: #303961; --fighter-accent: #dce2ff; }
 .overview-proof { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #2d363e; border-bottom: 1px solid #2d363e; }

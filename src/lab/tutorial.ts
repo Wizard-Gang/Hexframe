@@ -12,13 +12,7 @@ export type TutorialLessonId =
   | "movement"
   | "defense"
   | "attacks"
-  | "combo"
-  | "inspect";
-
-export type TutorialUiEvent =
-  | "debug-enabled"
-  | "contact-paused"
-  | "frame-stepped";
+  | "combo";
 
 interface TutorialStep {
   objective: string;
@@ -96,22 +90,11 @@ export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
       { objective: "Cash out with Phoenix Drive", success: "Combo complete" },
     ],
   },
-  {
-    id: "inspect",
-    title: "Inspect",
-    hint: "Use the same on-screen Debug tools available in normal Training.",
-    steps: [
-      { objective: "Turn on Debug", success: "Debug enabled" },
-      { objective: "Enable Pause on contact, then land an attack", success: "Contact paused" },
-      { objective: "Step forward one frame", success: "Frame stepped" },
-    ],
-  },
 ];
 
 const ATTACK_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.FrostHeel, MoveId.PhoenixDrive];
 const COMBO_MOVES = [MoveId.EmberPalm, MoveId.AshenSweep, MoveId.PhoenixDrive];
 const DEFENSE_LEVELS = [HitLevel.Mid, HitLevel.Low, HitLevel.Overhead];
-const INSPECT_EVENTS: readonly TutorialUiEvent[] = ["debug-enabled", "contact-paused", "frame-stepped"];
 
 export class TutorialController {
   active = false;
@@ -209,11 +192,6 @@ export class TutorialController {
     if (success) this.completeStep();
   }
 
-  recordUi(event: TutorialUiEvent): void {
-    if (!this.active || this.lessonComplete || this.tutorialComplete) return;
-    const lesson = TUTORIAL_LESSONS[this.lessonIndex];
-    if (lesson.id === "inspect" && INSPECT_EVENTS[this.stepIndex] === event) this.completeStep();
-  }
 
   dummyInput(_state: SimState): InputFrame {
     if (!this.active || TUTORIAL_LESSONS[this.lessonIndex].id !== "defense" || this.lessonComplete) return 0;

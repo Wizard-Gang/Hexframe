@@ -11,24 +11,24 @@ import { GamepadController } from "../input/controller/gamepad";
 import type { GamepadUiState } from "../input/controller/gamepad";
 import { KeyboardController } from "../input/controller/keyboard";
 import { DEFAULT_ACTION_KEYMAP, DEFAULT_KEYMAP_P1, DEFAULT_KEYMAP_P2, NO_ACTION_KEYMAP } from "../input/controller/keymap";
-import type { DebugToggles } from "../renderer/svg/debug-overlay";
 import { Renderer } from "../renderer/svg/renderer";
 import { DummyController, DummyMode } from "./dummy/dummy";
 import type { DummyModeValue } from "./dummy/dummy";
 import { applyPreferences, loadPreferences, persistPreferences, resetPreferences } from "./preferences";
 import type { LabPreferences } from "./preferences";
 import { Timeline } from "./timeline/timeline";
-import type { LabSpeed } from "./timeline/timeline";
-import { interactionHistoryMarkup, moveTimelineMarkup } from "./inspector";
-import type { InteractionSelection } from "./inspector";
 import { buildLabView } from "./view";
 import { markTutorialPromptSeen, tutorialPromptSeen, tutorialRequested, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
 import { STAGE_CATALOG } from "../game/session";
 
 const FRAME_MS = 1000 / 60;
-const DEBUG_STORAGE_KEY = "hexframe.debug.v1";
-const NO_DEBUG_TOGGLES: DebugToggles = { hitboxes: false, hurtboxes: false, pushboxes: false, origins: false, skeleton: false, boneNames: false, velocity: false };
+const TRAINING_VIEW_STORAGE_KEY = "hexframe.training.view.v1";
+
+interface TrainingViewState {
+  hitboxes: boolean;
+  slowMotion: boolean;
+}
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex='-1'])";
 
 const DUMMY_OPTIONS: readonly [DummyModeValue, string][] = [
@@ -47,7 +47,7 @@ function edge(now: GamepadUiState, before: GamepadUiState, key: keyof GamepadUiS
 
 /** Mounts the controller-first game and its integrated Training tools. */
 export async function startLab(mount: HTMLElement): Promise<() => void> {
-  let debugEnabled = loadDebugEnabled();
+  const viewState = loadTrainingView();
   const playerCharacter = createTestFighter();
   const dummyCharacter = createTestFighter();
   const combatCharacters = [playerCharacter, dummyCharacter];
@@ -55,7 +55,13 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const preferences = loadPreferences();
   applyPreferences(preferences);
 
-  replaceTrustedMarkup(mount, buildLabView({ character: playerCharacter, preferences, dummyOptions: DUMMY_OPTIONS, debugEnabled }));
+  replaceTrustedMarkup(mount, buildLabView({
+    character: playerCharacter,
+    preferences,
+    dummyOptions: DUMMY_OPTIONS,
+    hitboxesEnabled: viewState.hitboxes,
+    slowMotionEnabled: viewState.slowMotion,
+  }));
   mount.removeAttribute("aria-busy");
 
   const selectedStage = STAGE_CATALOG["training-grid"].stage;
@@ -67,7 +73,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const sim = new Simulation(config);
   const timeline = new Timeline(sim);
   timeline.paused = false;
-  timeline.pauseOnContact = false;
+  timeline.speed = viewState.slowMotion ? 25 : 100;
   const dummy = new DummyController();
   const tutorial = new TutorialController(syncTutorialUi);
   const keyboard = new KeyboardController(window, DEFAULT_KEYMAP_P1, DEFAULT_ACTION_KEYMAP);
@@ -77,8 +83,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     fighters: [0, 1].map(() => ({ model: TEST_FIGHTER_MODEL, rig: TEST_FIGHTER_RIG, animations: TEST_FIGHTER_ANIMATIONS, playback: TEST_FIGHTER_PLAYBACK })),
     stage: selectedStage,
   });
-  const toggles: DebugToggles = { hitboxes: false, hurtboxes: false, pushboxes: false, origins: false, skeleton: false, boneNames: false, velocity: false };
-
   timeline.inputProvider = () => {
     if (menuOpen()) return combatCharacters.map(() => 0);
     const playerInput = keyboard.sample() | gamepad.sample();
@@ -99,11 +103,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let focusBeforeMenu: HTMLElement | null = null;
   let lastMenuFocus: HTMLElement | null = null;
   let captionTimer = 0;
-  let selectedInteraction: InteractionSelection | null = null;
-  let renderedTimelineMoveId = -1;
-  let renderedTimelinePlayhead = -2;
-  let timelinePinnedMoveId = playerCharacter.commands[0]?.moveId ?? -1;
-  let interactionRenderKey = "";
   let lastPlayerInput = 0;
   let latestTutorialSnapshot: TutorialSnapshot | null = null;
 
@@ -111,17 +110,9 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   gameAudio.setCaptionHandler(showCaption);
   gameAudio.update(preferences.audio);
 
-  const render = (now = performance.now()): void => {
+  const render = (): void => {
     const state = sim.getState();
-    renderer.render(state, lastReport ?? timeline.lastReport, debugEnabled ? toggles : NO_DEBUG_TOGGLES);
-    const frameReadout = mount.querySelector<HTMLElement>("#frame-readout");
-    const playState = mount.querySelector<HTMLElement>("#play-state");
-    if (frameReadout) frameReadout.textContent = String(state.frame).padStart(6, "0");
-    if (playState) playState.textContent = timeline.paused ? "PAUSED" : "LIVE";
-    const pausedOverlay = required("paused-overlay");
-    pausedOverlay.hidden = !timeline.paused || menuOpen();
-    const timelineStatus = mount.querySelector<HTMLElement>("#timeline-status");
-    if (timelineStatus) timelineStatus.textContent = timeline.lastMessage ?? `Frame ${state.frame} · ${timeline.paused ? "paused" : "live"}`;
+    renderer.render(state, lastReport ?? timeline.lastReport, viewState.hitboxes);
     required("controller-state").textContent = gamepad.connected ? `Gamepad · ${gamepad.name}` : "Keyboard ready · connect gamepad anytime";
     for (let player = 0; player < state.fighters.length; player++) {
       const fighter = state.fighters[player];
@@ -137,10 +128,8 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }
     const move = playerCharacter.moves.find((candidate) => candidate.id === state.fighters[0].moveId);
     required("active-move").textContent = move?.key.replaceAll("_", " ") ?? "Ready";
-    required("active-tags").textContent = move?.tags.join(" · ") ?? "Move, strike, and inspect the result";
+    required("active-tags").textContent = move?.tags.join(" · ") ?? "Move, strike, and practice the route";
     for (const pause of mount.querySelectorAll<HTMLButtonElement>("[data-action='pause']")) pause.textContent = timeline.paused ? "Play" : "Pause";
-    renderFrameTimeline(state.fighters[0].moveId, state.fighters[0].moveFrame);
-    renderInteractionHistory();
   };
 
   const loop = (now: number): void => {
@@ -156,13 +145,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
         lastReport = reports[reports.length - 1];
         processReports(reports);
         tutorial.observe(lastPlayerInput, sim.getState(), reports);
-        if (timeline.pauseOnContact && timeline.paused && reports.some((report) => report.contacts.length > 0)) {
-          tutorial.recordUi("contact-paused");
-        }
         if (tutorial.consumeResetRequest()) resetMatch();
       }
     }
-    render(now);
+    render();
     animationId = requestAnimationFrame(loop);
   };
 
@@ -178,10 +164,9 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "menu") openMenu();
     if (action === "close-menu") closeMenu();
     if (action === "return-main") window.location.href = "/";
-    if (action === "forward") stepFrames(1);
-    if (action === "forward-10") stepFrames(10);
     if (action === "reset") resetMatch();
-    if (action === "debug") setDebugEnabled(!debugEnabled);
+    if (action === "slow-mo") setTrainingToggle("slowMotion", !viewState.slowMotion);
+    if (action === "hitboxes") setTrainingToggle("hitboxes", !viewState.hitboxes);
     if (action === "start-tutorial") startTutorial(tutorial.active);
     if (action === "start-tutorial-prompt") startTutorial(false);
     if (action === "dismiss-tutorial-prompt") {
@@ -192,20 +177,12 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "next-tutorial-lesson") advanceTutorial();
     if (action === "exit-tutorial") exitTutorial();
     if (button.dataset.menuDetailTarget) showMenuDetail(button.dataset.menuDetailTarget as MenuDetail);
-    if (button.dataset.contactFrame !== undefined && button.dataset.contactIndex !== undefined) inspectInteraction(Number(button.dataset.contactFrame), Number(button.dataset.contactIndex));
     render();
   };
 
   const change = (event: Event): void => {
     const target = event.target as HTMLInputElement | HTMLSelectElement;
-    if (target.dataset.control === "speed") timeline.speed = Number(target.value) as LabSpeed;
     if (target.dataset.control === "dummy") dummy.mode = Number(target.value) as DummyModeValue;
-    if (target.dataset.control === "pause-on-contact" && target instanceof HTMLInputElement) timeline.pauseOnContact = target.checked;
-    const debug = target.dataset.debug as keyof DebugToggles | undefined;
-    if (debug) {
-      toggles[debug] = (target as HTMLInputElement).checked;
-      for (const control of mount.querySelectorAll<HTMLInputElement>(`[data-debug='${debug}']`)) control.checked = toggles[debug];
-    }
     if (target.dataset.prefSection && target.dataset.prefKey) updatePreference(target);
     render();
   };
@@ -220,7 +197,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (event.code === "Backquote" && !isFormControl(event.target)) {
       if (event.repeat) return;
       event.preventDefault();
-      setDebugEnabled(!debugEnabled);
+      setTrainingToggle("hitboxes", !viewState.hitboxes);
       render();
       return;
     }
@@ -232,8 +209,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (event.code === "Escape") { event.preventDefault(); openMenu(); }
     else if ((event.code === "Space" || event.code === "KeyP") && !isFormControl(event.target)) {
       if (event.repeat) return; event.preventDefault(); timeline.paused = !timeline.paused;
-    } else if ((event.code === "Period" || event.code === "BracketRight") && !isFormControl(event.target)) { event.preventDefault(); stepFrames(1); }
-    else return;
+    } else return;
     render();
   };
 
@@ -326,16 +302,13 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }
   }
 
-  function setDebugEnabled(enabled: boolean): void {
-    debugEnabled = enabled;
-    persistDebugEnabled(enabled);
-    const tools = required("debug-tools");
-    tools.hidden = !enabled;
-    const button = required("debug-control");
-    button.setAttribute("aria-expanded", String(enabled));
-    button.setAttribute("aria-pressed", String(enabled));
-    button.textContent = "Debug: " + (enabled ? "On" : "Off") + " (`)";
-    if (enabled) recognizeInspectState();
+  function setTrainingToggle(key: keyof TrainingViewState, enabled: boolean): void {
+    viewState[key] = enabled;
+    if (key === "slowMotion") timeline.speed = enabled ? 25 : 100;
+    persistTrainingView(viewState);
+    const action = key === "slowMotion" ? "slow-mo" : "hitboxes";
+    const button = mount.querySelector<HTMLButtonElement>(`[data-action='${action}']`);
+    if (button) button.setAttribute("aria-pressed", String(enabled));
   }
 
   function showMenuDetail(detail: MenuDetail): void {
@@ -363,47 +336,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
 
 
-
-  function renderFrameTimeline(activeMoveId: number, activeMoveFrame: number): void {
-    const console = mount.querySelector<HTMLElement>("#move-timeline-console");
-    if (!console) return;
-    const activeMove = playerCharacter.moves.find((candidate) => candidate.id === activeMoveId);
-    if (activeMove) timelinePinnedMoveId = activeMove.id;
-    const move = activeMove
-      ?? playerCharacter.moves.find((candidate) => candidate.id === timelinePinnedMoveId)
-      ?? playerCharacter.moves[0];
-    if (!move) return;
-
-    if (renderedTimelineMoveId !== move.id) {
-      replaceTrustedMarkup(console, moveTimelineMarkup(move));
-      renderedTimelineMoveId = move.id;
-      renderedTimelinePlayhead = -2;
-    }
-
-    const playhead = activeMove ? activeMoveFrame : -1;
-    if (playhead === renderedTimelinePlayhead) return;
-    renderedTimelinePlayhead = playhead;
-    for (const cell of console.querySelectorAll<HTMLElement>("[data-frame]")) {
-      cell.classList.toggle("playhead", Number(cell.dataset.frame) === playhead);
-    }
-  }
-
-  function renderInteractionHistory(): void {
-    const interactionHistory = mount.querySelector<HTMLElement>("#interaction-history");
-    if (!interactionHistory) return;
-    const reports = timeline.contactReports();
-    const key = `${reports.map((report) => `${report.frame}:${report.contacts.length}`).join(",")}|${selectedInteraction?.frame ?? "latest"}:${selectedInteraction?.index ?? 0}`;
-    if (key === interactionRenderKey) return;
-    interactionRenderKey = key;
-    replaceTrustedMarkup(interactionHistory, interactionHistoryMarkup(reports, sim.characters(), selectedInteraction));
-  }
-
-  function inspectInteraction(frame: number, index: number): void {
-    const report = timeline.reportAt(frame);
-    if (!report || !report.contacts[index]) return;
-    selectedInteraction = { frame, index };
-    interactionRenderKey = "";
-  }
 
   function updatePreference(target: HTMLInputElement | HTMLSelectElement): void {
     const section = target.dataset.prefSection as keyof LabPreferences;
@@ -455,7 +387,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     else tutorial.start();
     resetMatch();
     timeline.paused = false;
-    recognizeInspectState();
   }
 
   function finishTutorial(): void {
@@ -484,15 +415,8 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     tutorial.nextLesson();
     if (tutorial.consumeResetRequest()) resetMatch();
     timeline.paused = false;
-    recognizeInspectState();
   }
 
-  function recognizeInspectState(): void {
-    const snapshot = tutorial.snapshot();
-    if (snapshot.active && snapshot.lessonId === "inspect" && snapshot.stepIndex === 0 && debugEnabled) {
-      tutorial.recordUi("debug-enabled");
-    }
-  }
 
   function syncTutorialPrompt(): void {
     const prompt = mount.querySelector<HTMLElement>("#tutorial-prompt");
@@ -546,18 +470,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }
     lastPlayerInput = 0;
     lastReport = null;
-    selectedInteraction = null;
-    interactionRenderKey = "";
-  }
-
-  function stepFrames(count: number): void {
-    const wasPaused = timeline.paused;
-    timeline.paused = true;
-    const reports = timeline.stepFrames(count);
-    lastReport = timeline.lastReport;
-    if (reports.length > 0) processReports(reports);
-    if (wasPaused && count === 1) tutorial.recordUi("frame-stepped");
-    interactionRenderKey = "";
   }
 
   function processReports(reports: readonly FrameReport[]): void {
@@ -618,7 +530,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (!menuOpen()) {
       if (edge(now, previousUi, "start")) timeline.paused = !timeline.paused;
       if (edge(now, previousUi, "menu")) openMenu();
-      if (timeline.paused && edge(now, previousUi, "rightBumper")) stepFrames(1);
       if (timeline.paused && edge(now, previousUi, "up")) focusGamepadTarget("up");
       if (timeline.paused && edge(now, previousUi, "down")) focusGamepadTarget("down");
       if (timeline.paused && edge(now, previousUi, "left") && !adjustFocused(-1)) focusGamepadTarget("left");
@@ -716,19 +627,22 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   }
 }
 
-function loadDebugEnabled(): boolean {
+function loadTrainingView(): TrainingViewState {
   try {
-    return localStorage.getItem(DEBUG_STORAGE_KEY) === "1";
+    const value: unknown = JSON.parse(localStorage.getItem(TRAINING_VIEW_STORAGE_KEY) ?? "{}");
+    if (!value || typeof value !== "object") return { hitboxes: false, slowMotion: false };
+    const record = value as Record<string, unknown>;
+    return { hitboxes: record.hitboxes === true, slowMotion: record.slowMotion === true };
   } catch {
-    return false;
+    return { hitboxes: false, slowMotion: false };
   }
 }
 
-function persistDebugEnabled(enabled: boolean): void {
+function persistTrainingView(state: TrainingViewState): void {
   try {
-    localStorage.setItem(DEBUG_STORAGE_KEY, enabled ? "1" : "0");
+    localStorage.setItem(TRAINING_VIEW_STORAGE_KEY, JSON.stringify(state));
   } catch {
-    // Debug persistence is device-local enhancement only.
+    // Training view preferences remain session-local when storage is unavailable.
   }
 }
 

@@ -46,9 +46,9 @@ function driveMovement(tutorial: TutorialController, sim: ReturnType<typeof crea
 }
 
 describe("interactive tutorial objectives", () => {
-  it("uses only the five Training MVP lessons", () => {
+  it("uses only the four Training MVP lessons", () => {
     expect(TUTORIAL_LESSONS.map((lesson) => lesson.id)).toEqual([
-      "movement", "defense", "attacks", "combo", "inspect",
+      "movement", "defense", "attacks", "combo",
     ]);
   });
 
@@ -126,22 +126,9 @@ describe("interactive tutorial objectives", () => {
     }
     expect(tutorial.snapshot().lessonComplete).toBe(true);
 
-    tutorial.nextLesson();
-    expect(tutorial.snapshot().lessonId).toBe("inspect");
-    tutorial.recordUi("frame-stepped");
-    expect(tutorial.snapshot().stepIndex).toBe(0);
-    tutorial.recordUi("debug-enabled");
-    expect(tutorial.snapshot().stepIndex).toBe(1);
-    tutorial.recordUi("frame-stepped");
-    expect(tutorial.snapshot().stepIndex).toBe(1);
-    tutorial.recordUi("contact-paused");
-    expect(tutorial.snapshot().stepIndex).toBe(2);
-    tutorial.recordUi("frame-stepped");
-
-    expect(tutorial.snapshot().lessonComplete).toBe(true);
     expect(tutorial.snapshot().tutorialComplete).toBe(true);
     expect(tutorial.snapshot().completedLessons).toEqual([
-      "movement", "defense", "attacks", "combo", "inspect",
+      "movement", "defense", "attacks", "combo",
     ]);
   });
 
@@ -157,20 +144,6 @@ describe("interactive tutorial objectives", () => {
     }
   });
 
-  it("requires ordered inspect actions and remains coherent across repeated Debug state", () => {
-    const tutorial = new TutorialController(() => undefined);
-    tutorial.start("inspect");
-    tutorial.recordUi("contact-paused");
-    expect(tutorial.snapshot().stepIndex).toBe(0);
-    tutorial.recordUi("debug-enabled");
-    tutorial.recordUi("debug-enabled");
-    expect(tutorial.snapshot().stepIndex).toBe(1);
-    tutorial.recordUi("frame-stepped");
-    expect(tutorial.snapshot().stepIndex).toBe(1);
-    tutorial.recordUi("contact-paused");
-    tutorial.recordUi("frame-stepped");
-    expect(tutorial.snapshot().tutorialComplete).toBe(true);
-  });
 
   it("persists completed lesson progress and restart clears it", () => {
     installStorage();
