@@ -4,7 +4,7 @@
 
 The owner wants Hexframe to stop being an engineering showcase and become a small, good-looking, fun proof of concept: two rigged fighters, four readable attacks, clean effects and a two-minute tutorial. FightLab's newest rig replaces Hexframe's hand-drawn model, using only its machine-generated bodies. FightLab was retired on 2026-10-02. Anything that does not serve that goal is removed, along with dead code, low-value tests and tooling that works against keeping it simple.
 
-HF-167 was queued by HF-166 before this wave and stays first. This wave starts at HF-169. Work only the first open task. Each task is sized for about ten minutes of focused implementation; CI, review and merge time are extra.
+This wave starts at HF-169. Work only the first open task. Each task is sized for about ten minutes of focused implementation; CI, review and merge time are extra.
 
 ### What the deep dive found
 
@@ -69,26 +69,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 | Local development | about 850-line wrapper plus a Linux CI smoke | `vite` | HF-171 |
 
 ## Open tasks
-
-### HF-167 — [DOCS] Clarify connected GitHub delivery guidance
-
-**Goal**
-
-Align the shared agent contract with the wording accepted in wizardgang-architecture-demo as DEMO-390.
-
-**Scope**
-
-- Update `AGENTS.md` to distinguish ordinary connected GitHub PR delivery from settings administration.
-- Update the portfolio-contract hash for `AGENTS.md` in `scripts/check-portfolio-contract.mjs`.
-- Preserve the controlled PR, exact-head CI, squash-merge, and post-merge verification requirements.
-
-**Acceptance**
-
-- The agent contract and hash match the accepted shared wording.
-- Pinned local validation and the separate dependency advisory gate pass.
-- The task retires through one controlled PR with required exact-head and post-merge CI green; the branch is deleted after merge.
-
----
 
 ### HF-169 — [REFACTOR] Delete dead code and stubs
 
