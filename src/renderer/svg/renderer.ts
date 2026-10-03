@@ -6,8 +6,7 @@ import type { AnimationPlayback } from "../animation/animator";
 import { animationForState, animationFrameForState, sampleAnimation } from "../animation/animator";
 import { applyPose, boneAnchor, buildFighterNode } from "../character/rig";
 import type { FighterNode } from "../character/rig";
-import type { DebugToggles } from "./debug-overlay";
-import { drawDebug } from "./debug-overlay";
+import { drawHitboxes } from "./debug-overlay";
 import { createStage, fmt, SVG_NS, worldToScreen } from "./stage";
 import { drawMoveParticles, moveVisualDefinition, styleImpact } from "./move-effects";
 
@@ -45,7 +44,7 @@ export class Renderer {
     }
   }
 
-  render(state: SimState, report: FrameReport | null, toggles: DebugToggles): void {
+  render(state: SimState, report: FrameReport | null, showHitboxes: boolean): void {
     const leadX = state.fighters[0]?.x ?? 0;
     const framed = state.fighters.filter((fighter) => fighter.health > 0 && Math.abs(fighter.x - leadX) <= 90_000);
     const focusX = framed.length > 0
@@ -79,10 +78,7 @@ export class Renderer {
 
     this.drawEffects(state, report);
     this.stage.svg.classList.toggle("stage-impact", (report?.contacts.length ?? 0) > 0);
-    drawDebug(this.stage.layers.debug, debugBoxes(state, this.chars), state, toggles);
-
-    this.stage.layers.fighters.classList.toggle("show-skeleton", toggles.skeleton);
-    this.stage.layers.fighters.classList.toggle("show-bone-names", toggles.boneNames);
+    drawHitboxes(this.stage.layers.debug, debugBoxes(state, this.chars), showHitboxes);
   }
 
   dispose(): void {
