@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-170 — [TEST] Delete retirement-guard and copy-pinning tests
-
-**Goal:** Tests prove behavior, not that deleted code stays deleted or that copy and CSS keep exact values.
-
-**Scope**
-- Delete `tests/worker/save-retirement.test.ts` and `tests/worker/private-surface-retirement.test.ts`. The retired-route 404 cases in `tests/worker/play.test.ts` stay.
-- Delete the contrast-pinning case in `tests/client/public-surface.test.ts`.
-- Remove the forbidden-vocabulary sweep from `scripts/validate-documentation-authority.mjs`; keep its document-set, link and command checks.
-
-**Acceptance:** Routing, headers, 404s, documents and the desktop gate are still proven.
-
-**Validation:** `npm test -- tests/worker tests/client`; `npm run validate:documentation-authority`.
-
----
-
 ### HF-171 — [BUILD] Run local development on the Vite dev server
 
 **Goal:** `npm run dev` starts in seconds with hot reload and no wrapper.
