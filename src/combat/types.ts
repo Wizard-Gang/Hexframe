@@ -194,8 +194,6 @@ export interface MoveDef {
   requiresCrouch: boolean;
   /** True for air normals. */
   airOk: boolean;
-  /** Deterministic resource cost paid once when the move starts. */
-  staminaCost: number;
   hitboxes: HitboxSpec[];
   hurtboxWindows: HurtboxWindow[];
   invulWindows: InvulWindow[];
@@ -228,8 +226,6 @@ export interface CharacterDef {
   name: string;
   /** Maximum health. */
   health: number;
-  /** Maximum stamina. */
-  stamina: number;
   walkForwardSpeed: number;
   walkBackwardSpeed: number;
   dashForward: DashProfile;
@@ -256,7 +252,6 @@ export interface CharacterDef {
 export interface DashProfile {
   velocities: number[];
   attackCancelFrame: number;
-  staminaCost: number;
   recognitionWindow: number;
 }
 
@@ -280,8 +275,7 @@ export const StateId = {
   BlockstunCrouch: 12,
   Dash: 13,
   Knockdown: 14,
-  GuardBreak: 15,
-  Defeat: 16,
+  Defeat: 15,
 } as const;
 export type StateIdValue = (typeof StateId)[keyof typeof StateId];
 
@@ -309,10 +303,6 @@ export interface FighterState {
   /** Frames of hitstun or blockstun left, depending on `state`. */
   stun: number;
   health: number;
-  /** Current spendable stamina, clamped to the character's resolved maximum. */
-  stamina: number;
-  /** Frames before stamina regeneration resumes after a spend. */
-  staminaRegenDelay: number;
   /** 1 when off the ground. Redundant with `y` by design: it survives moves that lift. */
   airborne: number;
   /** Aggregate bitmask of hitboxes that connected with any target during this move. */
@@ -395,10 +385,6 @@ export interface ContactEvent {
   counterHit: boolean;
   /** True when damage landed but a hyper-armor point prevented hitstun. */
   armored: boolean;
-  /** Stamina removed by this guard contact. Zero on a perfect guard. */
-  guardStaminaDamage: number;
-  perfectGuard: boolean;
-  guardBreak: boolean;
   /** Approximate world point of contact, for the renderer's effects. */
   x: number;
   y: number;

@@ -70,20 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-176 — [REFACTOR] Remove stamina, guard break and perfect guard
-
-**Goal:** Blocking is holding away; attacks cost nothing.
-
-**Scope**
-- Delete fighter stamina, move stamina costs, regeneration delay, guard stamina damage, guard break and perfect-guard detection, with their report fields, announcements, HUD stamina bars and styles.
-- Remove the matching cases from `tests/simulation/vertical-slice.test.ts` and `advanced-combat.test.ts`, and delete a file that empties.
-
-**Acceptance:** Held-away blocking still stops mids, lows and overheads correctly; the HUD shows health only.
-
-**Validation:** `npm test -- tests/simulation`; browser check.
-
----
-
 ### HF-177 — [REFACTOR] Remove dash
 
 **Goal:** Movement is walk, crouch and jump.

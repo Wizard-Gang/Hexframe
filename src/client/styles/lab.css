@@ -82,17 +82,11 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .hud-party-member + .hud-party-member { transform: scale(.82); transform-origin: left top; opacity: .86; }
 .hud-player > strong { display: grid; gap: 2px; }
 .hud-player > strong b { font: inherit; }
-.hud-player > strong small { color: #77c9e8; font: 650 7px ui-monospace, monospace; letter-spacing: .04em; white-space: nowrap; }
 .hud-meter-stack { display: grid; gap: 3px; min-width: 80px; }
 .health-track { height: 7px; overflow: hidden; background: rgba(255,255,255,.12); transform: skewX(-12deg); }
 .health-track i { display: block; width: 100%; height: 100%; background: var(--acid); transition: width 100ms linear; }
-.stamina-track { height: 3px; overflow: hidden; background: rgba(255,255,255,.1); transform: skewX(-12deg); }
-.stamina-track i { display: block; width: 100%; height: 100%; background: #57b9df; transition: width 100ms linear; }
-@keyframes guard-spend { 35% { background: #eef5fa; box-shadow: 0 0 9px #b7d4e5; } }
-.stamina-track.guard-spend i { animation: guard-spend 180ms ease-out; }
 .hud-player-right .health-track { transform: skewX(12deg); }
 .hud-player-right .health-track i { margin-left: auto; background: #8999ff; }
-.hud-player-right .stamina-track { transform: skewX(12deg); }.hud-player-right .stamina-track i { margin-left: auto; }
 .frame-readout { text-align: center; color: #7d8790; font: 8px ui-monospace, monospace; letter-spacing: .16em; }
 .frame-readout strong { display: block; margin-top: 2px; color: #f3f5f6; font-size: 18px; letter-spacing: 0; }
 .current-route { position: absolute; z-index: 2; left: 22px; bottom: 20px; display: grid; grid-template-columns: auto auto; align-items: baseline; gap: 3px 10px; padding: 10px 12px; border-left: 2px solid var(--acid); background: rgba(8,11,14,.78); backdrop-filter: blur(8px); }

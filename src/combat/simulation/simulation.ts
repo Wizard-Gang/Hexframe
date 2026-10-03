@@ -27,7 +27,6 @@ import {
   GROUND_Y,
   NO_MOVE,
   STAGE_HALF_WIDTH,
-  STAMINA_REGEN_DELAY,
 } from "../constants";
 import { advanceMove, canStartMove, moveOf, startMove } from "../commands/resolve";
 import { resolvePushboxes } from "../collision/pushbox";
@@ -87,8 +86,6 @@ export class Simulation {
         hitstop: 0,
         stun: 0,
         health: c.health,
-        stamina: c.stamina,
-        staminaRegenDelay: 0,
         airborne: 0,
         hitFlags: 0,
         comboCount: 0,
@@ -197,9 +194,6 @@ export class Simulation {
         f.vx = velocity * (f.dashForward === 1 ? f.facing : -f.facing);
       }
 
-      if (f.staminaRegenDelay > 0) f.staminaRegenDelay--;
-      else if (f.stamina < c.stamina) f.stamina++;
-
       // The stance is established before the command is matched. Crouching is a stance
       // rather than a move, and a command that requires it — every low in the game — has
       // to be judged against the direction being held now. Deferring the stance to the
@@ -251,7 +245,6 @@ export class Simulation {
 
     // 11-13. Hitstop, stun and health were written by step 10. They are decremented at
     //        the top of the following frame, so a hitstop of 7 freezes exactly 7 frames.
-    //        Stamina was updated during step 3 from deterministic frame counters.
 
     // 15-17. A state entered during this frame is on its frame 0 for the whole of it and
     //        ages at the end, which is what lets the checks at the top of the next frame
@@ -309,7 +302,6 @@ export class Simulation {
       const sign = direction === InputBit.Left ? -1 : 1;
       const forward = sign === f.facing;
       const profile = forward ? c.dashForward : c.dashBackward;
-      if (f.stamina < profile.staminaCost) continue;
       let doubleTap = false;
       for (let frame = s.frame - 2; frame >= Math.max(0, s.frame - profile.recognitionWindow); frame--) {
         if (pressedOn(s, player, frame, direction)) {
@@ -318,8 +310,6 @@ export class Simulation {
         }
       }
       if (!doubleTap) continue;
-      f.stamina -= profile.staminaCost;
-      f.staminaRegenDelay = STAMINA_REGEN_DELAY;
       f.dashForward = forward ? 1 : 0;
       f.vx = (profile.velocities[0] ?? 0) * sign;
       enterState(f, StateId.Dash);

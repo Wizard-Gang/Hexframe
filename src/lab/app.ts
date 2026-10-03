@@ -119,10 +119,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       const percent = Math.max(0, Math.min(100, (fighter.health / maximum) * 100));
       required(`health-p${player + 1}`).style.width = `${percent}%`;
       required(`health-text-p${player + 1}`).textContent = String(fighter.health);
-      const maxStamina = sim.characters()[player].stamina;
-      const staminaPercent = Math.max(0, Math.min(100, (fighter.stamina / maxStamina) * 100));
-      required(`stamina-p${player + 1}`).style.width = `${staminaPercent}%`;
-      required(`stamina-text-p${player + 1}`).textContent = `${fighter.stamina} STA`;
     }
     const move = playerCharacter.moves.find((candidate) => candidate.id === state.fighters[0].moveId);
     required("active-move").textContent = move?.key.replaceAll("_", " ") ?? "Ready";
@@ -476,22 +472,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       for (const contact of report.contacts) {
         gameAudio.play(contact.kind === ContactKind.Hit ? "hit" : "block");
         if (contact.kind === ContactKind.Hit) gamepad.rumble(preferences.controls.vibration, 95);
-        else {
-          gamepad.rumble(preferences.controls.vibration * (contact.perfectGuard ? 0.55 : 0.28), contact.perfectGuard ? 75 : 48);
-          const meter = required(`stamina-p${contact.defender + 1}`).parentElement;
-          if (meter) {
-            meter.classList.remove("guard-spend");
-            void meter.offsetWidth;
-            meter.classList.add("guard-spend");
-          }
-        }
+        else gamepad.rumble(preferences.controls.vibration * 0.28, 48);
         announcements.push(contact.kind === ContactKind.Hit
           ? `Player ${contact.attacker + 1} hits for ${contact.damage}.`
-          : contact.guardBreak
-            ? `Player ${contact.defender + 1} guard broken.`
-            : contact.perfectGuard
-              ? `Player ${contact.defender + 1} perfect guards.`
-              : `Player ${contact.defender + 1} blocks and spends ${contact.guardStaminaDamage} stamina.`);
+          : `Player ${contact.defender + 1} blocks.`);
       }
     }
     if (preferences.accessibility.screenReaderCombat && announcements.length > 0) required("combat-announcer").textContent = announcements.slice(-3).join(" ");

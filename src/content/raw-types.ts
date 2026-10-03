@@ -110,7 +110,6 @@ export interface RawMove {
   recovery: number;
   requiresCrouch: boolean;
   airOk: boolean;
-  staminaCost: number;
   hitboxes: RawHitbox[];
   hurtboxWindows: RawHurtboxWindow[];
   invulWindows: RawInvulWindow[];
@@ -135,7 +134,6 @@ export interface RawDashProfile {
   velocities: number[];
   /** Zero-based first frame on which an attack may cancel the dash. */
   attackCancelFrame: number;
-  staminaCost: number;
   recognitionWindow: number;
 }
 

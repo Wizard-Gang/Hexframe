@@ -46,4 +46,28 @@ describe("contact resolution", () => {
     expect(contact.damage).toBe(36);
     expect(sim.getState().fighters[1].health).toBeLessThanOrEqual(TEST_FIGHTER.health - 36);
   });
+
+  it("blocks Sweep low while crouching away", () => {
+    const sim = createSim();
+    placeFighters(sim, -18, 18);
+    const reports = runFrames(sim, 14, (frame, player) => {
+      if (player === 0) return frame === 0 ? InputBit.Action2 : 0;
+      return InputBit.Down | InputBit.Right;
+    });
+    expect(reports.flatMap((report) => report.contacts)[0].kind).toBe(ContactKind.Block);
+    expect(sim.getState().fighters[1].health).toBe(TEST_FIGHTER.health);
+    expect(sim.getState().fighters[1].state).toBe(StateId.BlockstunCrouch);
+  });
+
+  it("blocks Overhead while standing away", () => {
+    const sim = createSim();
+    placeFighters(sim, -18, 18);
+    const reports = runFrames(sim, 16, (frame, player) => {
+      if (player === 0) return frame === 0 ? InputBit.Action3 : 0;
+      return InputBit.Right;
+    });
+    expect(reports.flatMap((report) => report.contacts)[0].kind).toBe(ContactKind.Block);
+    expect(sim.getState().fighters[1].health).toBe(TEST_FIGHTER.health);
+    expect(sim.getState().fighters[1].state).toBe(StateId.BlockstunStand);
+  });
 });

@@ -7,7 +7,7 @@
 
 import type { CharacterDef, FighterState, MoveDef } from "../types";
 import { StateId } from "../types";
-import { NO_MOVE, STAMINA_REGEN_DELAY } from "../constants";
+import { NO_MOVE } from "../constants";
 import { enterState, isActionable, isCrouching } from "../state/machine";
 
 /** The move with this id, or `null`. */
@@ -34,7 +34,6 @@ export function moveOf(c: CharacterDef, moveId: number): MoveDef | null {
  */
 export function canStartMove(f: FighterState, c: CharacterDef, m: MoveDef): boolean {
   if (f.hitstop > 0) return false;
-  if (f.stamina < staminaCostOf(c, m)) return false;
   if (m.airOk && f.airborne === 0) return false;
   if (!m.airOk && f.airborne === 1) return false;
   if (m.requiresCrouch && !isCrouching(f)) return false;
@@ -56,11 +55,6 @@ export function canStartMove(f: FighterState, c: CharacterDef, m: MoveDef): bool
  * when that attempt starts or ends.
  */
 export function startMove(f: FighterState, c: CharacterDef, m: MoveDef): void {
-  const cost = staminaCostOf(c, m);
-  if (cost > 0) {
-    f.stamina = Math.max(0, f.stamina - cost);
-    f.staminaRegenDelay = STAMINA_REGEN_DELAY;
-  }
   f.moveId = m.id;
   f.moveFrame = 0;
   clearHitFlags(f);
@@ -107,11 +101,6 @@ export function endMove(f: FighterState, m: MoveDef): void {
     f,
     f.airborne === 1 ? StateId.Airborne : m.requiresCrouch ? StateId.Crouch : StateId.Idle,
   );
-}
-
-/** Authored stamina cost for this move. */
-export function staminaCostOf(_c: CharacterDef, m: MoveDef): number {
-  return Math.max(0, m.staminaCost);
 }
 
 /** Whether the fighter's current move may be cancelled into `intoMoveId` on this frame. */

@@ -8,13 +8,11 @@
   "dashForward": {
     "velocities": [9, 9, 8, 8, 7, 6, 5, 4, 2, 0],
     "attackCancelFrame": 3,
-    "staminaCost": 14,
     "recognitionWindow": 11
   },
   "dashBackward": {
     "velocities": [7, 7, 6, 6, 6, 5, 5, 4, 3, 3, 2, 1],
     "attackCancelFrame": 7,
-    "staminaCost": 12,
     "recognitionWindow": 11
   },
 
