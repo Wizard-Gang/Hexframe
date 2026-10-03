@@ -228,8 +228,6 @@ export interface CharacterDef {
   health: number;
   walkForwardSpeed: number;
   walkBackwardSpeed: number;
-  dashForward: DashProfile;
-  dashBackward: DashProfile;
   jumpVelocityY: number;
   jumpVelocityXForward: number;
   jumpVelocityXBackward: number;
@@ -248,12 +246,6 @@ export interface CharacterDef {
   commands: CommandDef[];
 }
 
-/** Authored per-frame ground speed and cancel rules for one dash direction. */
-export interface DashProfile {
-  velocities: number[];
-  attackCancelFrame: number;
-  recognitionWindow: number;
-}
 
 // ---------------------------------------------------------------------------
 // Simulation state
@@ -273,9 +265,8 @@ export const StateId = {
   HitstunAir: 10,
   BlockstunStand: 11,
   BlockstunCrouch: 12,
-  Dash: 13,
-  Knockdown: 14,
-  Defeat: 15,
+  Knockdown: 13,
+  Defeat: 14,
 } as const;
 export type StateIdValue = (typeof StateId)[keyof typeof StateId];
 
@@ -317,8 +308,6 @@ export interface FighterState {
    * window; with it, a press produces exactly one move however early it was made.
    */
   bufferConsumedFrame: number;
-  /** 1 for a forward dash, 0 for a backdash. Meaningful only in `StateId.Dash`. */
-  dashForward: number;
 }
 
 export interface StageDef {

@@ -15,15 +15,9 @@ const LOOP: RawAnimation = {
 };
 
 describe("presentation state animation", () => {
-  it("gives committed movement, reactions and recovery dedicated clips", () => {
+  it("gives reactions and recovery dedicated clips", () => {
     const fighter = createSim().getState().fighters[0];
 
-    fighter.state = StateId.Dash;
-    fighter.dashForward = 1;
-    fighter.vx = TEST_FIGHTER.dashForward.velocities[0] * fighter.facing;
-    expect(animationForState(fighter, TEST_FIGHTER)).toBe("dash_forward");
-    fighter.dashForward = 0;
-    expect(animationForState(fighter, TEST_FIGHTER)).toBe("dash_backward");
 
     fighter.state = StateId.HitstunStand;
     expect(animationForState(fighter, TEST_FIGHTER)).toBe("hit_stand");

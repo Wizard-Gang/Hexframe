@@ -40,10 +40,6 @@ export function canStartMove(f: FighterState, c: CharacterDef, m: MoveDef): bool
 
   const free = isActionable(f) || (f.airborne === 1 && f.state === StateId.Airborne);
   if (free) return true;
-  if (f.state === StateId.Dash) {
-    const profile = f.dashForward === 1 ? c.dashForward : c.dashBackward;
-    return f.stateFrame >= profile.attackCancelFrame;
-  }
   return cancelAllowed(f, c, m.id);
 }
 

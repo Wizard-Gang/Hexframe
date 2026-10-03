@@ -3,15 +3,13 @@
   "$id": "https://hexframe.local/schemas/character.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "name", "health", "walkForwardSpeed", "walkBackwardSpeed", "dashForward", "dashBackward", "jumpVelocityY", "jumpVelocityXForward", "jumpVelocityXBackward", "jumpSquatFrames", "landingFrames", "gravity", "groundFriction", "pushboxStand", "pushboxCrouch", "pushboxAir", "hurtboxesStand", "hurtboxesCrouch", "hurtboxesAir", "commands"],
+  "required": ["id", "name", "health", "walkForwardSpeed", "walkBackwardSpeed", "jumpVelocityY", "jumpVelocityXForward", "jumpVelocityXBackward", "jumpSquatFrames", "landingFrames", "gravity", "groundFriction", "pushboxStand", "pushboxCrouch", "pushboxAir", "hurtboxesStand", "hurtboxesCrouch", "hurtboxesAir", "commands"],
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
     "name": { "type": "string", "minLength": 1 },
     "health": { "type": "integer", "minimum": 1 },
     "walkForwardSpeed": { "type": "number", "minimum": 0 },
     "walkBackwardSpeed": { "type": "number", "minimum": 0 },
-    "dashForward": { "$ref": "#/definitions/dashProfile" },
-    "dashBackward": { "$ref": "#/definitions/dashProfile" },
     "jumpVelocityY": { "type": "number", "exclusiveMinimum": 0 },
     "jumpVelocityXForward": { "type": "number" },
     "jumpVelocityXBackward": { "type": "number" },
@@ -28,16 +26,6 @@
     "commands": { "type": "array", "items": { "$ref": "#/definitions/command" } }
   },
   "definitions": {
-    "dashProfile": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["velocities", "attackCancelFrame", "recognitionWindow"],
-      "properties": {
-        "velocities": { "type": "array", "minItems": 1, "items": { "type": "number", "minimum": 0 } },
-        "attackCancelFrame": { "type": "integer", "minimum": 0 },
-        "recognitionWindow": { "type": "integer", "minimum": 2 }
-      }
-    },
     "box": {
       "type": "object",
       "additionalProperties": false,
