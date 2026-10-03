@@ -13,7 +13,7 @@ interface LabViewOptions {
 const KIT_INPUTS = ["↑ / Y", "← / X", "→ / B", "↓ / A"] as const;
 
 export function buildLabView({ character, preferences, dummyOptions, hitboxesEnabled = false, slowMotionEnabled = false }: LabViewOptions): string {
-  const hud = fighterHudMarkup(character.health, character.stamina);
+  const hud = fighterHudMarkup(character.health);
   return `<a class="skip-link" href="#game-content">Skip to game content</a>
   <main class="lab-shell public-play" id="game-content">
     <header class="lab-header debugger-header"><div class="brand"><p class="eyebrow">HEXFRAME / TRAINING</p><h1>Hit. Pause. Practice.</h1><p>Practice live. Use Slow-mo and Hitboxes when you want a closer look.</p></div><div class="header-actions"><span class="controller-state" id="controller-state">Keyboard ready</span><button type="button" data-action="menu" aria-haspopup="dialog">Menu</button></div></header>
@@ -30,7 +30,7 @@ export function buildLabView({ character, preferences, dummyOptions, hitboxesEna
 
     <aside class="tutorial-hud" id="tutorial-hud" aria-live="polite" hidden><header><span id="tutorial-lesson-count">LESSON 1 / 4</span><strong id="tutorial-title">Movement</strong></header><div class="tutorial-objective"><small>OBJECTIVE</small><b id="tutorial-objective">Move forward</b><em id="tutorial-success"></em></div><p id="tutorial-hint"></p><strong class="tutorial-telegraph" id="tutorial-telegraph" hidden></strong><footer><button class="primary" type="button" data-action="next-tutorial-lesson" hidden>Next lesson</button><button type="button" data-action="exit-tutorial">Exit tutorial</button></footer></aside>
 
-    <section class="debugger-workspace"><section class="playfield-card" aria-label="Combat arena"><div class="hud" aria-label="Fighter health and stamina">${hud}</div><div id="stage" class="stage"></div><div class="paused-overlay" id="paused-overlay" role="status" hidden><strong>PAUSED</strong><span>Press Start or Space to resume</span></div><div class="current-route"><span>ACTIVE</span><strong id="active-move">Ready</strong><em id="active-tags">Move, strike, and practice the route</em></div><div class="audio-caption" id="audio-caption" role="status" aria-live="polite" hidden></div><div class="sr-only" id="combat-announcer" role="status" aria-live="polite"></div></section></section>
+    <section class="debugger-workspace"><section class="playfield-card" aria-label="Combat arena"><div class="hud" aria-label="Fighter health">${hud}</div><div id="stage" class="stage"></div><div class="paused-overlay" id="paused-overlay" role="status" hidden><strong>PAUSED</strong><span>Press Start or Space to resume</span></div><div class="current-route"><span>ACTIVE</span><strong id="active-move">Ready</strong><em id="active-tags">Move, strike, and practice the route</em></div><div class="audio-caption" id="audio-caption" role="status" aria-live="polite" hidden></div><div class="sr-only" id="combat-announcer" role="status" aria-live="polite"></div></section></section>
 
     <footer class="control-legend"><span><b>MOVE</b> WASD / left stick</span><span><b>↑ / Y</b> Jab</span><span><b>← / X</b> Sweep</span><span><b>→ / B</b> Overhead</span><span><b>↓ / A</b> Uppercut</span><span><b>HITBOXES</b> \`</span><span><b>MENU</b> Esc / View</span></footer>
 
@@ -38,7 +38,7 @@ export function buildLabView({ character, preferences, dummyOptions, hitboxesEna
   </main>`;
 }
 
-function fighterHudMarkup(health: number, stamina: number): string { return `<div class="hud-side hud-side-party"><div class="hud-player hud-party-member"><span>YOU</span><div class="hud-meter-stack"><div class="health-track"><i id="health-p1"></i></div><div class="stamina-track"><i id="stamina-p1"></i></div></div><strong><b id="health-text-p1">${health}</b><small id="stamina-text-p1">${stamina} STA</small></strong></div></div><div class="hud-player hud-player-right"><strong><b id="health-text-p2">${health}</b><small id="stamina-text-p2">${stamina} STA</small></strong><div class="hud-meter-stack"><div class="health-track"><i id="health-p2"></i></div><div class="stamina-track"><i id="stamina-p2"></i></div></div><span>DUMMY</span></div>`; }
+function fighterHudMarkup(health: number): string { return `<div class="hud-side hud-side-party"><div class="hud-player hud-party-member"><span>YOU</span><div class="hud-meter-stack"><div class="health-track"><i id="health-p1"></i></div></div><strong><b id="health-text-p1">${health}</b></strong></div></div><div class="hud-player hud-player-right"><strong><b id="health-text-p2">${health}</b></strong><div class="hud-meter-stack"><div class="health-track"><i id="health-p2"></i></div></div><span>DUMMY</span></div>`; }
 
 function moveListMarkup(character: CharacterDef): string {
   const rows = character.commands.map((command, index) => { const move = character.moves.find((candidate) => candidate.id === command.moveId); if (!move) return ""; const hitbox = move.hitboxes[0]; return `<tr data-move-id="${move.id}"><th scope="row"><strong>${KIT_INPUTS[index] ?? "—"}</strong><span>${titleCase(move.key)}</span></th><td>${hitbox ? hitLevelLabel(hitbox.level) : "—"}</td><td>${hitbox?.damage ?? 0}</td><td>${move.startup}</td><td>${move.active}</td><td>${move.recovery}</td></tr>`; }).join("");

@@ -9,7 +9,7 @@
 
 import type { CharacterDef, FighterState, InputFrame } from "../types";
 import { InputBit, StateId } from "../types";
-import { GROUND_Y, STAMINA_REGEN_DELAY } from "../constants";
+import { GROUND_Y } from "../constants";
 import { enterState, isActionable, isInHitstun, isInStun } from "../state/machine";
 import { isBackward, isForward } from "../../input/parser/numpad";
 
@@ -29,9 +29,7 @@ export function applyGroundMotion(f: FighterState, c: CharacterDef, input: Input
   if (f.airborne === 1) return;
   if (!isActionable(f)) return;
 
-  if ((input & InputBit.Up) !== 0 && f.stamina >= JUMP_STAMINA_COST) {
-    f.stamina -= JUMP_STAMINA_COST;
-    f.staminaRegenDelay = STAMINA_REGEN_DELAY;
+  if ((input & InputBit.Up) !== 0) {
     enterState(f, StateId.JumpSquat);
     f.vx = 0;
     return;
@@ -55,7 +53,6 @@ export function applyGroundMotion(f: FighterState, c: CharacterDef, input: Input
   }
 }
 
-export const JUMP_STAMINA_COST = 12;
 /**
  * Integrate one frame of physics.
  *

@@ -168,7 +168,6 @@ export function loadMove(raw: RawMove, path = `moves.${raw.key}`): MoveDef {
     recovery: raw.recovery,
     requiresCrouch: raw.requiresCrouch,
     airOk: raw.airOk,
-    staminaCost: raw.staminaCost,
     hitboxes,
     hurtboxWindows: raw.hurtboxWindows.map((w) => ({
       startFrame: w.startFrame,
@@ -243,7 +242,6 @@ export function loadCharacter(raw: RawCharacter, moves: RawMove[]): CharacterDef
     id: raw.id,
     name: raw.name,
     health: raw.health,
-    stamina: 100,
     walkForwardSpeed: px(raw.walkForwardSpeed),
     walkBackwardSpeed: px(raw.walkBackwardSpeed),
     dashForward: {

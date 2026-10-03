@@ -111,14 +111,13 @@ export class Renderer {
       const profile = move ? styleImpact(burst, move) : null;
       if (!move) burst.setAttribute("class", "contact-burst effect-physical");
       if (contact.kind === ContactKind.Block) {
-        burst.setAttribute("class", `contact-burst block-burst${contact.perfectGuard ? " perfect-guard-burst" : ""}${contact.guardBreak ? " guard-break-burst" : ""}`);
+        burst.setAttribute("class", "contact-burst block-burst");
       }
       burst.setAttribute("transform", `translate(${fmt(point.x)} ${fmt(point.y)})`);
       const circle = document.createElementNS(SVG_NS, "circle");
       circle.setAttribute("r", fmt(profile ? 7 + profile.radius * 0.15 : 9));
       circle.setAttribute("class", "contact-ring");
-      if (contact.perfectGuard) circle.setAttribute("stroke", "#fff4bf");
-      else if (contact.kind === ContactKind.Block) circle.setAttribute("stroke", "#92a1ad");
+      if (contact.kind === ContactKind.Block) circle.setAttribute("stroke", "#92a1ad");
       else if (profile) circle.setAttribute("stroke", profile.secondary);
       burst.appendChild(circle);
       const rays = profile?.count ?? 4;
@@ -128,8 +127,7 @@ export class Renderer {
         line.setAttribute("x1", fmt(-length));
         line.setAttribute("x2", fmt(length));
         line.setAttribute("class", "contact-ray");
-        if (contact.perfectGuard) line.setAttribute("stroke", ray % 2 === 0 ? "#ffffff" : "#e8bf5d");
-        else if (contact.kind === ContactKind.Block) line.setAttribute("stroke", ray % 2 === 0 ? "#62717e" : "#c2ccd3");
+        if (contact.kind === ContactKind.Block) line.setAttribute("stroke", ray % 2 === 0 ? "#62717e" : "#c2ccd3");
         else if (profile) line.setAttribute("stroke", ray % 2 === 0 ? profile.primary : profile.secondary);
         line.setAttribute("transform", `rotate(${fmt((profile?.rotation ?? 0) + ray * (180 / rays))})`);
         burst.appendChild(line);

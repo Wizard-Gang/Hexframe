@@ -79,7 +79,6 @@ export function animationForState(f: FighterState, c: CharacterDef): string {
   }
   if (f.state === StateId.BlockstunStand) return "block_stand";
   if (f.state === StateId.BlockstunCrouch) return "block_crouch";
-  if (f.state === StateId.GuardBreak) return "hit_stand";
   if (f.state === StateId.HitstunStand) return "hit_stand";
   if (f.state === StateId.HitstunCrouch) return "hit_crouch";
   if (f.state === StateId.Knockdown) return f.stateFrame < 12 ? "knockdown" : "getup";

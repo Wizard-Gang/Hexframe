@@ -12,8 +12,6 @@
 
   "requiresCrouch": false,
   "airOk": false,
-  "staminaCost": 0,
-
   "hitboxes": [
     {
       "id": 1,

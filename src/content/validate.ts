@@ -466,7 +466,7 @@ const CHARACTER_KEYS = [
   "commands",
 ] as const;
 
-const DASH_PROFILE_KEYS = ["velocities", "attackCancelFrame", "staminaCost", "recognitionWindow"] as const;
+const DASH_PROFILE_KEYS = ["velocities", "attackCancelFrame", "recognitionWindow"] as const;
 
 function readDashProfile(value: unknown, path: string): RawDashProfile {
   const source = requireObject(value, path);
@@ -484,7 +484,6 @@ function readDashProfile(value: unknown, path: string): RawDashProfile {
   return {
     velocities,
     attackCancelFrame,
-    staminaCost: requireIntegerAtLeast(source, path, "staminaCost", 0),
     recognitionWindow: requireIntegerAtLeast(source, path, "recognitionWindow", 2),
   };
 }
@@ -541,7 +540,6 @@ const MOVE_KEYS = [
   "recovery",
   "requiresCrouch",
   "airOk",
-  "staminaCost",
   "hitboxes",
   "hurtboxWindows",
   "invulWindows",
@@ -609,7 +607,6 @@ export function validateMove(raw: unknown, path = ""): RawMove {
     recovery: requireIntegerAtLeast(source, path, "recovery", 0),
     requiresCrouch: requireBoolean(source, path, "requiresCrouch"),
     airOk: requireBoolean(source, path, "airOk"),
-    staminaCost: requireIntegerAtLeast(source, path, "staminaCost", 0),
     hitboxes,
     hurtboxWindows,
     invulWindows,

@@ -47,8 +47,7 @@ export function isInStun(f: FighterState): boolean {
     f.state === StateId.HitstunCrouch ||
     f.state === StateId.HitstunAir ||
     f.state === StateId.BlockstunStand ||
-    f.state === StateId.BlockstunCrouch ||
-    f.state === StateId.GuardBreak
+    f.state === StateId.BlockstunCrouch
   );
 }
 

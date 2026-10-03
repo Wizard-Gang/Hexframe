@@ -49,8 +49,5 @@ export const NO_MOVE = -1;
  */
 export const INPUT_BUFFER_FRAMES = 4;
 
-/** Frames after a stamina spend before one point per frame starts regenerating. */
-export const STAMINA_REGEN_DELAY = 36;
-
 /** How many past input frames the command parser can see when matching motions. */
 export const COMMAND_HISTORY_FRAMES = 32;

@@ -26,27 +26,6 @@ import {
   isCrouching,
   isInHitstun,
 } from "../state/machine";
-import { pressedOn } from "../../input/buffer/history";
-
-export const PERFECT_GUARD_WINDOW = 3;
-export const GUARD_BREAK_STUN = 45;
-
-function guardDirection(defender: FighterState, attacker: FighterState): number {
-  return attacker.x > defender.x ? InputBit.Left : InputBit.Right;
-}
-
-function isPerfectGuard(
-  state: SimState,
-  player: number,
-  defender: FighterState,
-  attacker: FighterState,
-): boolean {
-  const away = guardDirection(defender, attacker);
-  for (let offset = 0; offset < PERFECT_GUARD_WINDOW; offset++) {
-    if (pressedOn(state, player, state.frame - offset, away)) return true;
-  }
-  return false;
-}
 
 /**
  * Whether the defender is guarding this attack.
@@ -78,8 +57,7 @@ export function isBlocking(
     defender.state === StateId.JumpSquat ||
     defender.state === StateId.Landing ||
     defender.state === StateId.Dash ||
-    defender.state === StateId.Knockdown ||
-    defender.state === StateId.GuardBreak
+    defender.state === StateId.Knockdown
   ) {
     return false;
   }
@@ -151,30 +129,18 @@ export function resolveContacts(
         const counterHit = defender.state === StateId.Attack;
         const armored = !blocked && armorRemaining(defender, defenderChar) > 0;
         let appliedHitstun = spec.hitstun;
-        let perfectGuard = false;
-        let guardBreak = false;
-        let guardStaminaDamage = 0;
 
         attacker.hitstop = spec.hitstopAttacker;
         defender.hitstop = spec.hitstopDefender;
 
         if (blocked) {
-          perfectGuard = isPerfectGuard(state, d, defender, attacker);
-          guardStaminaDamage = perfectGuard ? 0 : Math.max(1, Math.trunc((spec.damage + 3) / 4));
-          guardBreak = !perfectGuard && defender.stamina <= guardStaminaDamage;
-          defender.stamina = Math.max(0, defender.stamina - guardStaminaDamage);
-          if (guardStaminaDamage > 0) defender.staminaRegenDelay = Math.max(defender.staminaRegenDelay, 36);
-          defender.stun = guardBreak
-            ? GUARD_BREAK_STUN
-            : perfectGuard
-              ? Math.max(1, Math.trunc((spec.blockstun * 3) / 5))
-              : spec.blockstun;
-          enterState(defender, guardBreak ? StateId.GuardBreak : blockstunStateFor(defender));
-          attacker.vx = spec.pushbackBlockAttacker * dir * (perfectGuard ? 3 : 2);
+          defender.stun = spec.blockstun;
+          enterState(defender, blockstunStateFor(defender));
+          attacker.vx = spec.pushbackBlockAttacker * dir * 2;
           defender.vx = spec.pushbackBlockDefender * dir;
           // Freeze the combatants for readability without pausing the simulation clock.
-          attacker.hitstop = Math.max(attacker.hitstop, perfectGuard ? 5 : 4);
-          defender.hitstop = Math.max(defender.hitstop, perfectGuard ? 5 : 4);
+          attacker.hitstop = Math.max(attacker.hitstop, 4);
+          defender.hitstop = Math.max(defender.hitstop, 4);
         } else {
           rawDamage = spec.damage;
           dealtDamage = rawDamage;
@@ -219,8 +185,8 @@ export function resolveContacts(
           rawDamage,
           hitstun: appliedHitstun,
           blockstun: spec.blockstun,
-          hitstopAttacker: blocked ? Math.max(spec.hitstopAttacker, perfectGuard ? 5 : 4) : spec.hitstopAttacker,
-          hitstopDefender: blocked ? Math.max(spec.hitstopDefender, perfectGuard ? 5 : 4) : spec.hitstopDefender,
+          hitstopAttacker: blocked ? Math.max(spec.hitstopAttacker, 4) : spec.hitstopAttacker,
+          hitstopDefender: blocked ? Math.max(spec.hitstopDefender, 4) : spec.hitstopDefender,
           pushbackAttacker: blocked
             ? attacker.vx
             : spec.pushbackHitAttacker * dir,
@@ -231,9 +197,6 @@ export function resolveContacts(
           overlapHeight: overlap.y1 - overlap.y0,
           counterHit,
           armored,
-          guardStaminaDamage,
-          perfectGuard,
-          guardBreak,
           x: where.x,
           y: where.y,
         };
