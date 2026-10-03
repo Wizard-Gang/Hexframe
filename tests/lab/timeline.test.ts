@@ -4,31 +4,28 @@ import { px } from "../../src/combat/constants";
 import { Simulation } from "../../src/combat/simulation/simulation";
 import { InputBit } from "../../src/combat/types";
 import { testFighterSimConfig } from "../../src/content/test-fighter";
-import { hashState } from "../../src/rollback/hashing/fnv";
 import { Timeline } from "../../src/lab/timeline/timeline";
 
 function contactTimeline(): { sim: Simulation; timeline: Timeline } {
   const config = { ...testFighterSimConfig(), startX: [px(-18), px(18)] as [number, number] };
   const sim = new Simulation(config);
-  const timeline = new Timeline(sim, 120);
+  const timeline = new Timeline(sim);
   timeline.inputProvider = (frame) => [frame === 0 ? InputBit.Light : 0, 0];
   return { sim, timeline };
 }
 
 describe("combat lab timeline", () => {
-  it("reuses recorded inputs when moving forward after an exact rewind", () => {
+  it("steps exactly one frame forward while paused", () => {
     const { sim, timeline } = contactTimeline();
-    timeline.pauseOnContact = false;
-    timeline.stepFrames(14);
-    const expectedHash = hashState(sim.getState());
+    timeline.paused = true;
 
-    timeline.stepFrames(-10);
-    expect(sim.getState().frame).toBe(4);
-    timeline.stepFrames(10);
+    const reports = timeline.stepFrames(1);
 
-    expect(sim.getState().frame).toBe(14);
-    expect(hashState(sim.getState())).toBe(expectedHash);
-    expect(timeline.contactReports()).toHaveLength(1);
+    expect(reports).toHaveLength(1);
+    expect(reports[0].frame).toBe(0);
+    expect(sim.getState().frame).toBe(1);
+    expect(timeline.lastReport).toEqual(reports[0]);
+    expect(timeline.tick(1)).toEqual([]);
   });
 
   it("stops a multi-frame advance on the resolved contact frame", () => {
@@ -42,5 +39,4 @@ describe("combat lab timeline", () => {
     expect(sim.getState().frame).toBe(contact!.frame + 1);
     expect(timeline.lastMessage).toContain(`Contact on frame ${contact!.frame}`);
   });
-
 });

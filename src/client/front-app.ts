@@ -53,7 +53,6 @@ function mountTrainingStages(mount: HTMLElement): Renderer[] {
     const simulation = new Simulation({
       characters: [player, dummy],
       startX: [px(-105), px(105)],
-      seed: 0x5eed,
       stage,
     });
     const fighter = {

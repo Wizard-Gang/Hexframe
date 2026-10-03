@@ -2,18 +2,17 @@
  * The shape of everything the simulation stores, reads or emits.
  *
  * This file is a contract. Every other module in `src/combat`, `src/input`,
- * `src/rollback`, `src/renderer` and `src/lab` is written against it, so changing a
- * field here changes the snapshot layout, the determinism hash and the wire format at
- * once. Add fields at the end of a structure and bump `SNAPSHOT_VERSION`.
+ * `src/renderer` and `src/lab` is written against it, so changing a field here changes
+ * the simulation contract consumed by those layers.
  *
  * Two separations are load-bearing and are stated here rather than left to discipline:
  *
  *  - **Visual data is not combat data.** Nothing in this file describes a bone, a
  *    rotation or an interpolation. `MoveDef.animation` is a name the renderer looks up;
  *    the simulation never reads the animation it points at.
- *  - **Simulation state is not simulation output.** `SimState` is hashed, snapshotted
- *    and rolled back. `FrameReport` is what happened during one step, for the renderer
- *    and the lab to look at, and is never part of the hash.
+ *  - **Simulation state is not simulation output.** `SimState` is the authoritative
+ *    state after a step. `FrameReport` is what happened during one step for the renderer
+ *    and the lab to inspect.
  */
 
 // ---------------------------------------------------------------------------
@@ -25,8 +24,8 @@
  *
  * Directions are **absolute** (left and right, not forward and back). The command
  * parser converts them to facing-relative numpad notation. Absolute is what gets
- * networked, recorded and hashed, because it is what the player physically did and it
- * stays meaningful when a rollback changes which way the fighter was facing.
+ * recorded as authoritative input history because it is what the player physically did
+ * and stays meaningful as facing changes.
  */
 export type InputFrame = number;
 
@@ -262,7 +261,7 @@ export interface DashProfile {
 }
 
 // ---------------------------------------------------------------------------
-// Simulation state — hashed, snapshotted, rolled back
+// Simulation state
 // ---------------------------------------------------------------------------
 
 export const StateId = {
@@ -289,8 +288,7 @@ export type StateIdValue = (typeof StateId)[keyof typeof StateId];
 /**
  * One fighter, entirely as integers.
  *
- * Every field here is serialised, hashed and restored. Nothing derived from rendering,
- * from wall-clock time or from the browser may be added to it.
+ * Nothing derived from rendering, wall-clock time or the browser may be added here.
  */
 export interface FighterState {
   /** Ground origin, sim units. `y` is height above the ground; `GROUND_Y` when standing. */
@@ -352,8 +350,6 @@ export interface StageState {
 /** The complete authoritative state of a match on one frame. */
 export interface SimState {
   frame: number;
-  /** Deterministic RNG word. Part of the state, so a rollback replays the same rolls. */
-  rng: number;
   /** One entry per configured fighter, in fighter-index order. */
   fighters: FighterState[];
   stage: StageState;
@@ -365,14 +361,14 @@ export interface SimState {
    *
    * Command parsing happens *inside* `Simulation.step()` — step 2 of the frame loop —
    * so the history the parser reads is authoritative simulation state. Keeping it here
-   * rather than in a client-side object is what makes a rollback re-derive the same
-   * moves from the same presses instead of trusting the caller to replay a parser.
+   * makes the same input sequence re-derive the same moves without trusting a client-side
+   * parser to reproduce hidden state.
    */
   inputHistory: number[][];
 }
 
 // ---------------------------------------------------------------------------
-// Simulation output — never hashed
+// Simulation output
 // ---------------------------------------------------------------------------
 
 export const ContactKind = { Hit: 0, Block: 1 } as const;
@@ -449,8 +445,6 @@ export interface SimConfig {
   characters: readonly CharacterDef[];
   /** Exactly two starting ground origins in sim units. */
   startX: readonly number[];
-  /** Seed for the deterministic RNG. */
-  seed: number;
   /** Optional Training Grid presentation/bounds definition. */
   stage?: StageDef;
 }

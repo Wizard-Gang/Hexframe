@@ -13,8 +13,8 @@ export type InputScript =
   | ((frame: number, player: number) => InputFrame)
   | readonly (readonly InputFrame[])[];
 
-export function createSim(seed?: number): Simulation {
-  return new Simulation(testFighterSimConfig(seed));
+export function createSim(): Simulation {
+  return new Simulation(testFighterSimConfig());
 }
 
 /** Both players' inputs for one frame. Anything the script does not cover is neutral. */
@@ -37,9 +37,8 @@ export function runFrames(sim: Simulation, count: number, script?: InputScript):
 export function runSim(
   count: number,
   script?: InputScript,
-  seed?: number,
 ): { sim: Simulation; reports: FrameReport[] } {
-  const sim = createSim(seed);
+  const sim = createSim();
   return { sim, reports: runFrames(sim, count, script) };
 }
 
