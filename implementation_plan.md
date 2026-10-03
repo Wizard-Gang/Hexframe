@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-172 — [REFACTOR] Delete scenario capture and the unused rollback session
-
-**Goal:** Remove replay tooling players never need.
-
-**Scope**
-- Delete `src/lab/scenario/scenario.ts` and its capture, replay, export and import controls, handlers and styles.
-- Delete `src/rollback/replay/rollback-session.ts` and `tests/rollback/rollback-session.test.ts`.
-- Remove the scenario cases from `tests/lab/timeline.test.ts`.
-
-**Acceptance:** No scenario code or UI remains; Training plays as before.
-
-**Validation:** `npm test -- tests/lab tests/rollback`; browser check.
-
----
-
 ### HF-173 — [REFACTOR] Delete rewind, save states, the frame inspector and state hashing
 
 **Goal:** Training runs forward only: play, pause, step one frame.

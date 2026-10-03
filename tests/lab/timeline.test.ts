@@ -5,12 +5,6 @@ import { Simulation } from "../../src/combat/simulation/simulation";
 import { InputBit } from "../../src/combat/types";
 import { testFighterSimConfig } from "../../src/content/test-fighter";
 import { hashState } from "../../src/rollback/hashing/fnv";
-import {
-  captureScenario,
-  parseScenario,
-  replayScenario,
-  scenarioJson,
-} from "../../src/lab/scenario/scenario";
 import { Timeline } from "../../src/lab/timeline/timeline";
 
 function contactTimeline(): { sim: Simulation; timeline: Timeline } {
@@ -49,18 +43,4 @@ describe("combat lab timeline", () => {
     expect(timeline.lastMessage).toContain(`Contact on frame ${contact!.frame}`);
   });
 
-  it("captures, JSON round-trips, and exactly replays a headless scenario", () => {
-    const { sim, timeline } = contactTimeline();
-    timeline.pauseOnContact = false;
-    timeline.stepFrames(14);
-    const captured = captureScenario(sim, timeline, "wizard 5m standing");
-    const imported = parseScenario(JSON.parse(scenarioJson(captured)) as unknown);
-    const result = replayScenario(sim, timeline, imported);
-
-    expect(imported.name).toBe("wizard_5m_standing");
-    expect(imported.expected.contacts).toHaveLength(1);
-    expect(result.matches).toBe(true);
-    expect(result.actualHash).toBe(captured.expected.hash);
-    expect(sim.getState().frame).toBe(14);
-  });
 });

@@ -22,8 +22,6 @@ import { Timeline } from "./timeline/timeline";
 import type { LabSpeed } from "./timeline/timeline";
 import { frameInspectorMarkup, interactionHistoryMarkup, moveTimelineMarkup } from "./inspector";
 import type { InteractionSelection } from "./inspector";
-import { captureScenario, parseScenario, replayScenario, scenarioJson } from "./scenario/scenario";
-import type { CombatScenario } from "./scenario/scenario";
 import { buildLabView } from "./view";
 import { markTutorialPromptSeen, tutorialPromptSeen, tutorialRequested, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
@@ -103,7 +101,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let focusBeforeMenu: HTMLElement | null = null;
   let lastMenuFocus: HTMLElement | null = null;
   let captionTimer = 0;
-  let capturedScenario: CombatScenario | null = null;
   let selectedInteraction: InteractionSelection | null = null;
   let renderedTimelineMoveId = -1;
   let renderedTimelinePlayhead = -2;
@@ -199,9 +196,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       markTutorialPromptSeen();
       syncTutorialPrompt();
     }
-    if (action === "scenario-capture") captureCurrentScenario();
-    if (action === "scenario-replay") replayCapturedScenario();
-    if (action === "scenario-export") exportCapturedScenario();
     if (action === "reset-preferences" && confirmDestructive("Reset every setting to its default?")) replacePreferences(resetPreferences());
     if (action === "next-tutorial-lesson") advanceTutorial();
     if (action === "exit-tutorial") exitTutorial();
@@ -222,7 +216,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (target.dataset.control === "speed") timeline.speed = Number(target.value) as LabSpeed;
     if (target.dataset.control === "dummy") dummy.mode = Number(target.value) as DummyModeValue;
     if (target.dataset.control === "pause-on-contact" && target instanceof HTMLInputElement) timeline.pauseOnContact = target.checked;
-    if (target.dataset.control === "scenario-import" && target instanceof HTMLInputElement) void importScenarioFile(target.files?.[0] ?? null);
     const debug = target.dataset.debug as keyof DebugToggles | undefined;
     if (debug) {
       toggles[debug] = (target as HTMLInputElement).checked;
@@ -429,76 +422,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     selectedInteraction = { frame, index };
     lastReport = report;
     interactionRenderKey = "";
-  }
-
-  function captureCurrentScenario(): void {
-    const state = sim.getState();
-    if (timeline.recordedInputs(state.frame).length !== state.frame) {
-      setScenarioStatus("Reset the match before capturing: this run did not begin at frame 0.", false);
-      return;
-    }
-    const move = playerCharacter.moves.find((candidate) => candidate.id === state.fighters[0].moveId)
-      ?? playerCharacter.moves.find((candidate) => candidate.id === timelinePinnedMoveId);
-    const name = `${playerCharacter.id}_${move?.key ?? "neutral"}_frame_${state.frame}`;
-    capturedScenario = captureScenario(sim, timeline, name);
-    setScenarioButtons(true);
-    setScenarioStatus(`Captured ${state.frame} frames · ${capturedScenario.expected.contacts.length} contacts · expected ${capturedScenario.expected.hash}`, true);
-  }
-
-  function replayCapturedScenario(): void {
-    if (!capturedScenario) return;
-    try {
-      const result = replayScenario(sim, timeline, capturedScenario);
-      lastReport = timeline.lastReport;
-      selectedInteraction = null;
-      interactionRenderKey = "";
-      setScenarioStatus(
-        result.matches
-          ? `PASS · ${result.reports} frames reproduced hash ${result.actualHash}`
-          : `FAIL · expected ${result.expectedHash}, received ${result.actualHash} at frame ${result.stateFrame}`,
-        result.matches,
-      );
-    } catch (error) {
-      setScenarioStatus(error instanceof Error ? error.message : "Scenario replay failed.", false);
-    }
-  }
-
-  function exportCapturedScenario(): void {
-    if (!capturedScenario) return;
-    const href = URL.createObjectURL(new Blob([scenarioJson(capturedScenario)], { type: "application/json" }));
-    const link = document.createElement("a");
-    link.href = href;
-    link.download = `${capturedScenario.name}.json`;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(href), 0);
-    setScenarioStatus(`Exported ${link.download}`, true);
-  }
-
-  async function importScenarioFile(file: File | null): Promise<void> {
-    if (!file) return;
-    try {
-      capturedScenario = parseScenario(JSON.parse(await file.text()) as unknown);
-      setScenarioButtons(true);
-      setScenarioStatus(`Imported ${capturedScenario.name} · ${capturedScenario.inputs.length} frames · expected ${capturedScenario.expected.hash}`, true);
-    } catch (error) {
-      capturedScenario = null;
-      setScenarioButtons(false);
-      setScenarioStatus(error instanceof Error ? error.message : "Scenario import failed.", false);
-    }
-  }
-
-  function setScenarioButtons(enabled: boolean): void {
-    for (const action of ["scenario-replay", "scenario-export"]) {
-      const button = mount.querySelector<HTMLButtonElement>(`[data-action='${action}']`);
-      if (button) button.disabled = !enabled;
-    }
-  }
-
-  function setScenarioStatus(message: string, success: boolean): void {
-    const status = required("scenario-status");
-    status.textContent = message;
-    status.classList.toggle("pass", success);
-    status.classList.toggle("fail", !success);
   }
 
   function updatePreference(target: HTMLInputElement | HTMLSelectElement): void {
