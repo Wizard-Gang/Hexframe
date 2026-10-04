@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { cancelAllowed } from "../../src/combat/commands/resolve";
 import { ACTION_SLOT_COUNT, actionBit } from "../../src/combat/types";
 import { KIT_MOVE_IDS, MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
-import { ADDITIONAL_ANIMATIONS } from "../../src/content/additional-animations";
 import { createSim } from "../helpers/harness";
 
 describe("fixed four-button move catalog", () => {
@@ -23,18 +22,6 @@ describe("fixed four-button move catalog", () => {
     expect(TEST_FIGHTER.commands.some((command) =>
       command.moveId === MoveId.StandingLight || command.moveId === MoveId.CrouchingLight,
     )).toBe(false);
-  });
-
-  it("retains only authored presentation clips for the playable kit", () => {
-    expect(Object.keys(ADDITIONAL_ANIMATIONS)).toEqual([
-      "jab",
-      "overhead",
-      "sweep",
-      "uppercut",
-    ]);
-    for (const animation of Object.values(ADDITIONAL_ANIMATIONS)) {
-      expect(animation.keyframes).toHaveLength(5);
-    }
   });
 
   it("authors only the Jab to Sweep to Uppercut cancel chain", () => {

@@ -159,7 +159,6 @@ export function loadMove(raw: RawMove, path = `moves.${raw.key}`): MoveDef {
   return {
     id: raw.id,
     key: raw.key,
-    animation: raw.animation,
     tags: raw.tags?.slice() ?? [],
     description: raw.description ?? raw.key.replaceAll("_", " "),
     duration: raw.duration,
