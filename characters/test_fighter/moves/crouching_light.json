@@ -1,7 +1,6 @@
 {
   "id": 2,
   "key": "crouching_light",
-  "animation": "crouching_light",
   "tags": ["physical", "low", "starter"],
   "description": "Quick low starter that requires a crouching stance.",
 

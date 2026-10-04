@@ -58,7 +58,6 @@ function buildMove(blueprint: KitMoveBlueprint): RawMove {
   return {
     id: blueprint.id,
     key: blueprint.key,
-    animation: blueprint.key,
     tags: blueprint.tags.slice(),
     description: blueprint.description,
     duration,

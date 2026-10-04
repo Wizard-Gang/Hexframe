@@ -80,7 +80,7 @@ Hexframe is MIT-licensed. The distributable client contains first-party Hexframe
 - Development tooling: Vite, Vitest, TypeScript, Wrangler, Ajv, and type packages.
 - Fonts: family names only; no font file is bundled.
 - Audio: synthesized at runtime with WebAudio; no audio asset is bundled.
-- Art: `characters/test_fighter/model.svg` is first-party project art.
+- Art: the machine-generated fighter body parts under `characters/fighter/parts/` are bundled presentation assets adapted from the owner-directed FightLab source.
 - External media: no third-party image, font, audio, or video asset is bundled.
 
 Dependency and asset licensing must be re-reviewed whenever runtime dependencies or bundled media change.

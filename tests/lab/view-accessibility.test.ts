@@ -6,7 +6,7 @@ import { buildLabView } from "../../src/lab/view";
 
 const appSource = readFileSync(new URL("../../src/lab/app.ts", import.meta.url), "utf8");
 const preferencesSource = readFileSync(new URL("../../src/lab/preferences.ts", import.meta.url), "utf8");
-const rigSource = readFileSync(new URL("../../src/renderer/character/rig.ts", import.meta.url), "utf8");
+const figureSource = readFileSync(new URL("../../src/renderer/character/figure-view.ts", import.meta.url), "utf8");
 const overlaySource = readFileSync(new URL("../../src/renderer/svg/debug-overlay.ts", import.meta.url), "utf8");
 
 function view(hitboxesEnabled = false, slowMotionEnabled = false, skeletonEnabled = false): string {
@@ -43,7 +43,7 @@ describe("Training accessibility and study controls", () => {
     expect(appSource).toContain('localStorage.setItem(TRAINING_VIEW_STORAGE_KEY, JSON.stringify(state))');
     expect(appSource).toContain('event.code === "Backquote"');
     expect(appSource).toContain('timeline.speed = enabled ? 25 : 100');
-    expect(rigSource).not.toContain("bone-name");
+    expect(figureSource).not.toContain("bone-name");
     expect(overlaySource).not.toContain("debug-origin");
     expect(overlaySource).not.toContain("debug-velocity");
     for (const volume of ["debug-hitbox", "debug-hurtbox", "debug-pushbox"]) expect(overlaySource).toContain(volume);

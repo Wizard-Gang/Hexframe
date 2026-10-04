@@ -8,8 +8,7 @@
  * Two separations are load-bearing and are stated here rather than left to discipline:
  *
  *  - **Visual data is not combat data.** Nothing in this file describes a bone, a
- *    rotation or an interpolation. `MoveDef.animation` is a name the renderer looks up;
- *    the simulation never reads the animation it points at.
+ *    rotation, an interpolation or a presentation clip.
  *  - **Simulation state is not simulation output.** `SimState` is the authoritative
  *    state after a step. `FrameReport` is what happened during one step for the renderer
  *    and the lab to inspect.
@@ -177,11 +176,10 @@ export interface CancelWindow {
   onHitOnly: boolean;
 }
 
-/** A move: what the game *does*. Its `animation` is only a name the renderer resolves. */
+/** A move: what the game *does*. Visual clip selection lives entirely in presentation. */
 export interface MoveDef {
   id: number;
   key: string;
-  animation: string;
   /** Searchable move-tag vocabulary for presentation and authored roles. */
   tags: string[];
   /** Short player-facing explanation of the authored technique. */

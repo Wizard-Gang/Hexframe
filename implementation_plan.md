@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-182 — [REFACTOR] Delete the old rig, model and animation pipeline
-
-**Goal:** There is one rig.
-
-**Scope**
-- Delete `characters/test_fighter/model.svg`, `rig.json` and `animations/`.
-- Delete `src/renderer/character/rig.ts`, `src/renderer/animation/animator.ts`, and `src/content/additional-animations.ts`, `state-animations.ts`, `player-presentation.ts` and `test-fighter-assets.ts`.
-- Delete their raw types and schemas, and the tests that only described the old model.
-
-**Acceptance:** Nothing references the old model, rig or clip names.
-
-**Validation:** `npm run check`.
-
----
-
 ### HF-183 — [FEAT] Author crouch, crouch-guard and jump clips
 
 **Goal:** Crouching, low blocking and jumping get real poses.
