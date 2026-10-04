@@ -53,7 +53,7 @@ function mountTrainingStages(mount: HTMLElement): Renderer[] {
       presentationScale: 1.45,
     };
     const renderer = new Renderer(stageMount, [player, dummy], { fighters: [fighter, fighter], stage });
-    renderer.render(simulation.getState(), null, false);
+    renderer.render(simulation.getState(), false, false);
     const svg = stageMount.querySelector("svg");
     svg?.setAttribute("aria-hidden", "true");
     svg?.removeAttribute("role");

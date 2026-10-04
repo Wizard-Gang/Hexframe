@@ -91,7 +91,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let animationId = 0;
   let lastTime = performance.now();
   let elapsed = 0;
-  let lastReport: FrameReport | null = null;
   let resumeAfterMenu = false;
   let previousUi = gamepad.sampleUi();
   let focusBeforeMenu: HTMLElement | null = null;
@@ -106,7 +105,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   const render = (): void => {
     const state = sim.getState();
-    renderer.render(state, lastReport ?? timeline.lastReport, viewState.hitboxes);
+    renderer.render(state, viewState.hitboxes, document.documentElement.dataset.motion === "reduced");
     required("controller-state").textContent = gamepad.connected ? `Gamepad · ${gamepad.name}` : "Keyboard ready · connect gamepad anytime";
     for (let player = 0; player < state.fighters.length; player++) {
       const fighter = state.fighters[player];
@@ -131,7 +130,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       elapsed -= realFrames * FRAME_MS;
       const reports = timeline.tick(realFrames);
       if (reports.length > 0) {
-        lastReport = reports[reports.length - 1];
         processReports(reports);
         tutorial.observe(lastPlayerInput, sim.getState(), reports);
         if (tutorial.consumeResetRequest()) resetMatch();
@@ -451,16 +449,17 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   function resetMatch(): void {
     timeline.reset();
     dummy.reset();
+    renderer.clearEffects();
     if (tutorial.active) {
       const state = sim.getState();
       state.fighters[0].x = px(-18);
       state.fighters[1].x = px(18);
     }
     lastPlayerInput = 0;
-    lastReport = null;
   }
 
   function processReports(reports: readonly FrameReport[]): void {
+    renderer.enqueueReports(reports);
     const announcements: string[] = [];
     for (const report of reports) {
       for (const contact of report.contacts) {
