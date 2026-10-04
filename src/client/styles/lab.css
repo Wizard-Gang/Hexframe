@@ -183,6 +183,16 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 
 .fighter-p1 { --fighter-body: #a8cf46; --fighter-near: #c4ed64; --fighter-near-dark: #8dac34; --fighter-far: #61792d; --fighter-far-dark: #465820; --fighter-accent: #efffc7; }
 .fighter-p2 { --fighter-body: #687bdf; --fighter-near: #8fa0ff; --fighter-near-dark: #5568c9; --fighter-far: #3d487f; --fighter-far-dark: #303961; --fighter-accent: #dce2ff; }
+
+.fighter .part { fill: var(--fighter-body); stroke: #07090c; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.fighter .part--accent { fill: var(--fighter-accent); }
+.fighter .part--skin { fill: var(--fighter-near); }
+.fighter .part--back { fill: var(--fighter-far); }
+.fighter .detail { fill: none; stroke: #101622; stroke-width: 1.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.fighter .skeleton { pointer-events: none; }
+.fighter .skeleton__bone { stroke: #fff36a; stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.fighter .skeleton__joint { fill: #0b1018; stroke: #55e5d5; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.fighter .skeleton__joint--root { fill: #ff9b51; stroke: #fff36a; }
 .tutorial-telegraph { padding: 8px; border: 1px solid #ff8190; color: #ff8190; font: 900 14px ui-monospace, monospace; text-align: center; }
 .tutorial-hud footer { display: flex; flex-wrap: wrap; gap: 5px; }
 .tutorial-hud footer button { flex: 1; min-height: 34px; padding: 6px; font-size: 8px; }

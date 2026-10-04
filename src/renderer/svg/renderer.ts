@@ -1,21 +1,20 @@
 import type { CharacterDef, FrameReport, SimState, StageDef } from "../../combat/types";
 import { ContactKind } from "../../combat/types";
 import { debugBoxes } from "../../combat/collision/boxes";
-import type { RawAnimation, RawRig } from "../../content/raw-types";
-import type { AnimationPlayback } from "../animation/animator";
-import { animationForState, animationFrameForState, sampleAnimation } from "../animation/animator";
-import { applyPose, buildFighterNode } from "../character/rig";
-import type { FighterNode } from "../character/rig";
+import type { Clip } from "../../rig/clip-types";
+import { sampleClip } from "../../rig/sample";
+import type { Rig } from "../../rig/types";
+import { FigureView } from "../character/figure-view";
+import { depthProfileForClip, fightLabPresentation } from "../character/fightlab-presentation";
 import { drawHitboxes } from "./debug-overlay";
-import { createStage, fmt, worldToScreen } from "./stage";
+import { createStage, worldToScreen } from "./stage";
 import { ContactEffectQueue, drawContactEffects, effectKind } from "./contact-effects";
 
 export interface FighterRendererAssets {
-  model: string;
-  rig: RawRig;
-  animations: Record<string, RawAnimation>;
-  playback?: Readonly<Record<string, AnimationPlayback>>;
-  presentationScale?: number;
+  readonly rig: Rig;
+  readonly parts: Readonly<Record<string, string>>;
+  readonly clips: Readonly<Record<string, Clip>>;
+  readonly presentationScale: number;
 }
 
 export interface RendererAssets {
@@ -27,7 +26,7 @@ export class Renderer {
   private readonly chars: readonly CharacterDef[];
   private readonly assets: readonly FighterRendererAssets[];
   private readonly stage;
-  private readonly nodes: FighterNode[] = [];
+  private readonly nodes: FigureView[] = [];
   private readonly effects = new ContactEffectQueue();
 
   constructor(mount: HTMLElement, chars: readonly CharacterDef[], assets: RendererAssets) {
@@ -38,7 +37,7 @@ export class Renderer {
     for (let player = 0; player < chars.length; player++) {
       const asset = this.assets[player];
       if (!asset) throw new Error(`Renderer assets are missing player ${player}`);
-      const node = buildFighterNode(asset.model, asset.rig);
+      const node = new FigureView({ rig: asset.rig, parts: asset.parts });
       node.root.classList.add(`fighter-p${player + 1}`);
       this.stage.layers.fighters.appendChild(node.root);
       this.nodes.push(node);
@@ -65,35 +64,32 @@ export class Renderer {
     this.stage.layers.effects.replaceChildren();
   }
 
-  render(state: SimState, showHitboxes: boolean, reducedMotion = false): void {
+  render(state: SimState, showHitboxes: boolean, reducedMotion = false, showSkeleton = false): void {
     const leadX = state.fighters[0]?.x ?? 0;
     const framed = state.fighters.filter((fighter) => fighter.health > 0 && Math.abs(fighter.x - leadX) <= 90_000);
     const focusX = framed.length > 0
       ? Math.trunc((Math.min(...framed.map((fighter) => fighter.x)) + Math.max(...framed.map((fighter) => fighter.x))) / 2)
       : leadX;
     this.stage.setCamera(focusX);
+
     for (let player = 0; player < state.fighters.length; player++) {
       const fighter = state.fighters[player];
       const node = this.nodes[player];
       const asset = this.assets[player];
-      const clipName = animationForState(fighter, this.chars[player]);
-      const clip = asset.animations[clipName] ?? asset.animations["idle"];
-      if (clip) {
-        const frame = animationFrameForState(
-          fighter,
-          this.chars[player],
-          clipName,
-          clip,
-          asset.playback?.[clipName],
-        );
-        applyPose(node, sampleAnimation(clip, frame));
-      }
-      const position = worldToScreen(fighter.x, fighter.y);
-      const scale = asset.presentationScale ?? 1;
-      node.root.setAttribute(
-        "transform",
-        `translate(${fmt(position.x)} ${fmt(position.y)}) scale(${fmt(fighter.facing * scale)} ${fmt(scale)})`,
+      if (!fighter || !node || !asset) continue;
+
+      const presentation = fightLabPresentation(fighter, this.chars[player]);
+      const clip = asset.clips[presentation.clip];
+      if (!clip) throw new Error(`FightLab clip '${presentation.clip}' is missing`);
+      const facing = fighter.facing === -1 ? -1 : 1;
+      const placed = node.pose(
+        sampleClip(clip, presentation.frame),
+        facing,
+        depthProfileForClip(asset.rig, presentation.clip),
       );
+      const position = worldToScreen(fighter.x, fighter.y);
+      node.place(position.x, position.y, facing, asset.presentationScale);
+      node.drawSkeleton(showSkeleton ? placed : null);
       node.root.classList.toggle("fighter-hitstop", fighter.hitstop > 0);
     }
 
