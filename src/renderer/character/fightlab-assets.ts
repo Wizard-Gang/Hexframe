@@ -2,6 +2,7 @@ import fighterRigJson from "../../../characters/fighter/fighter.rig.json";
 import crouchJson from "../../../characters/fighter/clips/crouch.json";
 import crouchGuardJson from "../../../characters/fighter/clips/crouchGuard.json";
 import jumpJson from "../../../characters/fighter/clips/jump.json";
+import launchedJson from "../../../characters/fighter/clips/launched.json";
 import labGuardJson from "../../../characters/fighter/clips/labGuard.json";
 import labIdleJson from "../../../characters/fighter/clips/labIdle.json";
 import labOverheadJson from "../../../characters/fighter/clips/labOverhead.json";
@@ -9,6 +10,8 @@ import labStaggerJson from "../../../characters/fighter/clips/labStagger.json";
 import labStrikeJson from "../../../characters/fighter/clips/labStrike.json";
 import labWalkJson from "../../../characters/fighter/clips/labWalk.json";
 import labWaveJson from "../../../characters/fighter/clips/labWave.json";
+import sweepJson from "../../../characters/fighter/clips/sweep.json";
+import uppercutJson from "../../../characters/fighter/clips/uppercut.json";
 import armLowerL from "../../../characters/fighter/parts/arm_lower_l.svg?raw";
 import armLowerR from "../../../characters/fighter/parts/arm_lower_r.svg?raw";
 import armUpperL from "../../../characters/fighter/parts/arm_upper_l.svg?raw";
@@ -35,6 +38,7 @@ export const FIGHTLAB_CLIPS: Readonly<Record<FightLabClipName, Clip>> = Object.f
   crouch: clip(crouchJson),
   crouchGuard: clip(crouchGuardJson),
   jump: clip(jumpJson),
+  launched: clip(launchedJson),
   labGuard: clip(labGuardJson),
   labIdle: clip(labIdleJson),
   labOverhead: clip(labOverheadJson),
@@ -42,6 +46,8 @@ export const FIGHTLAB_CLIPS: Readonly<Record<FightLabClipName, Clip>> = Object.f
   labStrike: clip(labStrikeJson),
   labWalk: clip(labWalkJson),
   labWave: clip(labWaveJson),
+  sweep: clip(sweepJson),
+  uppercut: clip(uppercutJson),
 });
 
 export const FIGHTLAB_PARTS: Readonly<Record<string, string>> = Object.freeze({
