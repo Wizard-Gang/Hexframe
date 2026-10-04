@@ -70,23 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-180 — [FEAT] Vendor the FightLab rig core and lab clips
-
-**Goal:** Bring FightLab's rig runtime into Hexframe as a small, pure module.
-
-**Scope**
-- Port FightLab's FK, sampler, depth-profile and paint-order logic, with the types they need, into `src/rig/`. Leave out wardrobe, sockets, anchors, figure manifests and the long contract validator.
-- Add `characters/fighter/fighter.rig.json`, trimmed to space, root, bones and depth profiles, plus the seven `lab*` clips.
-- Port the FK, sampler and paint-order unit tests.
-
-**Non-goals:** No rendering change; HF-181 wires the module in.
-
-**Acceptance:** Unit tests prove FK placement, clip sampling at pose boundaries and across loops, and that every depth profile paints all 11 bones exactly once at both facings.
-
-**Validation:** `npm test -- tests/rig`.
-
----
-
 ### HF-181 — [FEAT] Render fighters with machine-generated FightLab bodies
 
 **Goal:** Both fighters and the overview preview are FightLab's 11-bone figure.
