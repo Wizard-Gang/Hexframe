@@ -10,8 +10,7 @@
  * Two kinds of check live here. Everything JSON Schema can express — types, required
  * keys, unknown keys, enums, bounds, array lengths — is mirrored exactly by the schemas.
  * The relational checks that draft 2020-12 has no vocabulary for (`endFrame >=
- * startFrame`, keyframes in ascending order, a rig hierarchy that is actually a tree)
- * are done here as well, after the structural pass, so that any input broken in a way
+ * startFrame`) are done here as well, after the structural pass, so that any input broken in a way
  * `ajv` can see is rejected here for the same reason and at the same path.
  *
  * Errors name a path, because "expected a number" is useless and
@@ -19,9 +18,7 @@
  */
 
 import type {
-  RawAnimation,
   RawArmorWindow,
-  RawBonePose,
   RawBox,
   RawCancelWindow,
   RawCharacter,
@@ -29,11 +26,8 @@ import type {
   RawHitbox,
   RawHurtboxWindow,
   RawInvulWindow,
-  RawKeyframe,
   RawMove,
   RawMovementKey,
-  RawRig,
-  RawRigPart,
 } from "./raw-types";
 
 /** Thrown for every content failure. `path` is where in the document the fault is. */
@@ -492,7 +486,6 @@ export function validateCharacter(raw: unknown, path = ""): RawCharacter {
 const MOVE_KEYS = [
   "id",
   "key",
-  "animation",
   "tags",
   "description",
   "duration",
@@ -557,7 +550,6 @@ export function validateMove(raw: unknown, path = ""): RawMove {
   return {
     id: requireIntegerAtLeast(source, path, "id", 1),
     key: requireIdentifier(source, path, "key"),
-    animation: requireIdentifier(source, path, "animation"),
     tags,
     description: source["description"] === undefined
       ? ""
@@ -575,200 +567,4 @@ export function validateMove(raw: unknown, path = ""): RawMove {
     movement,
     cancelWindows,
   };
-}
-
-const RIG_PART_KEYS = ["name", "parent", "pivot", "z"] as const;
-const PIVOT_KEYS = ["x", "y"] as const;
-
-function readRigPart(value: unknown, path: string): RawRigPart {
-  const source = requireObject(value, path);
-  requireNoExtraKeys(source, path, RIG_PART_KEYS);
-
-  const parentValue = requirePresent(source, path, "parent");
-  if (parentValue !== null && (typeof parentValue !== "string" || !KEY_PATTERN.test(parentValue))) {
-    throw new ContentError(field(path, "parent"), "must be a part name or null");
-  }
-
-  const pivotPath = field(path, "pivot");
-  const pivotSource = requireObject(requirePresent(source, path, "pivot"), pivotPath);
-  requireNoExtraKeys(pivotSource, pivotPath, PIVOT_KEYS);
-
-  return {
-    name: requireIdentifier(source, path, "name"),
-    parent: parentValue,
-    pivot: {
-      x: requireNumber(pivotSource, pivotPath, "x"),
-      y: requireNumber(pivotSource, pivotPath, "y"),
-    },
-    z: requireInteger(source, path, "z"),
-  };
-}
-
-const RIG_KEYS = ["root", "parts"] as const;
-
-/**
- * Validate a `rig.json`, including that the parts really form a single rooted tree.
- * A rig with a cycle or a dangling parent would send the renderer's transform walk into
- * an infinite loop, and catching it at the door is much cheaper than defending every
- * traversal against it.
- */
-export function validateRig(raw: unknown, path = ""): RawRig {
-  const source = requireObject(raw, path);
-  requireNoExtraKeys(source, path, RIG_KEYS);
-
-  const root = requireIdentifier(source, path, "root");
-  const partsPath = field(path, "parts");
-  const parts = requireArray(source, path, "parts", 1).map((item, i) =>
-    readRigPart(item, at(partsPath, i)),
-  );
-
-  const byName = new Map<string, RawRigPart>();
-  parts.forEach((part, i) => {
-    if (byName.has(part.name)) {
-      throw new ContentError(field(at(partsPath, i), "name"), `duplicates an earlier part`);
-    }
-    byName.set(part.name, part);
-  });
-
-  if (!byName.has(root)) {
-    throw new ContentError(field(path, "root"), `names a part that does not exist: ${root}`);
-  }
-
-  parts.forEach((part, i) => {
-    const partPath = at(partsPath, i);
-    if (part.parent === null) {
-      if (part.name !== root) {
-        throw new ContentError(field(partPath, "parent"), "only the root part may have no parent");
-      }
-      return;
-    }
-    if (part.name === root) {
-      throw new ContentError(field(partPath, "parent"), "the root part must have no parent");
-    }
-    if (!byName.has(part.parent)) {
-      throw new ContentError(
-        field(partPath, "parent"),
-        `names a part that does not exist: ${part.parent}`,
-      );
-    }
-  });
-
-  // Every part must reach the root by walking parents. The step budget is the number of
-  // parts, so a cycle is detected without keeping a visited set per walk.
-  parts.forEach((part, i) => {
-    let cursor: RawRigPart = part;
-    for (let steps = 0; steps <= parts.length; steps++) {
-      if (cursor.parent === null) return;
-      const parent = byName.get(cursor.parent);
-      if (parent === undefined) return;
-      cursor = parent;
-    }
-    throw new ContentError(at(partsPath, i), `is part of a parent cycle`);
-  });
-
-  return { root, parts };
-}
-
-const KEYFRAME_KEYS = ["frame", "bones"] as const;
-const BONE_POSE_KEYS = ["rotation", "x", "y"] as const;
-
-function readBonePose(value: unknown, path: string): RawBonePose {
-  const source = requireObject(value, path);
-  requireNoExtraKeys(source, path, BONE_POSE_KEYS);
-  if (Object.keys(source).length === 0) {
-    throw new ContentError(path, "must set at least one of rotation, x, y");
-  }
-  const pose: RawBonePose = {};
-  if (Object.prototype.hasOwnProperty.call(source, "rotation")) {
-    pose.rotation = requireNumber(source, path, "rotation");
-  }
-  if (Object.prototype.hasOwnProperty.call(source, "x")) {
-    pose.x = requireNumber(source, path, "x");
-  }
-  if (Object.prototype.hasOwnProperty.call(source, "y")) {
-    pose.y = requireNumber(source, path, "y");
-  }
-  return pose;
-}
-
-function readKeyframe(value: unknown, path: string): RawKeyframe {
-  const source = requireObject(value, path);
-  requireNoExtraKeys(source, path, KEYFRAME_KEYS);
-
-  const frame = requireIntegerAtLeast(source, path, "frame", 0);
-  const bonesPath = field(path, "bones");
-  const bonesSource = requireObject(requirePresent(source, path, "bones"), bonesPath);
-
-  const bones: Record<string, RawBonePose> = {};
-  const boneNames = Object.keys(bonesSource);
-  if (boneNames.length === 0) {
-    throw new ContentError(bonesPath, "must pose at least one bone");
-  }
-  for (const boneName of boneNames) {
-    if (!KEY_PATTERN.test(boneName)) {
-      throw new ContentError(
-        field(bonesPath, boneName),
-        "is not a valid part name: lowercase letters, digits and underscores",
-      );
-    }
-    bones[boneName] = readBonePose(bonesSource[boneName], field(bonesPath, boneName));
-  }
-
-  return { frame, bones };
-}
-
-const ANIMATION_KEYS = ["name", "loop", "duration", "note", "keyframes"] as const;
-
-/**
- * Validate one animation file.
- *
- * Note what is *not* checked: nothing here compares `duration` against any move, because
- * the two are deliberately independent. An animation is free to be longer or shorter
- * than the move that names it, and `tests/content` asserts exactly that.
- */
-export function validateAnimation(raw: unknown, path = ""): RawAnimation {
-  const source = requireObject(raw, path);
-  requireNoExtraKeys(source, path, ANIMATION_KEYS);
-
-  const keyframesPath = field(path, "keyframes");
-  const keyframes = requireArray(source, path, "keyframes", 1).map((item, i) =>
-    readKeyframe(item, at(keyframesPath, i)),
-  );
-
-  const animation: RawAnimation = {
-    name: requireIdentifier(source, path, "name"),
-    loop: requireBoolean(source, path, "loop"),
-    duration: requireIntegerAtLeast(source, path, "duration", 1),
-    keyframes,
-  };
-
-  if (Object.prototype.hasOwnProperty.call(source, "note")) {
-    animation.note = requireNonEmptyString(source, path, "note");
-  }
-
-  if (keyframes[0].frame !== 0) {
-    throw new ContentError(
-      field(at(keyframesPath, 0), "frame"),
-      "the first keyframe must be frame 0, so a pose is defined at the start",
-    );
-  }
-
-  for (let i = 1; i < keyframes.length; i++) {
-    if (keyframes[i].frame <= keyframes[i - 1].frame) {
-      throw new ContentError(
-        field(at(keyframesPath, i), "frame"),
-        "keyframes must be in strictly ascending frame order",
-      );
-    }
-  }
-
-  const last = keyframes[keyframes.length - 1].frame;
-  if (last > animation.duration) {
-    throw new ContentError(
-      field(at(keyframesPath, keyframes.length - 1), "frame"),
-      `must not be past the animation duration of ${animation.duration}`,
-    );
-  }
-
-  return animation;
 }

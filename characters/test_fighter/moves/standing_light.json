@@ -1,7 +1,6 @@
 {
   "id": 1,
   "key": "standing_light",
-  "animation": "standing_light",
   "tags": ["physical", "strike", "starter"],
   "description": "Fast universal starter with short reach.",
 

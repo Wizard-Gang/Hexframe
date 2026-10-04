@@ -10,10 +10,6 @@
  * Numbers here may carry up to two decimal places. `px()` is `Math.trunc(n * 100)`,
  * which is exact at that precision, so the conversion loses nothing and introduces no
  * float into the simulation.
- *
- * Nothing in the rig or animation types is combat data. They are declared alongside the
- * fighter because they ship in the same directory, not because the simulation reads
- * them — it never does.
  */
 
 /** A box in fighter-local world pixels: `x` forward from the ground origin, `y` up. */
@@ -100,8 +96,6 @@ export interface RawCancelWindow {
 export interface RawMove {
   id: number;
   key: string;
-  /** A name the renderer resolves against the animation files. The simulation ignores it. */
-  animation: string;
   tags?: string[];
   description?: string;
   duration: number;
@@ -157,63 +151,4 @@ export interface RawCharacter {
   hurtboxesCrouch: RawBox[];
   hurtboxesAir: RawBox[];
   commands: RawCommand[];
-}
-
-// ---------------------------------------------------------------------------
-// Presentation. Declared here, read only by src/renderer.
-// ---------------------------------------------------------------------------
-
-/**
- * One bone of the skeleton.
- *
- * `pivot` is the offset from the **parent's** pivot in world pixels, x forward and y up,
- * measured in the rest pose. The root's pivot is measured from the fighter's ground
- * origin instead. Storing offsets rather than absolute positions is what lets a parent
- * rotate and carry its children with it without any per-part correction.
- */
-export interface RawRigPart {
-  name: string;
-  /** `null` on the root part only. */
-  parent: string | null;
-  pivot: { x: number; y: number };
-  /** Default paint order, low to high. Far-side limbs sit below the torso, near above. */
-  z: number;
-}
-
-export interface RawRig {
-  /** The one part whose `parent` is `null`. */
-  root: string;
-  parts: RawRigPart[];
-}
-
-/**
- * A pose delta for one bone on one keyframe.
- *
- * `rotation` is degrees counter-clockwise in world space (y up) about the bone's own
- * pivot; `x` and `y` are world-pixel offsets in the same frame as the rig pivots. Every
- * field is optional because keyframes are sparse — a keyframe lists only what changed.
- */
-export interface RawBonePose {
-  rotation?: number;
-  x?: number;
-  y?: number;
-}
-
-export interface RawKeyframe {
-  frame: number;
-  bones: Record<string, RawBonePose>;
-}
-
-/**
- * A sparse keyframe animation. `duration` is the animation's own length in frames and is
- * deliberately unrelated to the duration of any move that names it: the renderer holds,
- * loops or interpolates as it sees fit, and the simulation never reads either number.
- */
-export interface RawAnimation {
-  name: string;
-  loop: boolean;
-  duration: number;
-  /** Free-text authoring note. JSON has no comments and some of these files need one. */
-  note?: string;
-  keyframes: RawKeyframe[];
 }

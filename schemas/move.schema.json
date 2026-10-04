@@ -3,11 +3,10 @@
   "$id": "https://hexframe.local/schemas/move.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "key", "animation", "duration", "startup", "active", "recovery", "requiresCrouch", "airOk", "hitboxes", "hurtboxWindows", "invulWindows", "armorWindows", "movement", "cancelWindows"],
+  "required": ["id", "key", "duration", "startup", "active", "recovery", "requiresCrouch", "airOk", "hitboxes", "hurtboxWindows", "invulWindows", "armorWindows", "movement", "cancelWindows"],
   "properties": {
     "id": { "type": "integer", "minimum": 0 },
     "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
-    "animation": { "type": "string", "minLength": 1 },
     "tags": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" } },
     "description": { "type": "string", "minLength": 1 },
     "duration": { "type": "integer", "minimum": 1 },
