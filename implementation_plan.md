@@ -70,18 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-183 — [FEAT] Author crouch, crouch-guard and jump clips
-
-**Goal:** Crouching, low blocking and jumping get real poses.
-
-**Scope:** Author `crouch`, `crouchGuard` and `jump` (rise, apex and fall) in the 13-pose clip format with depth profiles, and map them to their states.
-
-**Acceptance:** Clip tests validate bone names, pose count and loop closure; crouch-guard reads as a low guard at both facings.
-
-**Validation:** `npm test -- tests/rig`; browser check.
-
----
-
 ### HF-184 — [FEAT] Author sweep, uppercut and launched clips
 
 **Goal:** Every kit move has its own animation.

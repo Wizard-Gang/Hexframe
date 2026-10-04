@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { POSE_COUNT, POSE_INTERVALS } from "../../src/rig/clip-types";
 import type { Clip, Pose } from "../../src/rig/clip-types";
 import { sampleClip } from "../../src/rig/sample";
-import { asClip, labClips } from "./fixtures";
+import { asClip, labClips, rig } from "./fixtures";
 
 const poses: Pose[] = Array.from({ length: POSE_COUNT }, (_unused, index) => ({
   torso: { rotation: index },
@@ -18,12 +18,22 @@ const PROBE: Clip = {
 };
 
 describe("FightLab clip sampler", () => {
-  it("keeps all seven authored lab clips in the 13-pose format", () => {
-    expect(labClips).toHaveLength(7);
+  it("keeps all ten authored clips in the 13-pose format with valid bone names and closed loops", () => {
+    expect(labClips).toHaveLength(10);
+    const boneNames = new Set(rig.bones.map((bone) => bone.name));
+
     for (const [name, raw] of labClips) {
       const clip = asClip(raw);
       expect(raw.key, name).toBe(name);
       expect(clip.poses, name).toHaveLength(POSE_COUNT);
+      for (const authored of clip.poses) {
+        for (const boneName of Object.keys(authored)) {
+          expect(boneNames.has(boneName), `${name} references ${boneName}`).toBe(true);
+        }
+      }
+      if (clip.loop) {
+        expect(clip.poses[POSE_INTERVALS], `${name} loop closure`).toEqual(clip.poses[0]);
+      }
     }
   });
 

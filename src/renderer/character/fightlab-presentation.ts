@@ -5,6 +5,9 @@ import { depthProfileName } from "../../rig/depth";
 import type { Rig } from "../../rig/types";
 
 export type FightLabClipName =
+  | "crouch"
+  | "crouchGuard"
+  | "jump"
   | "labGuard"
   | "labIdle"
   | "labOverhead"
@@ -19,6 +22,9 @@ export interface FightLabPresentation {
 }
 
 const DEPTH_PROFILE_BY_CLIP: Partial<Record<FightLabClipName, string>> = {
+  crouch: "anatomical",
+  crouchGuard: "both-front",
+  jump: "locomotion",
   labGuard: "both-front",
   labOverhead: "punch",
   labStrike: "punch",
@@ -30,6 +36,19 @@ function attackClip(key: string | undefined): FightLabClipName {
   return "labStrike";
 }
 
+function jumpAirFrames(character: CharacterDef): number {
+  if (character.gravity <= 0) return 0;
+  return Math.ceil((character.jumpVelocityY * 2) / character.gravity) + 2;
+}
+
+function jumpFrame(fighter: FighterState, character: CharacterDef): number {
+  if (fighter.state === StateId.JumpSquat) return fighter.stateFrame;
+  if (fighter.state === StateId.Landing) {
+    return character.jumpSquatFrames + jumpAirFrames(character) + fighter.stateFrame;
+  }
+  return character.jumpSquatFrames + fighter.stateFrame;
+}
+
 /**
  * Presentation-only FightLab clip selection. Combat state chooses the image; no sampled
  * pose, FK placement or depth decision feeds back into simulation authority.
@@ -38,7 +57,10 @@ export function fightLabPresentation(fighter: FighterState, character: Character
   if (fighter.state === StateId.Attack) {
     return { clip: attackClip(moveOf(character, fighter.moveId)?.key), frame: fighter.moveFrame };
   }
-  if (fighter.state === StateId.BlockstunStand || fighter.state === StateId.BlockstunCrouch) {
+  if (fighter.state === StateId.BlockstunCrouch) {
+    return { clip: "crouchGuard", frame: fighter.stateFrame };
+  }
+  if (fighter.state === StateId.BlockstunStand) {
     return { clip: "labGuard", frame: fighter.stateFrame };
   }
   if (
@@ -50,15 +72,16 @@ export function fightLabPresentation(fighter: FighterState, character: Character
   ) {
     return { clip: "labStagger", frame: fighter.stateFrame };
   }
-  // HF-183 owns authored crouch/guard/jump clips. Guard and walk are the nearest current poses.
-  if (fighter.state === StateId.Crouch) return { clip: "labGuard", frame: fighter.stateFrame };
+  if (fighter.state === StateId.Crouch) {
+    return { clip: "crouch", frame: fighter.stateFrame };
+  }
   if (
     fighter.state === StateId.JumpSquat
     || fighter.state === StateId.Airborne
     || fighter.state === StateId.Landing
     || fighter.airborne === 1
   ) {
-    return { clip: "labWalk", frame: fighter.stateFrame };
+    return { clip: "jump", frame: jumpFrame(fighter, character) };
   }
   if (fighter.state === StateId.WalkForward || fighter.state === StateId.WalkBackward) {
     return { clip: "labWalk", frame: fighter.stateFrame };

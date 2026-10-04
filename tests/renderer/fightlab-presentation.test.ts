@@ -13,7 +13,9 @@ import {
   depthProfileForClip,
   fightLabPresentation,
 } from "../../src/renderer/character/fightlab-presentation";
+import { forwardKinematics, inBone } from "../../src/rig/fk";
 import { visualPaintOrder } from "../../src/rig/paint-order";
+import { sampleClip } from "../../src/rig/sample";
 import { createSim } from "../helpers/harness";
 
 describe("FightLab fighter presentation", () => {
@@ -27,11 +29,39 @@ describe("FightLab fighter presentation", () => {
       expect(FIGHTLAB_PARTS[bone.name], bone.name).toContain(`data-bone="${bone.name}"`);
     }
     expect(Object.keys(FIGHTLAB_CLIPS).sort()).toEqual([
+      "crouch", "crouchGuard", "jump",
       "labGuard", "labIdle", "labOverhead", "labStagger", "labStrike", "labWalk", "labWave",
     ]);
   });
 
-  it("maps current combat states and kit moves onto the seven authored lab clips", () => {
+  it("maps crouch, low block and the whole normal jump arc onto their authored clips", () => {
+    const fighter = createSim().getState().fighters[0];
+
+    fighter.state = StateId.Crouch;
+    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("crouch");
+
+    fighter.state = StateId.BlockstunCrouch;
+    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("crouchGuard");
+
+    fighter.state = StateId.JumpSquat;
+    fighter.stateFrame = 2;
+    expect(fightLabPresentation(fighter, TEST_FIGHTER)).toEqual({ clip: "jump", frame: 2 });
+
+    fighter.state = StateId.Airborne;
+    fighter.airborne = 1;
+    fighter.stateFrame = 5;
+    expect(fightLabPresentation(fighter, TEST_FIGHTER)).toEqual({
+      clip: "jump",
+      frame: TEST_FIGHTER.jumpSquatFrames + 5,
+    });
+
+    fighter.airborne = 0;
+    fighter.state = StateId.Landing;
+    fighter.stateFrame = 1;
+    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("jump");
+  });
+
+  it("keeps current standing, hit and attack mappings while HF-184 remains open", () => {
     const fighter = createSim().getState().fighters[0];
 
     fighter.state = StateId.Idle;
@@ -49,38 +79,44 @@ describe("FightLab fighter presentation", () => {
     expect(fightLabPresentation(fighter, TEST_FIGHTER)).toEqual({ clip: "labStrike", frame: 7 });
     fighter.moveId = MoveId.Overhead;
     expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labOverhead");
-  });
-
-  it("borrows only existing clips for crouch, jump, Sweep and Uppercut until HF-183/HF-184", () => {
-    const fighter = createSim().getState().fighters[0];
-
-    fighter.state = StateId.Crouch;
-    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labGuard");
-    fighter.state = StateId.Airborne;
-    fighter.airborne = 1;
-    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labWalk");
-
-    fighter.airborne = 0;
-    fighter.state = StateId.Attack;
     fighter.moveId = MoveId.Sweep;
     expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labStrike");
     fighter.moveId = MoveId.Uppercut;
     expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labOverhead");
   });
 
-  it("selects depth profiles that cross far and near arms correctly at both facings", () => {
+  it("reads crouch-guard low with both arms in front at either facing", () => {
+    const profile = depthProfileForClip(FIGHTLAB_RIG, "crouchGuard");
+    expect(profile).toBe("both-front");
+
+    const pose = sampleClip(FIGHTLAB_CLIPS.crouchGuard, 0);
+    const placed = forwardKinematics(FIGHTLAB_RIG, pose);
+    const head = placed.get("head");
+    const front = placed.get("forearm-front");
+    const back = placed.get("forearm-back");
+    expect(head).toBeDefined();
+    expect(front).toBeDefined();
+    expect(back).toBeDefined();
+
+    const frontHand = inBone(front!, FIGHTLAB_RIG.byName.get("forearm-front")!.tip!);
+    const backHand = inBone(back!, FIGHTLAB_RIG.byName.get("forearm-back")!.tip!);
+    expect(frontHand.y).toBeGreaterThan(head!.y + 35);
+    expect(backHand.y).toBeGreaterThan(head!.y + 35);
+
+    for (const facing of [1, -1] as const) {
+      const order = visualPaintOrder(FIGHTLAB_RIG, facing, profile);
+      expect(order.indexOf("arm-front")).toBeGreaterThan(order.indexOf("torso"));
+      expect(order.indexOf("arm-back")).toBeGreaterThan(order.indexOf("torso"));
+    }
+  });
+
+  it("selects the intended depth profiles for locomotion and strikes", () => {
+    expect(depthProfileForClip(FIGHTLAB_RIG, "crouch")).toBe("anatomical");
+    expect(depthProfileForClip(FIGHTLAB_RIG, "jump")).toBe("locomotion");
     expect(depthProfileForClip(FIGHTLAB_RIG, "labIdle")).toBe("anatomical");
     expect(depthProfileForClip(FIGHTLAB_RIG, "labWalk")).toBe("locomotion");
     expect(depthProfileForClip(FIGHTLAB_RIG, "labGuard")).toBe("both-front");
     expect(depthProfileForClip(FIGHTLAB_RIG, "labStrike")).toBe("punch");
-
-    const right = visualPaintOrder(FIGHTLAB_RIG, 1, "anatomical");
-    expect(right.indexOf("arm-front")).toBeLessThan(right.indexOf("torso"));
-    expect(right.indexOf("arm-back")).toBeGreaterThan(right.indexOf("torso"));
-
-    const left = visualPaintOrder(FIGHTLAB_RIG, -1, "anatomical");
-    expect(left.indexOf("arm-back")).toBeLessThan(left.indexOf("torso"));
-    expect(left.indexOf("arm-front")).toBeGreaterThan(left.indexOf("torso"));
 
     for (const facing of [1, -1] as const) {
       const punch = visualPaintOrder(FIGHTLAB_RIG, facing, "punch");

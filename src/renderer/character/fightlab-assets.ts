@@ -1,4 +1,7 @@
 import fighterRigJson from "../../../characters/fighter/fighter.rig.json";
+import crouchJson from "../../../characters/fighter/clips/crouch.json";
+import crouchGuardJson from "../../../characters/fighter/clips/crouchGuard.json";
+import jumpJson from "../../../characters/fighter/clips/jump.json";
 import labGuardJson from "../../../characters/fighter/clips/labGuard.json";
 import labIdleJson from "../../../characters/fighter/clips/labIdle.json";
 import labOverheadJson from "../../../characters/fighter/clips/labOverhead.json";
@@ -29,6 +32,9 @@ function clip(value: unknown): Clip {
 export const FIGHTLAB_RIG = createRig(fighterRigJson as unknown as RigContract);
 
 export const FIGHTLAB_CLIPS: Readonly<Record<FightLabClipName, Clip>> = Object.freeze({
+  crouch: clip(crouchJson),
+  crouchGuard: clip(crouchGuardJson),
+  jump: clip(jumpJson),
   labGuard: clip(labGuardJson),
   labIdle: clip(labIdleJson),
   labOverhead: clip(labOverheadJson),
