@@ -284,9 +284,41 @@ Tasks follow these defaults unless the owner changes them before the task starts
 **Goal:** Ship the rigging MVP.
 
 **Scope**
-- Set `package.json` and `package-lock.json` to 0.9.0, and return `implementation_plan.md` to the permanent empty template.
+- Set `package.json` and `package-lock.json` to 0.9.0, and retire HF-197 from `implementation_plan.md`.
 - After merge, the Release Cutter tags v0.9.0 and the Release workflow publishes it; the owner approves the protected `production` deployment.
 
 **Acceptance:** Production `/version.json` reports v0.9.0, and `/` and `/play/` show the new rig, effects and tutorial. If approval is pending, stop there and report.
+
+**Validation:** Standard validation; the Release and Deploy runs; a production browser check.
+
+### HF-199 — [OPS] Adopt the shared wg-edge shell and the baseline deploy workflow
+
+**Goal:** Hexframe runs on baseline's shared Worker shell, conforming config and single deploy path, as Phase 4 of the Cloudflare consolidation. Baseline's `config/cloudflare.json` and `config/secrets.json` are the authority.
+
+**Scope**
+- Vendor baseline `platform/` verbatim from a merged baseline commit (BASE-028 or later), and commit the `platform/vendor.lock.json` that `npm run vendor:lock -- <commit>` prints in baseline.
+- Collapse `env.production` into one conforming top-level `wrangler.jsonc`:
+  - name and `WG_APP` `hexframe`, with custom domain `hexframe.wizardgang.ai`;
+  - compatibility date 2026-08-31 (from 2026-06-28) with `nodejs_compat`;
+  - `workers_dev` and `preview_urls` false, and observability on;
+  - `ASSETS`, plus Secrets Store bindings for `WG_OPS_TOKEN` and `WG_SESSION_KEY` with the store ID the owner recorded in baseline runbook step 3.5;
+  - no `env`, D1, R2 or KV.
+- `node platform/conformance/cli.mjs wrangler --worker hexframe` passes.
+- The Worker entry uses `createEdge`. The shell provides the host guard, `/version.json` from `WG_VERSION` and `WG_COMMIT`, headers, errors and Accept-driven 404s, so the `/api` stub goes. The app handler keeps `/` → `/play/`, `/play/` and the asset CSP.
+- The release path calls `Wizard-Gang/baseline/.github/workflows/deploy-worker.yml` pinned to a merged baseline commit with `worker: hexframe`, never `secrets: inherit`. Remove the in-repo deploy workflow and its scripts. Nothing reads `secrets.CLOUDFLARE_ACCOUNT_ID` or the `PRODUCTION_HOST` variable; the deploy reads the host from the vendored `desired.mjs`.
+
+**Acceptance:** `npm run check` runs the vendored `pin` and `wrangler` conformance checks. Tests prove `/version.json` identity, the `/` redirect, `/play/` and a 404 for `/api/*`. No deploy happens in this task.
+
+**Validation:** Standard validation, plus the conformance checks.
+
+### HF-200 — [BUILD] Release v0.10.0 through the baseline deploy workflow
+
+**Goal:** The first release through `deploy-worker.yml`. The Worker name `hexframe` already matches its target, so no rename or domain move is needed.
+
+**Scope**
+- Set `package.json` and `package-lock.json` to 0.10.0 and retire HF-200 from `implementation_plan.md`. After merge, the Release Cutter tags v0.10.0, and the owner approves the protected `production` deployment run by `deploy-worker.yml`.
+- Owner follow-up from baseline's runbooks: delete the `production` secret `CLOUDFLARE_ACCOUNT_ID` (now a variable) and the `PRODUCTION_HOST` variable.
+
+**Acceptance:** The deploy run proves 100% of traffic. Production `/version.json` reports `hexframe`, 0.10.0 and the tag commit. Baseline `npm run verify:cloudflare` shows no `hexframe` drift, which closes the compatibility-date mismatch. If approval is pending, stop there and report.
 
 **Validation:** Standard validation; the Release and Deploy runs; a production browser check.
