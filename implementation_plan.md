@@ -70,18 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-184 — [FEAT] Author sweep, uppercut and launched clips
-
-**Goal:** Every kit move has its own animation.
-
-**Scope:** Author `sweep` (a low leg sweep), `uppercut` (a rising strike) and `launched` (an airborne hit reaction and fall). Map Sweep, Uppercut and airborne hitstun to them.
-
-**Acceptance:** Each clip validates; the three-hit combo reads clearly in Slow-mo.
-
-**Validation:** `npm test -- tests/rig`; browser check in Slow-mo.
-
----
-
 ### HF-185 — [FEAT] Fit the kit's frame data and reach to its clips
 
 **Goal:** Hits land where the limbs visibly are.

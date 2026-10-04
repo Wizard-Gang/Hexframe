@@ -31,6 +31,7 @@ describe("FightLab fighter presentation", () => {
     expect(Object.keys(FIGHTLAB_CLIPS).sort()).toEqual([
       "crouch", "crouchGuard", "jump",
       "labGuard", "labIdle", "labOverhead", "labStagger", "labStrike", "labWalk", "labWave",
+      "launched", "sweep", "uppercut",
     ]);
   });
 
@@ -61,7 +62,7 @@ describe("FightLab fighter presentation", () => {
     expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("jump");
   });
 
-  it("keeps current standing, hit and attack mappings while HF-184 remains open", () => {
+  it("maps every kit move and airborne hitstun onto its intended authored clip", () => {
     const fighter = createSim().getState().fighters[0];
 
     fighter.state = StateId.Idle;
@@ -72,6 +73,8 @@ describe("FightLab fighter presentation", () => {
     expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labGuard");
     fighter.state = StateId.HitstunStand;
     expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labStagger");
+    fighter.state = StateId.HitstunAir;
+    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("launched");
 
     fighter.state = StateId.Attack;
     fighter.moveFrame = 7;
@@ -80,9 +83,9 @@ describe("FightLab fighter presentation", () => {
     fighter.moveId = MoveId.Overhead;
     expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labOverhead");
     fighter.moveId = MoveId.Sweep;
-    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labStrike");
+    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("sweep");
     fighter.moveId = MoveId.Uppercut;
-    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("labOverhead");
+    expect(fightLabPresentation(fighter, TEST_FIGHTER).clip).toBe("uppercut");
   });
 
   it("reads crouch-guard low with both arms in front at either facing", () => {
@@ -117,6 +120,9 @@ describe("FightLab fighter presentation", () => {
     expect(depthProfileForClip(FIGHTLAB_RIG, "labWalk")).toBe("locomotion");
     expect(depthProfileForClip(FIGHTLAB_RIG, "labGuard")).toBe("both-front");
     expect(depthProfileForClip(FIGHTLAB_RIG, "labStrike")).toBe("punch");
+    expect(depthProfileForClip(FIGHTLAB_RIG, "sweep")).toBe("locomotion");
+    expect(depthProfileForClip(FIGHTLAB_RIG, "uppercut")).toBe("punch");
+    expect(depthProfileForClip(FIGHTLAB_RIG, "launched")).toBe("anatomical");
 
     for (const facing of [1, -1] as const) {
       const punch = visualPaintOrder(FIGHTLAB_RIG, facing, "punch");
