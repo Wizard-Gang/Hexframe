@@ -70,22 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-181 — [FEAT] Render fighters with machine-generated FightLab bodies
-
-**Goal:** Both fighters and the overview preview are FightLab's 11-bone figure.
-
-**Scope**
-- Add the 11 machine-generated part SVGs and a `FigureView` adapted from FightLab's `render/figure.ts`. It places one flat group per bone by FK, repaints them in depth order, and inserts part markup only through the trusted-markup boundary.
-- Add player and dummy colourways in CSS, and scale the figure to the 104 px standing hurtbox.
-- Map states to clips: idle `labIdle`, walk `labWalk`, block `labGuard`, hitstun `labStagger`, Jab `labStrike` and Overhead `labOverhead`. Until HF-183 and HF-184 land, crouch, jump, Sweep and Uppercut borrow the closest existing clip.
-- Add the Skeleton view toggle, which draws FK bones and joints over the body.
-
-**Acceptance:** Fighters render, animate and mirror correctly at both facings, with arms crossing per depth profile; Skeleton lines up with the body.
-
-**Validation:** `npm test -- tests/rig tests/renderer`; browser check of `/play/` and `/`.
-
----
-
 ### HF-182 — [REFACTOR] Delete the old rig, model and animation pipeline
 
 **Goal:** There is one rig.

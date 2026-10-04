@@ -9,14 +9,14 @@ const preferencesSource = readFileSync(new URL("../../src/lab/preferences.ts", i
 const rigSource = readFileSync(new URL("../../src/renderer/character/rig.ts", import.meta.url), "utf8");
 const overlaySource = readFileSync(new URL("../../src/renderer/svg/debug-overlay.ts", import.meta.url), "utf8");
 
-function view(hitboxesEnabled = false, slowMotionEnabled = false): string {
-  return buildLabView({ character: createTestFighter(), preferences: DEFAULT_PREFERENCES, dummyOptions: [[0, "Stand"]], hitboxesEnabled, slowMotionEnabled });
+function view(hitboxesEnabled = false, slowMotionEnabled = false, skeletonEnabled = false): string {
+  return buildLabView({ character: createTestFighter(), preferences: DEFAULT_PREFERENCES, dummyOptions: [[0, "Stand"]], hitboxesEnabled, slowMotionEnabled, skeletonEnabled });
 }
 
 describe("Training accessibility and study controls", () => {
   it("keeps the compact Training bar and seven-item pause menu semantic", () => {
     const html = view();
-    for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-action="slow-mo"', 'data-action="hitboxes"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
+    for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-action="skeleton"', 'data-action="slow-mo"', 'data-action="hitboxes"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
     for (const item of ["Resume", "Restart", "Start tutorial", "Move list", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
     for (const removed of ['data-control="speed"', 'id="debug-control"', 'id="debug-tools"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="move-timeline-console"', 'id="interaction-history"']) expect(html).not.toContain(removed);
     expect(html).not.toContain('role="tablist"');
@@ -30,11 +30,13 @@ describe("Training accessibility and study controls", () => {
     ]) expect(appSource).not.toContain(removed);
   });
 
-  it("remembers Hitboxes and Slow-mo while deleting the old Debug drawing paths", () => {
-    const off = view(false, false);
-    const on = view(true, true);
+  it("remembers Skeleton, Hitboxes and Slow-mo while deleting the old Debug drawing paths", () => {
+    const off = view(false, false, false);
+    const on = view(true, true, true);
+    expect(off).toContain('data-action="skeleton" data-gamepad-nav aria-pressed="false"');
     expect(off).toContain('data-action="hitboxes" data-gamepad-nav aria-pressed="false"');
     expect(off).toContain('data-action="slow-mo" data-gamepad-nav aria-pressed="false"');
+    expect(on).toContain('data-action="skeleton" data-gamepad-nav aria-pressed="true"');
     expect(on).toContain('data-action="hitboxes" data-gamepad-nav aria-pressed="true"');
     expect(on).toContain('data-action="slow-mo" data-gamepad-nav aria-pressed="true"');
     expect(appSource).toContain('const TRAINING_VIEW_STORAGE_KEY = "hexframe.training.view.v1"');
