@@ -24,6 +24,18 @@ describe("fixed four-button move catalog", () => {
     )).toBe(false);
   });
 
+  it("publishes the clip-fitted frame data used by the move list", () => {
+    expect(KIT_MOVE_IDS.map((moveId) => {
+      const move = TEST_FIGHTER.moves.find((candidate) => candidate.id === moveId)!;
+      return [move.key, move.startup, move.active, move.recovery, move.duration];
+    })).toEqual([
+      ["jab", 5, 3, 12, 20],
+      ["sweep", 8, 4, 14, 26],
+      ["overhead", 16, 2, 12, 30],
+      ["uppercut", 9, 5, 22, 36],
+    ]);
+  });
+
   it("authors only the Jab to Sweep to Uppercut cancel chain", () => {
     const ember = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Jab)!;
     const ashen = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Sweep)!;

@@ -1,13 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { cancelAllowed } from "../../src/combat/commands/resolve";
+import { px } from "../../src/combat/constants";
 import { ContactKind, InputBit } from "../../src/combat/types";
-import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
-import { createSim, placeFighters } from "../helpers/harness";
+import { MoveId, TEST_FIGHTER, TRAINING_START_X } from "../../src/content/test-fighter";
+import { createSim } from "../helpers/harness";
 
 describe("fixed-kit deterministic route", () => {
-  it("lands Jab into Sweep into Uppercut through authored on-hit cancels", () => {
+  it("lands Jab into Sweep into Uppercut from reset after one step forward", () => {
     const sim = createSim();
-    placeFighters(sim, -18, 18);
+    expect(sim.getState().fighters.map((fighter) => fighter.x)).toEqual([...TRAINING_START_X]);
+
+    sim.step([InputBit.Right, 0]);
+    expect(sim.getState().fighters[0].x).toBe(px(-38));
+    expect(sim.getState().fighters[1].x - sim.getState().fighters[0].x).toBe(px(78));
+
     const landed: number[] = [];
     let opening = true;
     let ashenQueued = false;
