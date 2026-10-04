@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-179 — [FEAT] Replace per-move particles with clean hit and block sparks
-
-**Goal:** One clean, readable spark per hit and per block.
-
-**Scope**
-- Delete `src/renderer/svg/move-effects.ts`, the contact ray bursts and damage numbers, and the Particles, Combat flashes and Damage numbers settings with their styles.
-- Add a small presentation-side effect queue. On each contact it spawns a hit spark (bright core, ring and short streaks, larger for Overhead and Uppercut) or a block spark (a shield arc) at the contact point, then ages it out over about ten frames. Under reduced motion, a single static flash shows instead.
-- Replace `tests/renderer/move-effects.test.ts` with a pure test of spawn and expiry.
-
-**Acceptance:** Every contact shows exactly one spark, which fades without lingering; effects never change combat.
-
-**Validation:** `npm test -- tests/renderer`; browser check.
-
----
-
 ### HF-180 — [FEAT] Vendor the FightLab rig core and lab clips
 
 **Goal:** Bring FightLab's rig runtime into Hexframe as a small, pure module.

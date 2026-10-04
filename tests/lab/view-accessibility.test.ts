@@ -72,8 +72,8 @@ describe("Training accessibility and study controls", () => {
 
   it("retains only settings that still have Training behavior", () => {
     const html = view();
-    for (const retired of ["Mono audio", "Music", "Ambience", "Dynamic range", "Visual quality", "Menu wrap"]) expect(html).not.toContain(retired);
-    for (const retiredKey of ["music", "ambience", "mono", "dynamicRange", "quality", "menuWrap", "holdToConfirm"]) expect(preferencesSource).not.toMatch(new RegExp(`\\b${retiredKey}\\s*:`));
+    for (const retired of ["Mono audio", "Music", "Ambience", "Dynamic range", "Visual quality", "Menu wrap", "Particles", "Combat flashes", "Damage numbers"]) expect(html).not.toContain(retired);
+    for (const retiredKey of ["music", "ambience", "mono", "dynamicRange", "quality", "menuWrap", "holdToConfirm", "particles", "combatFlashes", "damageNumbers"]) expect(preferencesSource).not.toMatch(new RegExp(`\\b${retiredKey}\\s*:`));
   });
 
   it("shows the unchanged fixed four-button legend", () => {

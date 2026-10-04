@@ -11,10 +11,7 @@ export interface LabPreferences {
     muteUnfocused: boolean;
   };
   video: {
-    particles: "off" | "reduced" | "full";
     cameraShake: number;
-    combatFlashes: "off" | "reduced" | "full";
-    damageNumbers: boolean;
     hudOpacity: number;
   };
   accessibility: {
@@ -36,7 +33,7 @@ export interface LabPreferences {
 
 export const DEFAULT_PREFERENCES: LabPreferences = {
   audio: { master: 0.8, sfx: 0.85, ui: 0.7, captions: true, muteUnfocused: true },
-  video: { particles: "full", cameraShake: 0.35, combatFlashes: "reduced", damageNumbers: true, hudOpacity: 0.92 },
+  video: { cameraShake: 0.35, hudOpacity: 0.92 },
   accessibility: { theme: "system", contrast: "normal", motion: "system", textScale: 1, colorVision: "default", dyslexiaFont: false, strongFocus: true, screenReaderCombat: false },
   controls: { glyphs: "auto", stickDeadzone: 0.45, vibration: 0.7 },
 };
@@ -52,7 +49,10 @@ export function loadPreferences(): LabPreferences {
   }
   return {
     audio: { ...DEFAULT_PREFERENCES.audio, ...saved.audio },
-    video: { ...DEFAULT_PREFERENCES.video, ...saved.video },
+    video: {
+      cameraShake: saved.video?.cameraShake ?? DEFAULT_PREFERENCES.video.cameraShake,
+      hudOpacity: saved.video?.hudOpacity ?? DEFAULT_PREFERENCES.video.hudOpacity,
+    },
     accessibility: { ...DEFAULT_PREFERENCES.accessibility, ...saved.accessibility },
     controls: { ...DEFAULT_PREFERENCES.controls, ...saved.controls },
   };
@@ -79,9 +79,6 @@ export function applyPreferences(preferences: LabPreferences): void {
   root.dataset.colorVision = accessibility.colorVision;
   root.dataset.dyslexia = accessibility.dyslexiaFont ? "on" : "off";
   root.dataset.strongFocus = accessibility.strongFocus ? "on" : "off";
-  root.dataset.flashes = video.combatFlashes;
-  root.dataset.particles = video.particles;
-  root.dataset.damageNumbers = video.damageNumbers ? "on" : "off";
   root.dataset.cameraShake = video.cameraShake <= 0 ? "off" : video.cameraShake < 0.5 ? "reduced" : "full";
   root.dataset.glyphs = preferences.controls.glyphs;
   root.style.setProperty("--font-scale", String(clamp(accessibility.textScale, 0.9, 1.6)));
