@@ -4,7 +4,7 @@ import type { FrameReport, SimConfig } from "../combat/types";
 import { ContactKind } from "../combat/types";
 import { Simulation } from "../combat/simulation/simulation";
 import { createTestFighter } from "../content/test-fighter";
-import { TEST_FIGHTER_ANIMATIONS, TEST_FIGHTER_MODEL, TEST_FIGHTER_PLAYBACK, TEST_FIGHTER_RIG } from "../content/test-fighter-assets";
+import { FIGHTLAB_FIGHTER_ASSET } from "../renderer/character/fightlab-assets";
 import { gameAudio } from "../client/audio/audio-manager";
 import { GamepadController } from "../input/controller/gamepad";
 import type { GamepadUiState } from "../input/controller/gamepad";
@@ -27,6 +27,7 @@ const TRAINING_VIEW_STORAGE_KEY = "hexframe.training.view.v1";
 interface TrainingViewState {
   hitboxes: boolean;
   slowMotion: boolean;
+  skeleton: boolean;
 }
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex='-1'])";
 
@@ -58,6 +59,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     dummyOptions: DUMMY_OPTIONS,
     hitboxesEnabled: viewState.hitboxes,
     slowMotionEnabled: viewState.slowMotion,
+    skeletonEnabled: viewState.skeleton,
   }));
   mount.removeAttribute("aria-busy");
 
@@ -76,7 +78,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const keyboard = new KeyboardController(window, DEFAULT_KEYMAP_P1, DEFAULT_ACTION_KEYMAP);
   const gamepad = new GamepadController();
   const renderer = new Renderer(required("stage"), sim.characters(), {
-    fighters: [0, 1].map(() => ({ model: TEST_FIGHTER_MODEL, rig: TEST_FIGHTER_RIG, animations: TEST_FIGHTER_ANIMATIONS, playback: TEST_FIGHTER_PLAYBACK })),
+    fighters: [FIGHTLAB_FIGHTER_ASSET, FIGHTLAB_FIGHTER_ASSET],
     stage: selectedStage,
   });
   timeline.inputProvider = () => {
@@ -105,7 +107,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   const render = (): void => {
     const state = sim.getState();
-    renderer.render(state, viewState.hitboxes, document.documentElement.dataset.motion === "reduced");
+    renderer.render(state, viewState.hitboxes, document.documentElement.dataset.motion === "reduced", viewState.skeleton);
     required("controller-state").textContent = gamepad.connected ? `Gamepad · ${gamepad.name}` : "Keyboard ready · connect gamepad anytime";
     for (let player = 0; player < state.fighters.length; player++) {
       const fighter = state.fighters[player];
@@ -154,6 +156,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "reset") resetMatch();
     if (action === "slow-mo") setTrainingToggle("slowMotion", !viewState.slowMotion);
     if (action === "hitboxes") setTrainingToggle("hitboxes", !viewState.hitboxes);
+    if (action === "skeleton") setTrainingToggle("skeleton", !viewState.skeleton);
     if (action === "start-tutorial") startTutorial(tutorial.active);
     if (action === "start-tutorial-prompt") startTutorial(false);
     if (action === "dismiss-tutorial-prompt") {
@@ -292,7 +295,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     viewState[key] = enabled;
     if (key === "slowMotion") timeline.speed = enabled ? 25 : 100;
     persistTrainingView(viewState);
-    const action = key === "slowMotion" ? "slow-mo" : "hitboxes";
+    const action = key === "slowMotion" ? "slow-mo" : key === "skeleton" ? "skeleton" : "hitboxes";
     const button = mount.querySelector<HTMLButtonElement>(`[data-action='${action}']`);
     if (button) button.setAttribute("aria-pressed", String(enabled));
   }
@@ -588,11 +591,15 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 function loadTrainingView(): TrainingViewState {
   try {
     const value: unknown = JSON.parse(localStorage.getItem(TRAINING_VIEW_STORAGE_KEY) ?? "{}");
-    if (!value || typeof value !== "object") return { hitboxes: false, slowMotion: false };
+    if (!value || typeof value !== "object") return { hitboxes: false, slowMotion: false, skeleton: false };
     const record = value as Record<string, unknown>;
-    return { hitboxes: record.hitboxes === true, slowMotion: record.slowMotion === true };
+    return {
+      hitboxes: record.hitboxes === true,
+      slowMotion: record.slowMotion === true,
+      skeleton: record.skeleton === true,
+    };
   } catch {
-    return { hitboxes: false, slowMotion: false };
+    return { hitboxes: false, slowMotion: false, skeleton: false };
   }
 }
 
