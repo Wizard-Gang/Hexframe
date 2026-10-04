@@ -8,13 +8,16 @@ export type FightLabClipName =
   | "crouch"
   | "crouchGuard"
   | "jump"
+  | "launched"
   | "labGuard"
   | "labIdle"
   | "labOverhead"
   | "labStagger"
   | "labStrike"
   | "labWalk"
-  | "labWave";
+  | "labWave"
+  | "sweep"
+  | "uppercut";
 
 export interface FightLabPresentation {
   readonly clip: FightLabClipName;
@@ -25,14 +28,19 @@ const DEPTH_PROFILE_BY_CLIP: Partial<Record<FightLabClipName, string>> = {
   crouch: "anatomical",
   crouchGuard: "both-front",
   jump: "locomotion",
+  launched: "anatomical",
   labGuard: "both-front",
   labOverhead: "punch",
   labStrike: "punch",
   labWalk: "locomotion",
+  sweep: "locomotion",
+  uppercut: "punch",
 };
 
 function attackClip(key: string | undefined): FightLabClipName {
-  if (key === "overhead" || key === "uppercut") return "labOverhead";
+  if (key === "sweep") return "sweep";
+  if (key === "uppercut") return "uppercut";
+  if (key === "overhead") return "labOverhead";
   return "labStrike";
 }
 
@@ -63,10 +71,12 @@ export function fightLabPresentation(fighter: FighterState, character: Character
   if (fighter.state === StateId.BlockstunStand) {
     return { clip: "labGuard", frame: fighter.stateFrame };
   }
+  if (fighter.state === StateId.HitstunAir) {
+    return { clip: "launched", frame: fighter.stateFrame };
+  }
   if (
     fighter.state === StateId.HitstunStand
     || fighter.state === StateId.HitstunCrouch
-    || fighter.state === StateId.HitstunAir
     || fighter.state === StateId.Knockdown
     || fighter.state === StateId.Defeat
   ) {

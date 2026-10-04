@@ -18,8 +18,8 @@ const PROBE: Clip = {
 };
 
 describe("FightLab clip sampler", () => {
-  it("keeps all ten authored clips in the 13-pose format with valid bone names and closed loops", () => {
-    expect(labClips).toHaveLength(10);
+  it("keeps all thirteen authored clips in the 13-pose format with valid bone names and closed loops", () => {
+    expect(labClips).toHaveLength(13);
     const boneNames = new Set(rig.bones.map((bone) => bone.name));
 
     for (const [name, raw] of labClips) {
