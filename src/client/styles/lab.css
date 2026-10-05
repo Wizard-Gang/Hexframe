@@ -183,6 +183,7 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 
 .fighter-p1 { --fighter-body: #a8cf46; --fighter-near: #c4ed64; --fighter-near-dark: #8dac34; --fighter-far: #61792d; --fighter-far-dark: #465820; --fighter-accent: #efffc7; }
 .fighter-p2 { --fighter-body: #687bdf; --fighter-near: #8fa0ff; --fighter-near-dark: #5568c9; --fighter-far: #3d487f; --fighter-far-dark: #303961; --fighter-accent: #dce2ff; }
+.motion-trail__segment { stroke: var(--fighter-near); stroke-linecap: round; vector-effect: non-scaling-stroke; }
 
 .fighter .part { fill: var(--fighter-body); stroke: #07090c; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
 .fighter .part--accent { fill: var(--fighter-accent); }

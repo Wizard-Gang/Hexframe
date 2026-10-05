@@ -70,18 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-187 — [FEAT] Draw limb motion trails from the rig
-
-**Goal:** Strikes leave a short arc that shows the rig in motion.
-
-**Scope:** During a move's active frames, record the striking limb's FK tip each frame and draw a tapered trail that fades over about six frames. Turn trails off under reduced motion.
-
-**Acceptance:** Trails follow the limb at both facings and are gone by recovery; a pure test covers trail sampling.
-
-**Validation:** `npm test -- tests/renderer`; browser check in Slow-mo.
-
----
-
 ### HF-188 — [FEAT] Add landing dust and impact shake
 
 **Goal:** Landings and heavy hits carry weight.
