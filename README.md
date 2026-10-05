@@ -77,7 +77,7 @@ See [Architecture](docs/ARCHITECTURE.md) and [Security model](docs/SECURITY-MODE
 Hexframe is MIT-licensed. The distributable client contains first-party Hexframe code plus the runtime libraries declared in `package.json`.
 
 - Runtime dependencies: `react` and `react-dom`; both are MIT-licensed.
-- Development tooling: Vite, Vitest, TypeScript, Wrangler, Ajv, and type packages.
+- Development tooling: Vite, Vitest, TypeScript, Wrangler, and type packages.
 - Fonts: family names only; no font file is bundled.
 - Audio: synthesized at runtime with WebAudio; no audio asset is bundled.
 - Art: the machine-generated fighter body parts under `characters/fighter/parts/` are bundled presentation assets adapted from the owner-directed FightLab source.

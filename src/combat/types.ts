@@ -102,7 +102,7 @@ export const HitLevel = {
 export type HitLevelValue = (typeof HitLevel)[keyof typeof HitLevel];
 
 // ---------------------------------------------------------------------------
-// Move data (runtime form — sim units, already scaled by the content loader)
+// Move data (runtime form — sim units, converted by typed fighter data)
 // ---------------------------------------------------------------------------
 
 /**
