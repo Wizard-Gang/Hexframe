@@ -18,6 +18,7 @@ import {
 import type { TrailPoint } from "./motion-trail";
 import { createStage, worldToScreen } from "./stage";
 import { ContactEffectQueue, drawContactEffects, effectKind } from "./contact-effects";
+import { StageMotionEffectQueue, applyStageShake, drawLandingDust } from "./stage-effects";
 
 export interface FighterRendererAssets {
   readonly rig: Rig;
@@ -38,6 +39,7 @@ export class Renderer {
   private readonly nodes: FigureView[] = [];
   private readonly trails: TrailPoint[][] = [];
   private readonly effects = new ContactEffectQueue();
+  private readonly stageMotion = new StageMotionEffectQueue();
 
   constructor(mount: HTMLElement, chars: readonly CharacterDef[], assets: RendererAssets) {
     this.chars = chars;
@@ -66,15 +68,19 @@ export class Renderer {
           y: contact.y,
           large,
         }, report.frame + 1);
+        if (large) this.stageMotion.spawnImpact(report.frame + 1);
       }
     }
   }
 
   clearEffects(): void {
     this.effects.clear();
+    this.stageMotion.clear();
     for (const trail of this.trails) trail.length = 0;
+    this.stage.layers.groundEffects.replaceChildren();
     this.stage.layers.trails.replaceChildren();
     this.stage.layers.effects.replaceChildren();
+    this.stage.world.removeAttribute("transform");
   }
 
   render(state: SimState, showHitboxes: boolean, reducedMotion = false, showSkeleton = false): void {
@@ -84,6 +90,7 @@ export class Renderer {
       ? Math.trunc((Math.min(...framed.map((fighter) => fighter.x)) + Math.max(...framed.map((fighter) => fighter.x))) / 2)
       : leadX;
     this.stage.setCamera(focusX);
+    if (reducedMotion) this.stageMotion.clearAnimated();
 
     for (let player = 0; player < state.fighters.length; player++) {
       const fighter = state.fighters[player];
@@ -102,6 +109,9 @@ export class Renderer {
       );
       const position = worldToScreen(fighter.x, fighter.y);
       node.place(position.x, position.y, facing, asset.presentationScale);
+      if (fighter.state === StateId.Landing && fighter.stateFrame === 0) {
+        this.stageMotion.observeLanding(player, fighter.x, fighter.y, state.frame, !reducedMotion);
+      }
 
       let trailPoint = null;
       if (!reducedMotion && fighter.state === StateId.Attack) {
@@ -123,6 +133,13 @@ export class Renderer {
       node.root.classList.toggle("fighter-hitstop", fighter.hitstop > 0);
     }
 
+    drawLandingDust(
+      this.stage.layers.groundEffects,
+      this.stageMotion.activeDust(state.frame),
+      state.frame,
+      reducedMotion,
+    );
+    applyStageShake(this.stage.world, this.stageMotion.shakeOffset(state.frame), reducedMotion);
     drawMotionTrails(this.stage.layers.trails, this.trails, state.frame, reducedMotion);
     drawContactEffects(this.stage.layers.effects, this.effects.active(state.frame), state.frame, reducedMotion);
     drawHitboxes(this.stage.layers.debug, debugBoxes(state, this.chars), showHitboxes);
