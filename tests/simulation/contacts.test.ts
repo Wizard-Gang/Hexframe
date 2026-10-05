@@ -62,7 +62,7 @@ describe("contact resolution", () => {
   it("blocks Overhead while standing away", () => {
     const sim = createSim();
     placeFighters(sim, -18, 18);
-    const reports = runFrames(sim, 16, (frame, player) => {
+    const reports = runFrames(sim, 20, (frame, player) => {
       if (player === 0) return frame === 0 ? InputBit.Action3 : 0;
       return InputBit.Right;
     });
