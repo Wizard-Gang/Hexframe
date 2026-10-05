@@ -1,5 +1,6 @@
+import { moveOf } from "../../combat/commands/resolve";
 import type { CharacterDef, FrameReport, SimState, StageDef } from "../../combat/types";
-import { ContactKind } from "../../combat/types";
+import { ContactKind, StateId } from "../../combat/types";
 import { debugBoxes } from "../../combat/collision/boxes";
 import type { Clip } from "../../rig/clip-types";
 import { sampleClip } from "../../rig/sample";
@@ -7,6 +8,14 @@ import type { Rig } from "../../rig/types";
 import { FigureView } from "../character/figure-view";
 import { depthProfileForClip, fightLabPresentation } from "../character/fightlab-presentation";
 import { drawHitboxes } from "./debug-overlay";
+import {
+  drawMotionTrails,
+  placeTrailPoint,
+  sampleMotionTrail,
+  strikingBoneForMove,
+  strikingTip,
+} from "./motion-trail";
+import type { TrailPoint } from "./motion-trail";
 import { createStage, worldToScreen } from "./stage";
 import { ContactEffectQueue, drawContactEffects, effectKind } from "./contact-effects";
 
@@ -27,6 +36,7 @@ export class Renderer {
   private readonly assets: readonly FighterRendererAssets[];
   private readonly stage;
   private readonly nodes: FigureView[] = [];
+  private readonly trails: TrailPoint[][] = [];
   private readonly effects = new ContactEffectQueue();
 
   constructor(mount: HTMLElement, chars: readonly CharacterDef[], assets: RendererAssets) {
@@ -41,6 +51,7 @@ export class Renderer {
       node.root.classList.add(`fighter-p${player + 1}`);
       this.stage.layers.fighters.appendChild(node.root);
       this.nodes.push(node);
+      this.trails.push([]);
     }
   }
 
@@ -61,6 +72,8 @@ export class Renderer {
 
   clearEffects(): void {
     this.effects.clear();
+    for (const trail of this.trails) trail.length = 0;
+    this.stage.layers.trails.replaceChildren();
     this.stage.layers.effects.replaceChildren();
   }
 
@@ -89,10 +102,28 @@ export class Renderer {
       );
       const position = worldToScreen(fighter.x, fighter.y);
       node.place(position.x, position.y, facing, asset.presentationScale);
+
+      let trailPoint = null;
+      if (!reducedMotion && fighter.state === StateId.Attack) {
+        const move = moveOf(this.chars[player], fighter.moveId);
+        const active = move !== null
+          && fighter.moveFrame >= move.startup
+          && fighter.moveFrame < move.startup + move.active;
+        const bone = active ? strikingBoneForMove(move?.key) : null;
+        const localTip = bone ? strikingTip(placed, asset.rig, bone) : null;
+        trailPoint = localTip
+          ? placeTrailPoint(localTip, position, facing, asset.presentationScale)
+          : null;
+      }
+      this.trails[player] = reducedMotion
+        ? []
+        : sampleMotionTrail(this.trails[player] ?? [], state.frame, trailPoint);
+
       node.drawSkeleton(showSkeleton ? placed : null);
       node.root.classList.toggle("fighter-hitstop", fighter.hitstop > 0);
     }
 
+    drawMotionTrails(this.stage.layers.trails, this.trails, state.frame, reducedMotion);
     drawContactEffects(this.stage.layers.effects, this.effects.active(state.frame), state.frame, reducedMotion);
     drawHitboxes(this.stage.layers.debug, debugBoxes(state, this.chars), showHitboxes);
   }
