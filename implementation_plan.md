@@ -70,18 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-188 — [FEAT] Add landing dust and impact shake
-
-**Goal:** Landings and heavy hits carry weight.
-
-**Scope:** Show a small dust puff when a fighter lands, and a brief stage shake on Overhead and Uppercut hits. Turn both off under reduced motion.
-
-**Acceptance:** Each effect fires once per event; reduced motion disables both.
-
-**Validation:** `npm test -- tests/renderer`; browser check.
-
----
-
 ### HF-189 — [FEAT] Make Training a full-bleed stage with compact controls
 
 **Goal:** The game fills the screen.

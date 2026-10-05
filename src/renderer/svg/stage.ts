@@ -40,6 +40,8 @@ export const VIEW_HEIGHT_PX = VIEW_HEADROOM_PX + VIEW_FLOOR_PX;
 export interface StageLayers {
   /** Sky, floor, wall markers. Static after `createStage`. */
   readonly background: SVGGElement;
+  /** Landing dust, drawn behind the fighters. */
+  readonly groundEffects: SVGGElement;
   /** Short presentation-only arcs left by active striking limbs. */
   readonly trails: SVGGElement;
   /** One posed fighter rig per player. */
@@ -135,12 +137,14 @@ export function createStage(mount: HTMLElement, stage?: StageDef): StageHandles 
   const world = group("sm-world");
 
   const background = group("sm-background");
+  const groundEffects = group("sm-ground-effects");
   const trails = group("sm-trails");
   const fighters = group("sm-fighters");
   const effects = group("sm-effects");
   const debug = group("sm-debug");
 
   // Presentation overlays are never click targets; the lab owns interaction above the stage.
+  groundEffects.style.pointerEvents = "none";
   trails.style.pointerEvents = "none";
   effects.style.pointerEvents = "none";
   debug.style.pointerEvents = "none";
@@ -167,6 +171,7 @@ export function createStage(mount: HTMLElement, stage?: StageDef): StageHandles 
   background.appendChild(line(-halfW, 0, halfW, 0, "#484f58", 2));
 
   world.appendChild(background);
+  world.appendChild(groundEffects);
   world.appendChild(trails);
   world.appendChild(fighters);
   world.appendChild(effects);
@@ -183,5 +188,5 @@ export function createStage(mount: HTMLElement, stage?: StageDef): StageHandles 
     svg.setAttribute("viewBox", `${fmt(center - viewHalf)} ${fmt(-VIEW_HEADROOM_PX)} ${fmt(VIEW_WIDTH_PX)} ${fmt(VIEW_HEIGHT_PX)}`);
   };
 
-  return { svg, world, layers: { background, trails, fighters, effects, debug }, setCamera };
+  return { svg, world, layers: { background, groundEffects, trails, fighters, effects, debug }, setCamera };
 }
