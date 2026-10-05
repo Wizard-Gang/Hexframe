@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-185 — [FEAT] Fit the kit's frame data and reach to its clips
-
-**Goal:** Hits land where the limbs visibly are.
-
-**Scope**
-- Retime each move's startup, active and recovery frames to its clip's contact poses. Place each hitbox at the striking limb's FK tip during its active frames.
-- Spawn the fighters about 80 px apart so they no longer overlap at reset.
-- Keep the Jab → Sweep → Uppercut route, and update the move list and tests.
-
-**Acceptance:** A test samples each move's clip at its first active frame and finds the striking limb tip inside the hitbox; the combo lands from reset distance after one step forward.
-
-**Validation:** `npm test -- tests/simulation tests/rig`; browser check with Hitboxes and Skeleton on.
-
----
-
 ### HF-186 — [REFACTOR] Replace the JSON content pipeline with typed fighter data
 
 **Goal:** One small typed file defines the fighter and its four moves.

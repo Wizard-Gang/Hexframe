@@ -1,9 +1,8 @@
 import { replaceTrustedMarkup } from "../client/trusted-markup";
-import { px } from "../combat/constants";
 import type { FrameReport, SimConfig } from "../combat/types";
 import { ContactKind } from "../combat/types";
 import { Simulation } from "../combat/simulation/simulation";
-import { createTestFighter } from "../content/test-fighter";
+import { createTestFighter, TRAINING_START_X } from "../content/test-fighter";
 import { FIGHTLAB_FIGHTER_ASSET } from "../renderer/character/fightlab-assets";
 import { gameAudio } from "../client/audio/audio-manager";
 import { GamepadController } from "../input/controller/gamepad";
@@ -66,7 +65,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const selectedStage = STAGE_CATALOG["training-grid"].stage;
   const config: SimConfig = {
     characters: combatCharacters,
-    startX: [px(-18), px(18)],
+    startX: TRAINING_START_X,
     stage: selectedStage,
   };
   const sim = new Simulation(config);
@@ -453,11 +452,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     timeline.reset();
     dummy.reset();
     renderer.clearEffects();
-    if (tutorial.active) {
-      const state = sim.getState();
-      state.fighters[0].x = px(-18);
-      state.fighters[1].x = px(18);
-    }
     lastPlayerInput = 0;
   }
 

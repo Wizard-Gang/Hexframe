@@ -64,9 +64,11 @@ export function createTestFighter(): CharacterDef {
 
 export const TEST_FIGHTER: CharacterDef = createTestFighter();
 
+export const TRAINING_START_X = [px(-40), px(40)] as const;
+
 export function testFighterSimConfig(): SimConfig {
   return {
     characters: [TEST_FIGHTER, TEST_FIGHTER],
-    startX: [px(-120), px(120)],
+    startX: TRAINING_START_X,
   };
 }
