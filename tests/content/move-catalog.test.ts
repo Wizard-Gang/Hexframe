@@ -4,24 +4,25 @@ import { ACTION_SLOT_COUNT, actionBit } from "../../src/combat/types";
 import { KIT_MOVE_IDS, MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import { createSim } from "../helpers/harness";
 
-describe("fixed four-button move catalog", () => {
-  it("contains two engine fixtures plus exactly four playable attacks", () => {
+describe("typed four-button move catalog", () => {
+  it("contains exactly the four playable kit attacks", () => {
     expect(ACTION_SLOT_COUNT).toBe(4);
     expect(TEST_FIGHTER.moves.map((move) => move.key)).toEqual([
-      "standing_light",
-      "crouching_light",
       "jab",
-      "overhead",
       "sweep",
+      "overhead",
       "uppercut",
     ]);
     expect(TEST_FIGHTER.commands.map((command) => command.moveId)).toEqual([...KIT_MOVE_IDS]);
     expect(TEST_FIGHTER.commands.map((command) => command.buttons)).toEqual([
       actionBit(0), actionBit(1), actionBit(2), actionBit(3),
     ]);
-    expect(TEST_FIGHTER.commands.some((command) =>
-      command.moveId === MoveId.StandingLight || command.moveId === MoveId.CrouchingLight,
-    )).toBe(false);
+  });
+
+  it("converts authored pixel values into exact integer simulation units", () => {
+    expect(TEST_FIGHTER.walkBackwardSpeed).toBe(150);
+    expect(TEST_FIGHTER.gravity).toBe(60);
+    expect(TEST_FIGHTER.moves.find((move) => move.id === MoveId.Jab)?.hitboxes[0].box.x).toBe(3400);
   });
 
   it("publishes the clip-fitted frame data used by the move list", () => {
@@ -37,18 +38,18 @@ describe("fixed four-button move catalog", () => {
   });
 
   it("authors only the Jab to Sweep to Uppercut cancel chain", () => {
-    const ember = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Jab)!;
-    const ashen = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Sweep)!;
-    const frost = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Overhead)!;
-    const phoenix = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Uppercut)!;
-    expect(ember.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.Sweep]);
-    expect(ashen.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.Uppercut]);
-    expect(frost.cancelWindows).toHaveLength(0);
-    expect(phoenix.cancelWindows).toHaveLength(0);
+    const jab = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Jab)!;
+    const sweep = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Sweep)!;
+    const overhead = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Overhead)!;
+    const uppercut = TEST_FIGHTER.moves.find((move) => move.id === MoveId.Uppercut)!;
+    expect(jab.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.Sweep]);
+    expect(sweep.cancelWindows.flatMap((window) => window.into)).toEqual([MoveId.Uppercut]);
+    expect(overhead.cancelWindows).toHaveLength(0);
+    expect(uppercut.cancelWindows).toHaveLength(0);
 
     const fighter = createSim().getState().fighters[0];
     fighter.moveId = MoveId.Jab;
-    fighter.moveFrame = ember.cancelWindows[0].startFrame;
+    fighter.moveFrame = jab.cancelWindows[0].startFrame;
     fighter.hitFlags = 1;
     expect(cancelAllowed(fighter, TEST_FIGHTER, MoveId.Sweep)).toBe(true);
     expect(cancelAllowed(fighter, TEST_FIGHTER, MoveId.Overhead)).toBe(false);

@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-186 — [REFACTOR] Replace the JSON content pipeline with typed fighter data
-
-**Goal:** One small typed file defines the fighter and its four moves.
-
-**Scope**
-- Author the fighter's stats, boxes and kit in TypeScript, with a pixel-to-simulation-unit helper.
-- Delete `characters/test_fighter/character.json` and `moves/`, the `standing_light` and `crouching_light` fixtures, `schemas/`, `src/content/validate.ts`, `raw-types.ts`, the loader code only they used, Ajv and `validate:content`.
-- Move the engine tests onto kit moves.
-
-**Acceptance:** No JSON schema, validator or Ajv remains; engine tests pass on the kit.
-
-**Validation:** `npm run check`.
-
----
-
 ### HF-187 — [FEAT] Draw limb motion trails from the rig
 
 **Goal:** Strikes leave a short arc that shows the rig in motion.

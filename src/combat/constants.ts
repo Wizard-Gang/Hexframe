@@ -11,7 +11,7 @@
  *
  * Positions are stored in *sim units*. One world pixel is `SCALE` sim units, so the
  * simulation carries 1/100th-pixel precision while still being exact integer maths.
- * Content is authored in whole world pixels and multiplied up by the loader.
+ * Fighter content is authored in world pixels and converted at the typed content boundary.
  */
 
 /** Simulation frames per second. Fixed, and never derived from a browser `deltaTime`. */
@@ -20,7 +20,7 @@ export const FPS = 60;
 /** Sim units per world pixel. All stored positions, velocities and boxes use sim units. */
 export const SCALE = 100;
 
-/** Convert whole world pixels (as authored in JSON) to sim units. Exact for integers. */
+/** Convert authored world pixels to integer sim units. */
 export function px(worldPixels: number): number {
   return Math.trunc(worldPixels * SCALE);
 }
