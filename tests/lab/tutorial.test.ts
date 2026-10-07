@@ -4,10 +4,8 @@ import { cancelAllowed } from "../../src/combat/commands/resolve";
 import { InputBit, StateId } from "../../src/combat/types";
 import { MoveId, TEST_FIGHTER } from "../../src/content/test-fighter";
 import {
-  markTutorialPromptSeen,
   TUTORIAL_LESSONS,
   TutorialController,
-  tutorialPromptSeen,
   tutorialRequested,
 } from "../../src/lab/tutorial";
 import { createSim, placeFighters } from "../helpers/harness";
@@ -168,11 +166,7 @@ describe("interactive tutorial objectives", () => {
     expect(resumed.snapshot().completedLessons).toEqual([]);
   });
 
-  it("keeps the first-visit prompt and tutorial query contracts device-local and explicit", () => {
-    installStorage();
-    expect(tutorialPromptSeen()).toBe(false);
-    markTutorialPromptSeen();
-    expect(tutorialPromptSeen()).toBe(true);
+  it("starts the tutorial only from the explicit query", () => {
     expect(tutorialRequested("?tutorial=1")).toBe(true);
     expect(tutorialRequested("?debug=1")).toBe(false);
     expect(tutorialRequested("")).toBe(false);

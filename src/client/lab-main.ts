@@ -11,11 +11,13 @@ let dispose = (): void => undefined;
 if (isUnsupportedMobileDevice()) {
   replaceTrustedMarkup(mount, desktopOnlyMarkup());
   mount.removeAttribute("aria-busy");
+  void attachVersionBadge(document.body);
 } else {
   void startLab(mount).then((teardown) => {
     dispose = teardown;
+    const footer = mount.querySelector<HTMLElement>(".menu-footer");
+    if (footer) void attachVersionBadge(footer);
   });
 }
-void attachVersionBadge(document.body);
 
 if (import.meta.hot) import.meta.hot.dispose(() => dispose());
