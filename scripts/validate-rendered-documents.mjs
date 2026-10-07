@@ -4,8 +4,10 @@ import { existsSync, readFileSync } from "node:fs";
 const root = readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
 const play = readFileSync(new URL("../dist/play/index.html", import.meta.url), "utf8");
 
-assert.match(root, /Browser fighting-game lab/);
-assert.match(root, /Practice the hit/);
+assert.match(root, /A rigged fighting-game proof of concept/);
+assert.match(root, /Small game/);
+assert.doesNotMatch(root, /deterministic|replay|frame tools/i);
+assert.match(root, /One rig. Four attacks./);
 assert.match(root, /href="\/play\/"/);
 assert.match(root, /assets\/main-[^"]+\.js/);
 assert.doesNotMatch(root, /\/src\/client\//);

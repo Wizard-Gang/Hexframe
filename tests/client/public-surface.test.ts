@@ -11,9 +11,9 @@ const playHtml = renderDocument("play");
 
 describe("public Hexframe surface", () => {
   it("renders useful overview and direct Training fallback before JavaScript", () => {
-    expect(rootHtml).toContain("Browser fighting-game lab"); expect(rootHtml).toContain("Practice the hit."); expect(rootHtml).toContain('href="/play/"');
+    expect(rootHtml).toContain("A rigged fighting-game proof of concept"); expect(rootHtml).toContain("Small game."); expect(rootHtml).toContain('href="/play/"');
     expect(playHtml).toContain("Training starts here."); expect(playHtml).toContain("<code>/play/</code>"); expect(playHtml).not.toContain("data-launch-training");
-    expect(rootHtml.indexOf("Browser fighting-game lab")).toBeLessThan(rootHtml.indexOf('<script type="module"'));
+    expect(rootHtml.indexOf("A rigged fighting-game proof of concept")).toBeLessThan(rootHtml.indexOf('<script type="module"'));
     expect(playHtml.indexOf("Training starts here.")).toBeLessThan(playHtml.indexOf('<script type="module"'));
   });
 
@@ -33,9 +33,13 @@ describe("public Hexframe surface", () => {
     expect(source).toContain('const DESKTOP_ONLY_QUERY = "(pointer: coarse), (max-width: 960px)"'); expect(notice).toContain("Desktop only."); expect(notice).toContain("Mobile and tablet support is not planned."); expect(labMain).toContain("isUnsupportedMobileDevice()");
   });
 
-  it("uses the real Training renderer only for the overview preview", () => {
-    expect(rootHtml).toContain("data-training-stage"); expect(playHtml).not.toContain("data-training-stage"); expect(source).toContain("mountTrainingStages(mount)");
+  it("keeps a useful showreel fallback and one Play link without runtime-only claims", () => {
+    expect(rootHtml).toContain("One rig. Four attacks.");
+    expect(rootHtml).toContain("Play also requires JavaScript.");
+    expect(rootHtml).toContain("data-showreel");
+    expect(rootHtml.match(/href="\/play\/"/g)).toHaveLength(1);
+    expect(rootHtml).not.toMatch(/deterministic|replay|frame tools|save states|Debug/i);
+    expect(rootHtml).toContain('hidden="" data-showreel-controls');
+    expect(rootHtml).toContain('/src/client/styles/front.css');
   });
-
-
 });

@@ -13,23 +13,30 @@ function Overview() {
     <a className="skip-link" href="#overview-content">Skip to project overview</a>
     <header className="overview-nav">
       <a className="route-brand" href="/" aria-label="WizardGang Hexframe home"><Brand /></a>
-      <nav aria-label="Primary"><a href="/" aria-current="page">Overview</a><a href="/play/">Training</a><a href="https://github.com/Wizard-Gang/Hexframe" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+      <nav aria-label="Primary"><a href="/" aria-current="page">Overview</a><a href="https://github.com/Wizard-Gang/Hexframe" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
     </header>
     <section className="overview-hero" id="overview-content">
       <div className="overview-copy">
-        <p className="overview-kicker">Browser fighting-game lab</p>
-        <h1>Practice the hit.<br/><span>Inspect the result.</span></h1>
-        <p>Enter Training immediately, fight the dummy, then reveal the exact boxes, frames, contacts, save states, and deterministic replay behind the result.</p>
-        <div className="overview-actions"><a className="overview-primary" href="/play/">Enter Training →</a><a href="https://github.com/Wizard-Gang/Hexframe" target="_blank" rel="noopener noreferrer">View source ↗</a></div>
+        <p className="overview-kicker">A rigged fighting-game proof of concept</p>
+        <h1>Small game.<br/><span>Big moves.</span></h1>
+        <p>Two fighters, an 11-bone rig and four readable attacks. A small browser playground for bringing a character to life.</p>
+        <div className="overview-actions"><a className="overview-primary" href="/play/">Play →</a></div>
+        <p className="overview-controls">Desktop browser · Keyboard or gamepad</p>
       </div>
-      <figure className="overview-demo"><figcaption><span>TRAINING STAGE</span><strong>PLAYER + DUMMY</strong></figcaption><div className="overview-training-stage" data-training-stage role="img" aria-label="Hexframe's training stage with the player facing a practice dummy"></div><footer><span>60 HZ COMBAT</span><span>ACTUAL GAME RENDERER</span></footer></figure>
+      <figure className="overview-demo">
+        <figcaption><span>RIGGING SHOWREEL</span><label hidden data-showreel-controls><input type="checkbox" data-showreel-skeleton /> Skeleton</label></figcaption>
+        <div className="overview-training-stage" data-showreel aria-label="Fighter rigging showreel">
+          <div className="showreel-fallback"><strong>One rig. Four attacks.</strong><p>Jab, Sweep, Overhead and Uppercut.</p><p>Enable JavaScript to watch the fighter move and reveal its skeleton. Play also requires JavaScript.</p></div>
+        </div>
+        <footer><span>11 BONES · AUTHORED MOTION</span><span data-showreel-label>Idle → Jab → Sweep → Overhead → Uppercut</span></footer>
+      </figure>
     </section>
-    <section className="overview-proof" aria-label="Training lab capabilities"><span>Direct Training</span><span>Public Debug toggle</span><span>Frame step and replay</span><span>Keyboard + gamepad</span></section>
+    <section className="overview-proof" aria-label="Proof of concept"><span>Two rigged fighters</span><span>Four attacks</span><span>Jab → Sweep → Uppercut</span><span>Keyboard + gamepad</span></section>
     <section className="overview-sections">
-      <article><span>01 / PRACTICE</span><h2>Test the move.</h2><p>Move, attack, block, and repeat against a configurable dummy on the real training stage.</p></article>
-      <article><span>02 / INSPECT</span><h2>Read the hit.</h2><p>Turn on Debug without stopping the match, then reveal geometry, frame data, and contact history.</p></article>
-      <article><span>03 / REPEAT</span><h2>Reproduce it.</h2><p>Save positions or capture a scenario, then replay the same inputs through the same combat rules.</p></article>
-      <article><span>04 / ACCESS</span><h2>Use your controls.</h2><p>Keyboard and gamepad share the fixed four-button kit and can reach the Training controls.</p></article>
+      <article><span>01 / RIG</span><h2>Bring it to life.</h2><p>Eleven bones drive the body. Toggle Skeleton in the showreel to see how the parts move together.</p></article>
+      <article><span>02 / ATTACK</span><h2>Throw a punch.</h2><p>Jab, Sweep, Overhead and Uppercut each have their own motion. Use ↑, ←, → and ↓, or Y, X, B and A on a gamepad.</p></article>
+      <article><span>03 / COMBO</span><h2>Link the hits.</h2><p>Land Jab → Sweep → Uppercut to launch the dummy. Walk, jump and block between attacks.</p></article>
+      <article><span>04 / PLAY</span><h2>Try the kit.</h2><p>Face the practice dummy on a full-screen stage. Reveal the rig, see the hitboxes or slow down the motion.</p></article>
     </section>
     <footer className="overview-footer"><span>Wizard Gang · Hexframe</span><a href="https://wizardgang.ai/projects/hexframe/">Case study ↗</a></footer>
   </main>;
@@ -51,10 +58,10 @@ function TrainingFallback() {
 function RootDocument() {
   return <html lang="en"><head>
     <meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="color-scheme" content="dark"/>
-    <title>Hexframe — Deterministic Fighting-Game Training Lab</title>
-    <meta name="description" content="Hexframe is a browser-based fighting-game training lab with deterministic simulation, frame tools, replayable state, and accessible controls."/>
-    <link rel="canonical" href="https://hexframe.wizardgang.ai/"/><meta property="og:type" content="website"/><meta property="og:title" content="Hexframe — Deterministic Fighting-Game Training Lab"/><meta property="og:description" content="Fixed-step combat, public Debug tools, replayable state, and accessible controls."/><meta property="og:url" content="https://hexframe.wizardgang.ai/"/>
-    <link rel="icon" href={FAVICON}/>
+    <title>Hexframe — A Rigged Fighting-Game Proof of Concept</title>
+    <meta name="description" content="Two rigged fighters, four readable attacks and a small browser playground. Watch the rigging showreel, then play with keyboard or gamepad."/>
+    <link rel="canonical" href="https://hexframe.wizardgang.ai/"/><meta property="og:type" content="website"/><meta property="og:title" content="Hexframe — A Rigged Fighting-Game Proof of Concept"/><meta property="og:description" content="Two rigged fighters, an 11-bone rig and four readable attacks."/><meta property="og:url" content="https://hexframe.wizardgang.ai/"/>
+    <link rel="icon" href={FAVICON}/><link rel="stylesheet" href="/src/client/styles/front.css"/>
   </head><body><div id="app"><Overview /></div><script type="module" src="/src/client/main.ts"></script></body></html>;
 }
 
