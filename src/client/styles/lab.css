@@ -52,31 +52,16 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 :root[data-theme="light"] .lab-menu, :root[data-theme="light"] .menu-page, :root[data-theme="light"] .menu-header, :root[data-theme="light"] .menu-tabs, :root[data-theme="light"] .menu-footer { background: #f7f5ef; color: #16191c; }
 :root[data-theme="light"] button, :root[data-theme="light"] select, :root[data-theme="light"] input { background-color: #fff; color: #16191c; }
 
-.lab-shell { width: min(1480px, 100%); min-height: 100vh; margin: 0 auto; padding: 18px clamp(14px, 2.2vw, 34px) 26px; }
-.lab-header { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 6px 0 16px; }
+.lab-shell { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; height: 100dvh; min-height: 0; }
 .eyebrow { margin: 0; color: var(--acid); font: 750 9px ui-monospace, monospace; letter-spacing: .17em; }
-.brand h1 { margin: 4px 0 0; font-size: clamp(25px, 3.2vw, 44px); line-height: .95; letter-spacing: -.055em; }
-.debugger-header .brand > p:last-child { margin: 8px 0 0; color: #89939c; font: 10px ui-monospace, monospace; }
-.header-actions { display: flex; align-items: center; gap: 9px; }
-.controller-state { max-width: 270px; overflow: hidden; color: var(--muted); font: 10px ui-monospace, monospace; text-overflow: ellipsis; white-space: nowrap; }
-.public-play { width: min(1680px, 100%); padding-top: 10px; }
-.public-play .lab-header { align-items: center; padding-bottom: 10px; }
-.public-play .brand h1 { font-size: clamp(23px, 2.6vw, 38px); }
-.public-play .debugger-workspace { display: block; }
-.public-play .debugger-workspace .stage { height: min(78dvh, 900px); min-height: 540px; }
-.public-play .playfield-card { border-color: #53606b; box-shadow: 0 30px 110px rgba(0,0,0,.42); }
-
-
-.debugger-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, 360px); gap: 1px; min-width: 0; border: 1px solid var(--line); background: var(--line); }
-.debugger-workspace .playfield-card { border: 0; }
-.debugger-workspace .hud { grid-template-columns: 1fr 1fr; }
-.debugger-workspace .stage { height: min(56vh, 590px); min-height: 430px; }
-
-.playfield-card { position: relative; overflow: hidden; border: 1px solid var(--line); background: #0d1117; box-shadow: 0 28px 90px rgba(0,0,0,.28); }
-.stage { height: min(69vh, 720px); min-height: 430px; }
-.hud { position: absolute; z-index: 2; top: 20px; left: 22px; right: 22px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px; opacity: var(--hud-opacity); pointer-events: none; }
+.playfield-card { position: relative; min-height: 0; overflow: hidden; background: #0d1117; }
+.stage, .stage > svg { display: block; width: 100%; height: 100%; }
+.paused-overlay { position: absolute; z-index: 3; top: 22%; left: 50%; display: grid; gap: 6px; text-align: center; transform: translateX(-50%); color: #edf0f2; }
+.paused-overlay strong { font-size: 20px; letter-spacing: .14em; }
+.paused-overlay span { color: var(--muted); font-size: 11px; }
+.hud { position: absolute; z-index: 2; top: 20px; left: 22px; right: 22px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 24px; opacity: var(--hud-opacity); pointer-events: none; }
 .hud-player { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; color: #cbd1d6; font: 800 9px ui-monospace, monospace; letter-spacing: .1em; }
-.hud-player-right { grid-column: 3; }
+.hud-player-right { grid-column: 2; }
 .hud-side { display: grid; gap: 5px; min-width: 0; }
 .hud-side .hud-player { grid-template-columns: auto minmax(80px, 1fr) auto; }
 .hud-party-member + .hud-party-member { transform: scale(.82); transform-origin: left top; opacity: .86; }
@@ -95,8 +80,7 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .current-route em { grid-column: 2; color: #89929b; font: normal 9px ui-monospace, monospace; }
 .audio-caption { position: absolute; z-index: 5; right: 50%; bottom: 74px; padding: 8px 15px; border: 1px solid #fff; border-radius: 999px; background: rgba(4,6,8,.9); color: #fff; font-size: 12px; font-weight: 800; transform: translateX(50%); }
 
-.control-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; padding: 12px 14px; border: 1px solid var(--line); border-top: 0; background: #0d1115; color: #758089; font: 9px ui-monospace, monospace; }
-.control-legend b { color: #b6bec5; }
+.control-hint { margin: 0; padding: 8px 12px; background: #0d1115; color: #aeb7c0; font: 10px/1.4 ui-monospace, monospace; text-align: center; white-space: nowrap; }
 
 .menu-scrim { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; min-width: 0; min-height: 0; padding: clamp(8px, 2vw, 26px); background: rgba(3,5,7,.82); backdrop-filter: blur(12px); }
 .lab-menu { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; width: min(1420px, 100%); height: min(920px, calc(100dvh - clamp(16px, 4vw, 52px))); min-width: 0; min-height: 0; overflow: hidden; border: 1px solid #59636d; background: #0e1216; box-shadow: 0 32px 120px #000; }
@@ -179,7 +163,7 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 
 .menu-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 10px 18px; border-top: 1px solid var(--line); color: #737d86; font: 9px ui-monospace, monospace; }
 .menu-footer form { margin: 0; }
-.menu-footer > strong { color: var(--acid); font-size: 8px; letter-spacing: .12em; }
+.menu-footer .version-badge { margin: 0; color: var(--acid); font-size: 9px; }
 
 .fighter-p1 { --fighter-body: #a8cf46; --fighter-near: #c4ed64; --fighter-near-dark: #8dac34; --fighter-far: #61792d; --fighter-far-dark: #465820; --fighter-accent: #efffc7; }
 .fighter-p2 { --fighter-body: #687bdf; --fighter-near: #8fa0ff; --fighter-near-dark: #5568c9; --fighter-far: #3d487f; --fighter-far-dark: #303961; --fighter-accent: #dce2ff; }
@@ -212,9 +196,9 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .training-bootstrap > section > p { color: #aeb7c0; font-size: 15px; line-height: 1.65; }
 .training-bootstrap code, .training-bootstrap kbd { color: #fff; }
 
-.training-bar { position: sticky; z-index: 8; top: 0; display: grid; grid-template-columns: auto auto minmax(150px, .8fr) minmax(135px, .6fr) auto; gap: 8px; align-items: stretch; margin-bottom: 10px; padding: 9px; border: 1px solid #53606b; background: rgba(8,12,16,.94); backdrop-filter: blur(12px); }
+.training-bar { z-index: 8; display: flex; justify-content: center; gap: 6px; align-items: center; padding: 6px; background: rgba(8,12,16,.94); }
 .training-bar > label { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; min-height: 44px; padding: 0 10px; border: 1px solid #343d46; background: #11171c; color: #9da7af; font: 9px ui-monospace, monospace; }
-.training-bar select { width: 100%; }
+.training-bar select { width: 120px; }
 .training-toggle[aria-pressed="true"] { border-color: var(--acid); color: var(--acid); box-shadow: inset 0 0 0 1px var(--acid); }
 .debug-box { fill-opacity: .22; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
 .debug-hitbox { fill: #ff5268; stroke: #ff8190; }
@@ -240,37 +224,24 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .controls-list dd { margin: 0; color: #e5e9eb; font: 10px ui-monospace, monospace; }
 
 @media (max-width: 980px) {
-  .training-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .training-bar { flex-wrap: wrap; }
+  .control-hint { white-space: normal; }
   .settings-content { grid-template-columns: 1fr; }
   .pause-menu-list { grid-template-columns: repeat(4, minmax(120px, 1fr)); }
 }
 
 
-/* HF-158: tutorial guidance stays in document flow, clear of the fighter HUD. */
-.tutorial-prompt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin: 0 0 10px;
-  padding: 12px 14px;
-  border: 1px solid #53606b;
-  background: #0e1419;
-}
-.tutorial-prompt[hidden], .tutorial-hud[hidden] { display: none; }
-.tutorial-prompt > div { display: flex; align-items: center; gap: 10px; }
-.tutorial-prompt strong { color: var(--acid); font: 800 10px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
-.tutorial-prompt span { color: #9da7af; font: 10px/1.45 ui-monospace, monospace; }
-.tutorial-prompt button { min-height: 38px; }
-
 .tutorial-hud {
-  position: static;
+  position: absolute;
+  z-index: 6;
+  bottom: 110px;
+  left: 12px;
   display: grid;
   grid-template-columns: minmax(150px, .55fr) minmax(240px, 1fr) minmax(240px, 1.2fr) auto;
   gap: 12px;
   align-items: center;
-  width: 100%;
-  margin: 0 0 10px;
+  width: calc(100% - 24px);
+  margin: 0;
   padding: 10px 12px;
   border: 1px solid #53606b;
   background: #0b1116;
@@ -289,8 +260,6 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .tutorial-hud footer button { min-width: 104px; }
 
 @media (max-width: 900px) {
-  .tutorial-prompt { align-items: stretch; flex-direction: column; }
-  .tutorial-prompt > div { justify-content: space-between; }
   .tutorial-hud { grid-template-columns: 1fr 1fr; }
   .tutorial-hud footer { justify-self: stretch; }
 }

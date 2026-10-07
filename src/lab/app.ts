@@ -16,7 +16,7 @@ import { applyPreferences, loadPreferences, persistPreferences, resetPreferences
 import type { LabPreferences } from "./preferences";
 import { Timeline } from "./timeline/timeline";
 import { buildLabView } from "./view";
-import { markTutorialPromptSeen, tutorialPromptSeen, tutorialRequested, TutorialController } from "./tutorial";
+import { tutorialRequested, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
 import { STAGE_CATALOG } from "../game/session";
 
@@ -106,6 +106,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   const render = (): void => {
     const state = sim.getState();
+    required("paused-overlay").hidden = !timeline.paused || menuOpen();
     renderer.render(state, viewState.hitboxes, document.documentElement.dataset.motion === "reduced", viewState.skeleton);
     required("controller-state").textContent = gamepad.connected ? `Gamepad · ${gamepad.name}` : "Keyboard ready · connect gamepad anytime";
     for (let player = 0; player < state.fighters.length; player++) {
@@ -150,18 +151,16 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     const action = button.dataset.action;
     if (action === "pause") timeline.paused = !timeline.paused;
     if (action === "menu") openMenu();
-    if (action === "close-menu") closeMenu();
+    if (action === "close-menu") { closeMenu(); timeline.paused = false; }
     if (action === "return-main") window.location.href = "/";
-    if (action === "reset") resetMatch();
+    if (action === "reset") {
+      resetMatch();
+      if (menuOpen()) { closeMenu(); timeline.paused = false; }
+    }
     if (action === "slow-mo") setTrainingToggle("slowMotion", !viewState.slowMotion);
     if (action === "hitboxes") setTrainingToggle("hitboxes", !viewState.hitboxes);
     if (action === "skeleton") setTrainingToggle("skeleton", !viewState.skeleton);
     if (action === "start-tutorial") startTutorial(tutorial.active);
-    if (action === "start-tutorial-prompt") startTutorial(false);
-    if (action === "dismiss-tutorial-prompt") {
-      markTutorialPromptSeen();
-      syncTutorialPrompt();
-    }
     if (action === "reset-preferences" && confirmDestructive("Reset every setting to its default?")) replacePreferences(resetPreferences());
     if (action === "next-tutorial-lesson") advanceTutorial();
     if (action === "exit-tutorial") exitTutorial();
@@ -216,7 +215,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   motionQuery.addEventListener("change", motionChange);
   syncTutorialUi(tutorial.snapshot());
   if (tutorialRequested(window.location.search)) startTutorial(false);
-  else syncTutorialPrompt();
   render();
   animationId = requestAnimationFrame(loop);
 
@@ -368,8 +366,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   }
 
   function startTutorial(restart: boolean): void {
-    markTutorialPromptSeen();
-    syncTutorialPrompt();
     if (menuOpen()) closeMenu();
     if (restart) tutorial.restart();
     else tutorial.start();
@@ -390,7 +386,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     tutorial.stop();
     resetMatch();
     timeline.paused = false;
-    syncTutorialPrompt();
     mount.querySelector<HTMLButtonElement>("[data-action='menu']")?.focus();
   }
 
@@ -405,11 +400,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     timeline.paused = false;
   }
 
-
-  function syncTutorialPrompt(): void {
-    const prompt = mount.querySelector<HTMLElement>("#tutorial-prompt");
-    if (prompt) prompt.hidden = tutorialPromptSeen() || tutorial.active;
-  }
 
   function syncTutorialUi(snapshot: TutorialSnapshot): void {
     latestTutorialSnapshot = snapshot;
@@ -432,15 +422,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
         next.textContent = snapshot.lessonIndex === snapshot.lessonCount - 1 ? "Finish tutorial" : "Next lesson";
       }
     }
-    const menuTutorial = mount.querySelector<HTMLButtonElement>("[data-action='start-tutorial']");
-    if (menuTutorial) {
-      menuTutorial.textContent = snapshot.active
-        ? "Restart tutorial"
-        : snapshot.completedLessons.length > 0 && !snapshot.tutorialComplete
-          ? "Continue tutorial"
-          : "Start tutorial";
-    }
-    syncTutorialPrompt();
   }
 
   function textIn(root: HTMLElement, selector: string, value: string): void {
@@ -526,7 +507,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       return { target, primary, secondary, to };
     }).filter((candidate) => candidate.primary > 3)
       .sort((a, b) => (a.primary + a.secondary * 2.2) - (b.primary + b.secondary * 2.2));
-    let next = candidates[0]?.target;
+    const index = targets.indexOf(current);
+    const next = direction === "up" || direction === "down"
+      ? targets[(index + (direction === "up" ? -1 : 1) + targets.length) % targets.length]
+      : candidates[0]?.target;
     next?.focus();
     gameAudio.play("navigate");
   }
@@ -606,7 +590,7 @@ function persistTrainingView(state: TrainingViewState): void {
 }
 
 function isFormControl(target: EventTarget | null): boolean {
-  return target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement;
+  return target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement || target instanceof HTMLButtonElement || target instanceof HTMLAnchorElement;
 }
 
 function centerOf(rect: DOMRect): { x: number; y: number } {

@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-189 — [FEAT] Make Training a full-bleed stage with compact controls
-
-**Goal:** The game fills the screen.
-
-**Scope**
-- Remove the page header, hero copy and tutorial banner; the stage fills the viewport at desktop widths.
-- Add one compact control strip (Pause, Reset, Dummy, Slow-mo, Hitboxes, Skeleton, Menu) and a one-line control hint.
-- The pause menu holds Resume, Restart, Tutorial, Moves, Settings, Controls and Exit.
-
-**Acceptance:** At 1440×900 and 1280×720 the stage fills most of the viewport without scrolling; keyboard and gamepad reach every control.
-
-**Validation:** `npm test -- tests/lab`; browser check at both sizes.
-
----
-
 ### HF-190 — [FEAT] Restyle the stage floor, shadows and framing
 
 **Goal:** A clean, good-looking arena.

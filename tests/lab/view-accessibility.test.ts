@@ -17,7 +17,7 @@ describe("Training accessibility and study controls", () => {
   it("keeps the compact Training bar and seven-item pause menu semantic", () => {
     const html = view();
     for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-action="skeleton"', 'data-action="slow-mo"', 'data-action="hitboxes"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
-    for (const item of ["Resume", "Restart", "Start tutorial", "Move list", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
+    for (const item of ["Resume", "Restart", "Tutorial", "Moves", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
     for (const removed of ['data-control="speed"', 'id="debug-control"', 'id="debug-tools"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="move-timeline-console"', 'id="interaction-history"']) expect(html).not.toContain(removed);
     expect(html).not.toContain('role="tablist"');
     expect(appSource).toContain('[DummyMode.Stand, "Stand"]');
@@ -65,8 +65,8 @@ describe("Training accessibility and study controls", () => {
     const html = view(true);
     expect(html).toContain('id="combat-announcer" role="status" aria-live="polite"');
     expect(html).toContain('id="tutorial-hud" aria-live="polite"');
-    expect(html).toContain('id="tutorial-prompt" aria-labelledby="tutorial-prompt-title" hidden');
-    for (const action of ["start-tutorial-prompt", "dismiss-tutorial-prompt", "next-tutorial-lesson", "exit-tutorial"]) expect(html).toContain(`data-action="${action}"`);
+
+    for (const action of ["next-tutorial-lesson", "exit-tutorial"]) expect(html).toContain(`data-action="${action}"`);
     expect(html).not.toContain('data-action="skip-tutorial-lesson"');
     expect(html.indexOf('id="tutorial-hud"')).toBeLessThan(html.indexOf('aria-label="Combat arena"'));
     expect(html.match(/data-gamepad-nav/g)?.length ?? 0).toBeGreaterThan(20);
@@ -78,11 +78,13 @@ describe("Training accessibility and study controls", () => {
     for (const retiredKey of ["music", "ambience", "mono", "dynamicRange", "quality", "menuWrap", "holdToConfirm", "particles", "combatFlashes", "damageNumbers"]) expect(preferencesSource).not.toMatch(new RegExp(`\\b${retiredKey}\\s*:`));
   });
 
-  it("shows the unchanged fixed four-button legend", () => {
+  it("keeps only one seven-control strip and a one-line hint around the arena", () => {
     const html = view();
-    expect(html).toContain("<b>↑ / Y</b> Jab");
-    expect(html).toContain("<b>← / X</b> Sweep");
-    expect(html).toContain("<b>→ / B</b> Overhead");
-    expect(html).toContain("<b>↓ / A</b> Uppercut");
+    const strip = html.split('aria-label="Training controls">')[1].split('</section>')[0];
+    expect([...strip.matchAll(/data-action="([^"]+)"/g)].map((match) => match[1])).toEqual(["pause", "reset", "slow-mo", "hitboxes", "skeleton", "menu"]);
+    expect(strip.match(/data-gamepad-nav/g)).toHaveLength(7);
+    expect(html).toContain('class="control-hint"');
+    expect(html).not.toContain('class="lab-header');
+    expect(html).not.toContain('id="tutorial-prompt"');
   });
 });

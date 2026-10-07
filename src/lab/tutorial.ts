@@ -45,7 +45,6 @@ export interface TutorialSnapshot {
 }
 
 const STORAGE_KEY = "hexframe.tutorial.progress.v2";
-const PROMPT_STORAGE_KEY = "hexframe.tutorial.prompt.v2";
 
 export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
   {
@@ -288,22 +287,6 @@ function persistCompletedLessons(completed: ReadonlySet<TutorialLessonId>): void
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...completed]));
   } catch {
     // Tutorial progress remains valid for the current session when storage is unavailable.
-  }
-}
-
-export function tutorialPromptSeen(): boolean {
-  try {
-    return localStorage.getItem(PROMPT_STORAGE_KEY) === "true";
-  } catch {
-    return true;
-  }
-}
-
-export function markTutorialPromptSeen(): void {
-  try {
-    localStorage.setItem(PROMPT_STORAGE_KEY, "true");
-  } catch {
-    // The first-visit choice is session-only when storage is unavailable.
   }
 }
 

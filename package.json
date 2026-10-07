@@ -62,5 +62,10 @@
     "esbuild@0.28.1": true,
     "fsevents@2.3.3": true,
     "workerd@1.20261001.1": true
+  },
+  "overrides": {
+    "miniflare": {
+      "sharp": "0.35.5"
+    }
   }
 }
