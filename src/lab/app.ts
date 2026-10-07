@@ -18,6 +18,7 @@ import { Timeline } from "./timeline/timeline";
 import { buildLabView } from "./view";
 import { tutorialRequested, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
+import { HealthChip } from "./health-chip";
 import { TRAINING_STAGE } from "../renderer/svg/stage";
 
 const FRAME_MS = 1000 / 60;
@@ -103,6 +104,8 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   gameAudio.setCaptionHandler(showCaption);
   gameAudio.update(preferences.audio);
 
+  const healthChips = combatCharacters.map(() => new HealthChip());
+
   const render = (): void => {
     const state = sim.getState();
     required("paused-overlay").hidden = !timeline.paused || menuOpen();
@@ -113,7 +116,9 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       const maximum = sim.characters()[player].health;
       const percent = Math.max(0, Math.min(100, (fighter.health / maximum) * 100));
       required(`health-p${player + 1}`).style.width = `${percent}%`;
-      required(`health-text-p${player + 1}`).textContent = String(fighter.health);
+      const chip = healthChips[player].update(percent, performance.now());
+      required(`health-chip-p${player + 1}`).style.width = `${chip}%`;
+      required(`health-track-p${player + 1}`).setAttribute("aria-valuenow", String(fighter.health));
     }
     const move = playerCharacter.moves.find((candidate) => candidate.id === state.fighters[0].moveId);
     required("active-move").textContent = move?.key.replaceAll("_", " ") ?? "Ready";
@@ -430,6 +435,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   function resetMatch(): void {
     timeline.reset();
+    healthChips.forEach((chip) => chip.reset());
     dummy.reset();
     renderer.clearEffects();
     lastPlayerInput = 0;

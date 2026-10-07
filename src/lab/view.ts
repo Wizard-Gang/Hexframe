@@ -37,7 +37,9 @@ export function buildLabView({ character, preferences, dummyOptions, hitboxesEna
   </main>`;
 }
 
-function fighterHudMarkup(health: number): string { return `<div class="hud-side hud-side-party"><div class="hud-player hud-party-member"><span>YOU</span><div class="hud-meter-stack"><div class="health-track"><i id="health-p1"></i></div></div><strong><b id="health-text-p1">${health}</b></strong></div></div><div class="hud-player hud-player-right"><strong><b id="health-text-p2">${health}</b></strong><div class="hud-meter-stack"><div class="health-track"><i id="health-p2"></i></div></div><span>DUMMY</span></div>`; }
+function fighterHudMarkup(health: number): string {
+  return ["You", "Dummy"].map((label, player) => `<div class="hud-player"><span id="health-label-p${player + 1}">${label}</span><div class="health-track" id="health-track-p${player + 1}" role="progressbar" aria-labelledby="health-label-p${player + 1}" aria-valuemin="0" aria-valuemax="${health}" aria-valuenow="${health}"><i class="health-chip" id="health-chip-p${player + 1}"></i><i class="health-fill" id="health-p${player + 1}"></i></div></div>`).join("");
+}
 
 function moveListMarkup(character: CharacterDef): string {
   const rows = character.commands.map((command, index) => { const move = character.moves.find((candidate) => candidate.id === command.moveId); if (!move) return ""; const hitbox = move.hitboxes[0]; return `<tr data-move-id="${move.id}"><th scope="row"><strong>${KIT_INPUTS[index] ?? "—"}</strong><span>${titleCase(move.key)}</span></th><td>${hitbox ? hitLevelLabel(hitbox.level) : "—"}</td><td>${hitbox?.damage ?? 0}</td><td>${move.startup}</td><td>${move.active}</td><td>${move.recovery}</td></tr>`; }).join("");
