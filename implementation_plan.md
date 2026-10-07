@@ -70,18 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-191 — [FEAT] Restyle the health HUD
-
-**Goal:** Health reads at a glance.
-
-**Scope:** Show two slim health bars labelled You and Dummy, with a short damage-chip trail. Delete leftover HUD markup and styles.
-
-**Acceptance:** Damage shows as an immediate drop plus a chip that drains, and the HUD stays clear of the fighters.
-
-**Validation:** `npm test -- tests/lab`; browser check.
-
----
-
 ### HF-192 — [REFACTOR] Cut Settings to five options
 
 **Goal:** Settings fit on one short page.
