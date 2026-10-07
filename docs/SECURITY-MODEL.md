@@ -1,14 +1,15 @@
 # Security model
 
-Hexframe is a public browser Training product. Its security model keeps combat authority in the browser, keeps player preferences on the device, and keeps provider credentials outside the application runtime.
+Hexframe is a public browser fighting-game rigging MVP. Its security model keeps combat authority inside the client simulation, treats presentation assets as untrusted markup until validated, keeps convenience preferences on the device, and keeps provider credentials outside the application runtime.
 
 ## Trust boundaries
 
 | Boundary | What crosses it | Security treatment |
 | --- | --- | --- |
 | Browser → Worker | Public document, asset, and API-path requests | Untrusted input; route, method, and response-hardening rules apply |
-| Browser → device storage | Preferences, Debug visibility | Local convenience state only; grants no server capability |
-| Browser → simulation | Player and dummy inputs | Deterministic client-side combat state |
+| Browser → device storage | Preferences, study toggles, tutorial-invite dismissal | Local convenience state only; grants no server capability |
+| Keyboard/gamepad → simulation | Movement, block, and four attack inputs | Deterministic client-side combat state |
+| Bundled fighter SVG → figure renderer | Repository-owned part markup | Parsed through the trusted-markup boundary before insertion |
 | Release workflow → provider | Protected deployment credentials | Available only inside the governed production path |
 
 Combat is client-side by design. That is not a competitive-integrity claim; there is no authoritative multiplayer or server combat state in the MVP.
@@ -24,13 +25,21 @@ The Worker additionally implements boundary behavior rather than product pages:
 - Other missing paths return a hardened text 404.
 - Static asset requests are rebuilt as bare GETs before Workers Static Assets receives them.
 
-The overview, Training, tutorial, and Debug tools are public. The Worker has no application authentication or session capability.
+The overview, Training stage, tutorial, move list, settings, Skeleton, Hitboxes, and Slow-mo controls are public. The Worker has no application authentication or session capability.
 
 ## Runtime data
 
-The Worker stores no player save, inventory, equipment, progression, identity, application credential, or session. Training constructs its fighter content from bundled authored data.
+The Worker stores no player save, inventory, equipment, progression, identity, application credential, or session.
 
-Tutorial progress lasts only for the current run. Preferences and Debug visibility remain in browser storage. They are not synchronized account data and are not a backup service.
+Training constructs its fighter definition, rig, body parts, and clips from bundled repository data. Tutorial lesson progress lasts only for the current run. Preferences, the three study toggles, and tutorial-invite dismissal may persist in browser storage. They are not synchronized account data and are not a backup service.
+
+## Presentation asset boundary
+
+The fighter body is assembled from eleven bundled machine-generated SVG parts. The parts originated in the FightLab/Boneyard presentation lane recorded in the README, but the deployed application reads only the vendored Hexframe copies.
+
+Part markup is not inserted directly from arbitrary network content. Repository-owned SVG source crosses `src/client/trusted-markup.ts`, which rejects script/style elements, inline event handlers, inline style attributes, and JavaScript URLs before the figure renderer receives it.
+
+Rig sampling, forward kinematics, depth ordering, Skeleton drawing, motion trails, hit sparks, dust, shake, and the tutorial celebration are presentation only. None can write combat state.
 
 ## Response hardening
 
@@ -48,7 +57,7 @@ Training assets use immutable caching while public documents and boundary respon
 ## Secrets
 
 - Local development needs no application credential file.
-- `npm run dev` does not read or create `.env` or `.dev.vars`.
+- `npm run dev` runs Vite directly and does not read or create `.env` or `.dev.vars`.
 - `wrangler.jsonc` omits the Cloudflare account identifier; the protected deployment environment supplies it.
 - Provider credentials remain in protected GitHub/provider state and are injected only into the immutable tag-driven deployment path.
 - No provider credential may appear in tracked source, documentation, tests, or built assets.
@@ -65,7 +74,7 @@ Production mutation is release-only. The release workflow validates an immutable
 This model does not claim:
 
 - server enforcement against a player changing their own local simulation;
-- cloud synchronization of device-local preferences or tutorial state;
+- cloud synchronization of device-local convenience state;
 - certification against an external compliance standard.
 
 Security corrections move forward through controlled changes and immutable later releases rather than rewriting published history.
