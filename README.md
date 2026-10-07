@@ -21,7 +21,7 @@ On hit, Jab can route into Sweep and then Uppercut. Movement is WASD or left sti
 
 The Training bar keeps the study surface small: Pause, Reset, Dummy, Slow-mo, Hitboxes, Skeleton, and Menu. Dummy behavior is limited to Stand, Block, and Fight back. Slow-mo runs at 25%; Hitboxes shows combat geometry; Skeleton exposes the 11-bone presentation rig without affecting combat state.
 
-The tutorial is four short lessons: Move, Attack, Block, and Combo. It has at most nine simulation-driven steps, gives visual/audio confirmation for each success, and ends with the fighter's `labWave` celebration plus Free play and Restart actions.
+The tutorial has four short lessons: Move, Attack, Block, and Combo. It has at most nine simulation-driven steps, gives visual/audio confirmation for each success, and ends with the fighter's `labWave` celebration plus Free play and Restart actions.
 
 The overview at `/` loops the rig through idle and the four attacks. With reduced motion enabled, it holds a ready pose instead of animating the showreel.
 
