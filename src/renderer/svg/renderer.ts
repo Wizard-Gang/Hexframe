@@ -8,6 +8,7 @@ import { sampleClip } from "../../rig/sample";
 import type { Rig } from "../../rig/types";
 import { FigureView } from "../character/figure-view";
 import { depthProfileForClip, fightLabPresentation } from "../character/fightlab-presentation";
+import type { FightLabPresentation } from "../character/fightlab-presentation";
 import { drawHitboxes } from "./debug-overlay";
 import {
   drawMotionTrails,
@@ -83,7 +84,7 @@ export class Renderer {
     this.stage.world.removeAttribute("transform");
   }
 
-  render(state: SimState, showHitboxes: boolean, reducedMotion = false, showSkeleton = false): void {
+  render(state: SimState, showHitboxes: boolean, reducedMotion = false, showSkeleton = false, playerPresentation?: FightLabPresentation): void {
     this.stage.setCamera(state.fighters);
     this.stage.layers.shadows.replaceChildren();
     if (reducedMotion) this.stageMotion.clearAnimated();
@@ -94,7 +95,9 @@ export class Renderer {
       const asset = this.assets[player];
       if (!fighter || !node || !asset) continue;
 
-      const presentation = fightLabPresentation(fighter, this.chars[player]);
+      const presentation = player === 0 && playerPresentation
+        ? playerPresentation
+        : fightLabPresentation(fighter, this.chars[player]);
       const clip = asset.clips[presentation.clip];
       if (!clip) throw new Error(`FightLab clip '${presentation.clip}' is missing`);
       const facing = fighter.facing === -1 ? -1 : 1;

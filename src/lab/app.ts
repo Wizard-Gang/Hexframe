@@ -24,6 +24,7 @@ import { TRAINING_STAGE } from "../renderer/svg/stage";
 
 const FRAME_MS = 1000 / 60;
 const TRAINING_VIEW_STORAGE_KEY = "hexframe.training.view.v1";
+const TUTORIAL_PROMPT_STORAGE_KEY = "hexframe.training.tutorial-prompt.v1";
 
 interface TrainingViewState {
   hitboxes: boolean;
@@ -97,6 +98,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let focusBeforeMenu: HTMLElement | null = null;
   let lastMenuFocus: HTMLElement | null = null;
   let latestTutorialSnapshot: TutorialSnapshot | null = null;
+  let lastTutorialConfirmation: string | null = null;
+  let tutorialCelebrationStartFrame: number | null = null;
+  let completionCardShown = false;
+  let tutorialCheckTimer: number | null = null;
 
   gameAudio.update(preferences.audio);
 
@@ -105,7 +110,19 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const render = (): void => {
     const state = sim.getState();
     required("paused-overlay").hidden = !timeline.paused || menuOpen();
-    renderer.render(state, viewState.hitboxes, document.documentElement.dataset.motion === "reduced", viewState.skeleton);
+    const tutorialCelebration = latestTutorialSnapshot?.active && latestTutorialSnapshot.tutorialComplete
+      ? {
+          clip: "labWave" as const,
+          frame: Math.max(0, state.frame - (tutorialCelebrationStartFrame ?? state.frame)),
+        }
+      : undefined;
+    renderer.render(
+      state,
+      viewState.hitboxes,
+      document.documentElement.dataset.motion === "reduced",
+      viewState.skeleton,
+      tutorialCelebration,
+    );
     required("controller-state").textContent = gamepad.connected ? `Gamepad · ${gamepad.name}` : "Keyboard ready · connect gamepad anytime";
     for (let player = 0; player < state.fighters.length; player++) {
       const fighter = state.fighters[player];
@@ -161,8 +178,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "hitboxes") setTrainingToggle("hitboxes", !viewState.hitboxes);
     if (action === "skeleton") setTrainingToggle("skeleton", !viewState.skeleton);
     if (action === "start-tutorial") startTutorial();
+    if (action === "dismiss-tutorial-prompt") dismissTutorialPrompt();
     if (action === "next-tutorial-lesson") advanceTutorial();
-    if (action === "exit-tutorial") exitTutorial();
+    if (action === "exit-tutorial" || action === "free-play") exitTutorial();
+    if (action === "restart-tutorial") startTutorial();
     if (button.dataset.menuDetailTarget) showMenuDetail(button.dataset.menuDetailTarget as MenuDetail);
     render();
   };
@@ -206,12 +225,14 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   window.addEventListener("keydown", keydown);
   syncTutorialUi(tutorial.snapshot());
   if (tutorialRequested(window.location.search)) startTutorial();
+  else syncTutorialPrompt();
   render();
   animationId = requestAnimationFrame(loop);
 
   return () => {
     disposed = true;
     cancelAnimationFrame(animationId);
+    if (tutorialCheckTimer !== null) window.clearTimeout(tutorialCheckTimer);
     mount.removeEventListener("click", click);
     mount.removeEventListener("change", change);
     mount.removeEventListener("input", input);
@@ -329,13 +350,13 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   function startTutorial(): void {
     if (menuOpen()) closeMenu();
+    dismissTutorialPrompt();
+    completionCardShown = false;
+    tutorialCelebrationStartFrame = null;
+    lastTutorialConfirmation = null;
     tutorial.start();
     resetMatch();
     timeline.paused = false;
-  }
-
-  function finishTutorial(): void {
-    stopTutorial();
   }
 
   function exitTutorial(): void {
@@ -345,38 +366,88 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   function stopTutorial(): void {
     if (menuOpen()) closeMenu();
     tutorial.stop();
+    completionCardShown = false;
+    tutorialCelebrationStartFrame = null;
+    lastTutorialConfirmation = null;
     resetMatch();
     timeline.paused = false;
     mount.querySelector<HTMLButtonElement>("[data-action='menu']")?.focus();
   }
 
   function advanceTutorial(): void {
-    if (!latestTutorialSnapshot) return;
-    if (latestTutorialSnapshot.lessonComplete && latestTutorialSnapshot.lessonIndex === latestTutorialSnapshot.lessonCount - 1) {
-      finishTutorial();
-      return;
-    }
+    if (!latestTutorialSnapshot?.lessonComplete || latestTutorialSnapshot.tutorialComplete) return;
     tutorial.nextLesson();
     if (tutorial.consumeResetRequest()) resetMatch();
     timeline.paused = false;
   }
 
-
   function syncTutorialUi(snapshot: TutorialSnapshot): void {
     latestTutorialSnapshot = snapshot;
     const hud = mount.querySelector<HTMLElement>("#tutorial-hud");
     if (hud) {
-      hud.hidden = !snapshot.active;
-      textIn(hud, "#tutorial-lesson-count", `LESSON ${snapshot.lessonIndex + 1} / ${snapshot.lessonCount} · STEP ${snapshot.stepIndex + 1} / ${snapshot.stepCount}`);
-      textIn(hud, "#tutorial-title", snapshot.title);
+      hud.hidden = !snapshot.active || snapshot.tutorialComplete;
+      textIn(hud, "#tutorial-lesson-count", `${snapshot.title.toUpperCase()} · STEP ${snapshot.stepIndex + 1} / ${snapshot.stepCount}`);
       textIn(hud, "#tutorial-objective", snapshot.lessonComplete ? snapshot.success : snapshot.objective);
-      textIn(hud, "#tutorial-success", snapshot.confirmation ? `✓ ${snapshot.confirmation.toUpperCase()}` : "");
-      textIn(hud, "#tutorial-hint", snapshot.hint);
       const next = hud.querySelector<HTMLButtonElement>("[data-action='next-tutorial-lesson']");
-      if (next) {
-        next.hidden = !snapshot.lessonComplete;
-        next.textContent = snapshot.lessonIndex === snapshot.lessonCount - 1 ? "Finish tutorial" : "Next lesson";
-      }
+      if (next) next.hidden = !snapshot.lessonComplete || snapshot.tutorialComplete;
+    }
+
+    const complete = mount.querySelector<HTMLElement>("#tutorial-complete");
+    if (complete) complete.hidden = !snapshot.active || !snapshot.tutorialComplete;
+
+    if (snapshot.active && snapshot.confirmation && snapshot.confirmation !== lastTutorialConfirmation) {
+      lastTutorialConfirmation = snapshot.confirmation;
+      flashTutorialConfirmation(snapshot.confirmation);
+    } else if (!snapshot.confirmation) {
+      lastTutorialConfirmation = null;
+    }
+
+    if (snapshot.active && snapshot.tutorialComplete && !completionCardShown) {
+      completionCardShown = true;
+      tutorialCelebrationStartFrame = sim.getState().frame;
+      window.requestAnimationFrame(() => {
+        mount.querySelector<HTMLButtonElement>("[data-action='free-play']")?.focus();
+      });
+    }
+  }
+
+  function flashTutorialConfirmation(message: string): void {
+    const check = mount.querySelector<HTMLElement>("#tutorial-check");
+    if (!check) return;
+    check.textContent = `✓ ${message}`;
+    check.classList.remove("is-visible");
+    void check.offsetWidth;
+    check.classList.add("is-visible");
+    gameAudio.play("confirm");
+    if (tutorialCheckTimer !== null) window.clearTimeout(tutorialCheckTimer);
+    tutorialCheckTimer = window.setTimeout(() => {
+      check.classList.remove("is-visible");
+      check.textContent = "";
+      tutorialCheckTimer = null;
+    }, 650);
+  }
+
+  function syncTutorialPrompt(): void {
+    const prompt = mount.querySelector<HTMLElement>("#tutorial-prompt");
+    if (!prompt) return;
+    prompt.hidden = tutorial.active || tutorialPromptDismissed();
+  }
+
+  function dismissTutorialPrompt(): void {
+    const prompt = mount.querySelector<HTMLElement>("#tutorial-prompt");
+    if (prompt) prompt.hidden = true;
+    try {
+      localStorage.setItem(TUTORIAL_PROMPT_STORAGE_KEY, "dismissed");
+    } catch {
+      // Prompt dismissal remains session-local when storage is unavailable.
+    }
+  }
+
+  function tutorialPromptDismissed(): boolean {
+    try {
+      return localStorage.getItem(TUTORIAL_PROMPT_STORAGE_KEY) === "dismissed";
+    } catch {
+      return false;
     }
   }
 

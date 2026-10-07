@@ -60,14 +60,22 @@ describe("Training accessibility and study controls", () => {
     });
   });
 
-  it("keeps live regions, tutorial controls, and gamepad navigation hooks", () => {
+  it("keeps tutorial feedback, completion actions, and the first-visit invite keyboard reachable", () => {
     const html = view(true);
-    expect(html).toContain('id="tutorial-hud" aria-live="polite"');
-
-    for (const action of ["next-tutorial-lesson", "exit-tutorial"]) expect(html).toContain(`data-action="${action}"`);
+    expect(html).toContain('id="tutorial-hud" aria-live="polite" aria-atomic="true"');
+    expect(html).toContain('id="tutorial-check" role="status" aria-live="polite" aria-atomic="true"');
+    expect(html).toContain('id="tutorial-complete" aria-live="polite"');
+    expect(html).toContain('id="tutorial-prompt" aria-label="Tutorial invitation" hidden');
+    expect(html).not.toContain('id="tutorial-prompt" role="dialog"');
+    for (const action of ["start-tutorial", "dismiss-tutorial-prompt", "next-tutorial-lesson", "exit-tutorial", "free-play", "restart-tutorial"]) {
+      expect(html).toContain(`data-action="${action}"`);
+    }
     expect(html).not.toContain('data-action="skip-tutorial-lesson"');
-    expect(html.indexOf('id="tutorial-hud"')).toBeLessThan(html.indexOf('aria-label="Combat arena"'));
-    expect(html.match(/data-gamepad-nav/g)?.length ?? 0).toBeGreaterThan(15);
+    expect(html.indexOf('aria-label="Combat arena"')).toBeLessThan(html.indexOf('id="tutorial-hud"'));
+    expect(appSource).toContain('const TUTORIAL_PROMPT_STORAGE_KEY = "hexframe.training.tutorial-prompt.v1"');
+    expect(appSource).toContain('clip: "labWave" as const');
+    expect(appSource).toContain('gameAudio.play("confirm")');
+    expect(html.match(/data-gamepad-nav/g)?.length ?? 0).toBeGreaterThan(19);
   });
 
   it("shows exactly the five retained settings", () => {
@@ -83,6 +91,6 @@ describe("Training accessibility and study controls", () => {
     expect(strip.match(/data-gamepad-nav/g)).toHaveLength(7);
     expect(html).toContain('class="control-hint"');
     expect(html).not.toContain('class="lab-header');
-    expect(html).not.toContain('id="tutorial-prompt"');
+    expect(html).toContain('id="tutorial-prompt"');
   });
 });
