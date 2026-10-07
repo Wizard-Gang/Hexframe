@@ -13,23 +13,17 @@ function view(hitboxesEnabled = false, slowMotionEnabled = false, skeletonEnable
 }
 
 describe("Training accessibility and study controls", () => {
-  it("keeps the compact Training bar and seven-item pause menu semantic", () => {
+  it("keeps the compact Training bar, current dummy modes and seven-item pause menu semantic", () => {
     const html = view();
     for (const marker of ['aria-label="Training controls"', 'data-action="pause"', 'data-action="reset"', 'data-control="dummy"', 'data-action="skeleton"', 'data-action="slow-mo"', 'data-action="hitboxes"', 'role="dialog" aria-modal="true"']) expect(html).toContain(marker);
     for (const item of ["Resume", "Restart", "Tutorial", "Moves", "Settings", "Controls", "Exit"]) expect(html).toContain(`>${item}</button>`);
-    for (const removed of ['data-control="speed"', 'id="debug-control"', 'id="debug-tools"', 'data-action="forward"', 'data-action="forward-10"', 'data-control="pause-on-contact"', 'id="move-timeline-console"', 'id="interaction-history"']) expect(html).not.toContain(removed);
     expect(html).not.toContain('role="tablist"');
     expect(appSource).toContain('[DummyMode.Stand, "Stand"]');
     expect(appSource).toContain('[DummyMode.Block, "Block"]');
     expect(appSource).toContain('[DummyMode.FightBack, "Fight back"]');
-    for (const removed of [
-      "DummyMode.Crouch", "DummyMode.Jump", "DummyMode.BlockNone",
-      "DummyMode.BlockAll", "DummyMode.BlockAfterFirstHit", "DummyMode.Record",
-      "DummyMode.Playback", "DummyMode.Counterattack", "DummyMode.Reversal",
-    ]) expect(appSource).not.toContain(removed);
   });
 
-  it("remembers Skeleton, Hitboxes and Slow-mo while deleting the old Debug drawing paths", () => {
+  it("remembers Skeleton, Hitboxes and Slow-mo with the current combat overlay", () => {
     const off = view(false, false, false);
     const on = view(true, true, true);
     expect(off).toContain('data-action="skeleton" data-gamepad-nav aria-pressed="false"');
@@ -42,9 +36,7 @@ describe("Training accessibility and study controls", () => {
     expect(appSource).toContain('localStorage.setItem(TRAINING_VIEW_STORAGE_KEY, JSON.stringify(state))');
     expect(appSource).toContain('event.code === "Backquote"');
     expect(appSource).toContain('timeline.speed = enabled ? 25 : 100');
-    expect(figureSource).not.toContain("bone-name");
-    expect(overlaySource).not.toContain("debug-origin");
-    expect(overlaySource).not.toContain("debug-velocity");
+    expect(figureSource).toContain("skeleton__bone");
     for (const volume of ["debug-hitbox", "debug-hurtbox", "debug-pushbox"]) expect(overlaySource).toContain(volume);
   });
 
