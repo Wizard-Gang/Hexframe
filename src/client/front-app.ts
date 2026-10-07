@@ -1,7 +1,7 @@
 import { px } from "../combat/constants";
 import { Simulation } from "../combat/simulation/simulation";
 import { createTestFighter } from "../content/test-fighter";
-import { STAGE_CATALOG } from "../game/session";
+import { TRAINING_STAGE } from "../renderer/svg/stage";
 import { FIGHTLAB_FIGHTER_ASSET } from "../renderer/character/fightlab-assets";
 import { Renderer } from "../renderer/svg/renderer";
 import { replaceTrustedMarkup } from "./trusted-markup";
@@ -33,7 +33,7 @@ function mountTrainingStages(mount: HTMLElement): Renderer[] {
   for (const stageMount of mount.querySelectorAll<HTMLElement>("[data-training-stage]")) {
     const player = createTestFighter();
     const dummy = createTestFighter();
-    const stage = STAGE_CATALOG["training-grid"].stage;
+    const stage = TRAINING_STAGE;
     const simulation = new Simulation({
       characters: [player, dummy],
       startX: [px(-105), px(105)],
@@ -41,7 +41,6 @@ function mountTrainingStages(mount: HTMLElement): Renderer[] {
     });
     const renderer = new Renderer(stageMount, [player, dummy], {
       fighters: [FIGHTLAB_FIGHTER_ASSET, FIGHTLAB_FIGHTER_ASSET],
-      stage,
     });
     renderer.render(simulation.getState(), false, false);
     const svg = stageMount.querySelector("svg");

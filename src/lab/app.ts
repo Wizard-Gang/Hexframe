@@ -18,7 +18,7 @@ import { Timeline } from "./timeline/timeline";
 import { buildLabView } from "./view";
 import { tutorialRequested, TutorialController } from "./tutorial";
 import type { TutorialSnapshot } from "./tutorial";
-import { STAGE_CATALOG } from "../game/session";
+import { TRAINING_STAGE } from "../renderer/svg/stage";
 
 const FRAME_MS = 1000 / 60;
 const TRAINING_VIEW_STORAGE_KEY = "hexframe.training.view.v1";
@@ -62,7 +62,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   }));
   mount.removeAttribute("aria-busy");
 
-  const selectedStage = STAGE_CATALOG["training-grid"].stage;
+  const selectedStage = TRAINING_STAGE;
   const config: SimConfig = {
     characters: combatCharacters,
     startX: TRAINING_START_X,
@@ -78,7 +78,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   const gamepad = new GamepadController();
   const renderer = new Renderer(required("stage"), sim.characters(), {
     fighters: [FIGHTLAB_FIGHTER_ASSET, FIGHTLAB_FIGHTER_ASSET],
-    stage: selectedStage,
   });
   timeline.inputProvider = () => {
     if (menuOpen()) return combatCharacters.map(() => 0);

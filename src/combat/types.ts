@@ -305,7 +305,7 @@ export interface FighterState {
 }
 
 export interface StageDef {
-  id: "training-grid";
+  id: "training";
   width: number;
   cameraBounds: { minX: number; maxX: number };
 }
@@ -393,7 +393,7 @@ export interface SimConfig {
   characters: readonly CharacterDef[];
   /** Exactly two starting ground origins in sim units. */
   startX: readonly number[];
-  /** Optional Training Grid presentation/bounds definition. */
+  /** Optional Training stage bounds definition. */
   stage?: StageDef;
 }
 
