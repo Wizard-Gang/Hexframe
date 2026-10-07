@@ -1,103 +1,53 @@
-export type ThemePreference = "system" | "dark" | "light";
-export type MotionPreference = "system" | "full" | "reduced";
-export type ColorVisionMode = "default" | "deuteranopia" | "protanopia" | "tritanopia" | "monochrome";
-
 export interface LabPreferences {
-  audio: {
-    master: number;
-    sfx: number;
-    ui: number;
-    captions: boolean;
-    muteUnfocused: boolean;
-  };
-  video: {
-    cameraShake: number;
-    hudOpacity: number;
-  };
-  accessibility: {
-    theme: ThemePreference;
-    contrast: "normal" | "high";
-    motion: MotionPreference;
-    textScale: number;
-    colorVision: ColorVisionMode;
-    dyslexiaFont: boolean;
-    strongFocus: boolean;
-    screenReaderCombat: boolean;
-  };
-  controls: {
-    glyphs: "auto" | "keyboard" | "xbox";
-    stickDeadzone: number;
-    vibration: number;
-  };
+  audio: { master: number };
+  accessibility: { contrast: "normal" | "high"; motion: "full" | "reduced"; textScale: number };
+  controls: { vibration: number };
 }
 
 export const DEFAULT_PREFERENCES: LabPreferences = {
-  audio: { master: 0.8, sfx: 0.85, ui: 0.7, captions: true, muteUnfocused: true },
-  video: { cameraShake: 0.35, hudOpacity: 0.92 },
-  accessibility: { theme: "system", contrast: "normal", motion: "system", textScale: 1, colorVision: "default", dyslexiaFont: false, strongFocus: true, screenReaderCombat: false },
-  controls: { glyphs: "auto", stickDeadzone: 0.45, vibration: 0.7 },
+  audio: { master: 0.8 },
+  accessibility: { contrast: "normal", motion: "full", textScale: 1 },
+  controls: { vibration: 0.7 },
 };
 
 const STORAGE_KEY = "hexframe.preferences.v1";
 
 export function loadPreferences(): LabPreferences {
-  let saved: Partial<LabPreferences> = {};
-  try {
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as Partial<LabPreferences>;
-  } catch {
-    saved = {};
-  }
+  let saved: unknown;
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}"); } catch { /* Storage is optional. */ }
+  const root = record(saved);
+  const audio = record(root.audio);
+  const accessibility = record(root.accessibility);
+  const controls = record(root.controls);
+  const systemReduced = typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
   return {
-    audio: { ...DEFAULT_PREFERENCES.audio, ...saved.audio },
-    video: {
-      cameraShake: saved.video?.cameraShake ?? DEFAULT_PREFERENCES.video.cameraShake,
-      hudOpacity: saved.video?.hudOpacity ?? DEFAULT_PREFERENCES.video.hudOpacity,
+    audio: { master: number(audio.master, 0, 1, DEFAULT_PREFERENCES.audio.master) },
+    accessibility: {
+      contrast: accessibility.contrast === "high" ? "high" : "normal",
+      motion: accessibility.motion === "reduced" || (accessibility.motion !== "full" && systemReduced) ? "reduced" : "full",
+      textScale: number(accessibility.textScale, 0.9, 1.6, 1),
     },
-    accessibility: { ...DEFAULT_PREFERENCES.accessibility, ...saved.accessibility },
-    controls: { ...DEFAULT_PREFERENCES.controls, ...saved.controls },
+    controls: { vibration: number(controls.vibration, 0, 1, DEFAULT_PREFERENCES.controls.vibration) },
   };
 }
 
 export function persistPreferences(preferences: LabPreferences): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-  } catch {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)); } catch {
     // Device storage is an enhancement; inaccessible storage must never block play.
   }
 }
 
 export function applyPreferences(preferences: LabPreferences): void {
   const root = document.documentElement;
-  const { accessibility, video } = preferences;
-  if (accessibility.theme === "system") root.removeAttribute("data-theme");
-  else root.dataset.theme = accessibility.theme;
-  root.dataset.contrast = accessibility.contrast;
-  const systemReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-  root.dataset.motion = accessibility.motion === "system"
-    ? (systemReduced ? "reduced" : "full")
-    : accessibility.motion;
-  root.dataset.colorVision = accessibility.colorVision;
-  root.dataset.dyslexia = accessibility.dyslexiaFont ? "on" : "off";
-  root.dataset.strongFocus = accessibility.strongFocus ? "on" : "off";
-  root.dataset.cameraShake = video.cameraShake <= 0 ? "off" : video.cameraShake < 0.5 ? "reduced" : "full";
-  root.dataset.glyphs = preferences.controls.glyphs;
-  root.style.setProperty("--font-scale", String(clamp(accessibility.textScale, 0.9, 1.6)));
-  root.style.setProperty("--hud-opacity", String(clamp(video.hudOpacity, 0.45, 1)));
-  root.style.setProperty("--shake-strength", `${Math.round(clamp(video.cameraShake, 0, 1) * 7)}px`);
+  root.dataset.contrast = preferences.accessibility.contrast;
+  root.dataset.motion = preferences.accessibility.motion;
+  root.style.setProperty("--font-scale", String(preferences.accessibility.textScale));
 }
 
-export function resetPreferences(): LabPreferences {
-  const next: LabPreferences = {
-    audio: { ...DEFAULT_PREFERENCES.audio },
-    video: { ...DEFAULT_PREFERENCES.video },
-    accessibility: { ...DEFAULT_PREFERENCES.accessibility },
-    controls: { ...DEFAULT_PREFERENCES.controls },
-  };
-  persistPreferences(next);
-  applyPreferences(next);
-  return next;
+function record(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
-function clamp(value: number, minimum: number, maximum: number): number {
-  return Math.max(minimum, Math.min(maximum, value));
+function number(value: unknown, min: number, max: number, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
 }

@@ -2,25 +2,12 @@ import type { LabPreferences } from "../../lab/preferences";
 
 export type AudioCue = "navigate" | "confirm" | "hit" | "block";
 
-export const AUDIO_CAPTIONS: Record<AudioCue, string> = {
-  navigate: "Menu focus moves",
-  confirm: "Selection confirmed",
-  hit: "Heavy impact",
-  block: "Attack blocked",
-};
-
 class AudioManager {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private sfx: GainNode | null = null;
   private ui: GainNode | null = null;
   private preferences: LabPreferences["audio"] | null = null;
-  private caption: ((text: string) => void) | null = null;
-
-  setCaptionHandler(handler: ((text: string) => void) | null): void {
-    this.caption = handler;
-  }
-
   ensure(): void {
     if (!this.context) {
       const AudioCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -43,7 +30,6 @@ class AudioManager {
   }
 
   play(cue: AudioCue): void {
-    if (this.preferences?.captions && cue !== "navigate" && cue !== "confirm") this.caption?.(AUDIO_CAPTIONS[cue]);
     if (!this.context) return;
     const output = cue === "navigate" || cue === "confirm" ? this.ui : this.sfx;
     if (!output) return;
@@ -62,12 +48,6 @@ class AudioManager {
     oscillator.stop(now + duration + 0.02);
   }
 
-  handleVisibility(hidden: boolean): void {
-    if (!this.context || !this.preferences?.muteUnfocused) return;
-    if (hidden) void this.context.suspend();
-    else void this.context.resume();
-  }
-
   dispose(): void {
     void this.context?.close();
     this.context = null;
@@ -78,8 +58,8 @@ class AudioManager {
     if (!this.context || !this.preferences || !this.master || !this.sfx || !this.ui) return;
     const now = this.context.currentTime;
     this.master.gain.setTargetAtTime(this.preferences.master, now, 0.02);
-    this.sfx.gain.setTargetAtTime(this.preferences.sfx, now, 0.02);
-    this.ui.gain.setTargetAtTime(this.preferences.ui * 0.55, now, 0.02);
+    this.sfx.gain.setTargetAtTime(0.85, now, 0.02);
+    this.ui.gain.setTargetAtTime(0.7 * 0.55, now, 0.02);
   }
 }
 
