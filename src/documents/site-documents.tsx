@@ -49,8 +49,8 @@ function TrainingFallback() {
     <section id="training-copy">
       <p>HEXFRAME / TRAINING STAGE</p>
       <h1 id="training-title">Training starts here.</h1>
-      <p>The deterministic Training session opens directly at <code>/play/</code>. JavaScript enables combat, the always-visible controls, and the public Debug tools.</p>
-      <p>Use keyboard or gamepad to practice the fixed four-button kit. Toggle Debug on screen or with <kbd>`</kbd> to inspect frames without stopping the match.</p>
+      <p>The deterministic Training session opens directly at <code>/play/</code>. JavaScript enables combat, the seven-control Training bar, and the four-lesson tutorial.</p>
+      <p>Use keyboard or gamepad to practice the fixed four-button kit. Toggle Skeleton, Hitboxes or Slow-mo to study the rig and motion.</p>
     </section>
   </main>;
 }

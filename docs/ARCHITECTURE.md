@@ -1,6 +1,6 @@
 # Architecture
 
-Hexframe is a small browser Training product built around one rule: **the simulation is the combat authority**. One frame of inputs produces one frame of authoritative state. Rendering, Training tools, replay inspection, documents, and the Worker consume that state without deciding combat outcomes.
+Hexframe is a small browser fighting-game rigging MVP built around one rule: **the simulation is the combat authority**. Inputs advance fixed-step integer combat state. The rig, clips, forward kinematics, depth order, hitboxes, trails, effects, tutorial feedback, and showreel consume that state without deciding combat outcomes.
 
 ## Public product
 
@@ -8,82 +8,98 @@ There are two public product routes:
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Project overview rendered as a useful build-time document |
+| `/` | Build-time overview plus the looping rigging showreel |
 | `/play/` | Training document plus the interactive browser runtime |
 
-`/play` is only a canonical redirect to `/play/` and preserves `?tutorial=1`. The Worker returns a generic JSON 404 under `/api/*`; the current product exposes no application API.
+`/play` permanently redirects to `/play/` and preserves `?tutorial=1`. The Worker returns a generic JSON 404 under `/api/*`; the current product exposes no application API.
 
-Training contains the fixed four-button kit:
+Training uses one four-button kit:
 
-| Input | Move |
-| --- | --- |
-| ↑ / Y | Jab |
-| ← / X | Sweep |
-| → / B | Overhead |
-| ↓ / A | Uppercut |
+| Input | Move | Role |
+| --- | --- | --- |
+| ↑ / Y | Jab | Mid |
+| ← / X | Sweep | Low |
+| → / B | Overhead | Overhead |
+| ↓ / A | Uppercut | Launcher |
 
-Jab can route on hit into Sweep and then Uppercut. The dummy, four-lesson tutorial, frame transport, combat geometry, contact inspection, save states, and deterministic scenario replay all operate on the same browser simulation.
+Jab can route on hit into Sweep and then Uppercut. Movement adds walk, crouch, jump, and block. The dummy has Stand, Block, and Fight back modes.
+
+The study surface is intentionally small: Pause, Reset, Dummy, Slow-mo, Hitboxes, Skeleton, and Menu. Slow-mo changes presentation cadence to 25%; Hitboxes exposes combat geometry; Skeleton draws the presentation rig. None of those controls can author combat outcomes.
 
 ## Authority model
 
 | Concern | Authority |
 | --- | --- |
 | Combat result for a frame | `src/combat/simulation/simulation.ts` |
-| Input resolution | `src/input/` plus authored command data |
-| Snapshot/replay state | `src/rollback/` |
-| Training interaction and tools | `src/lab/` |
-| Visual presentation | `src/renderer/` and `src/client/` |
-| Tutorial progress | Current browser run |
-| Preferences, Debug visibility | Device-local browser storage |
+| Fighter stats, boxes, four moves, and command mapping | `src/content/test-fighter.ts` |
+| Keyboard/gamepad resolution | `src/input/` |
+| Rig contract, clip sampling, FK, and depth order | `src/rig/` |
+| State-to-clip presentation mapping | `src/renderer/character/fightlab-presentation.ts` |
+| Fighter rendering and presentation effects | `src/renderer/` |
+| Training controls, dummy, tutorial, preferences | `src/lab/` |
+| Build-time documents and browser entry points | `src/documents/` and `src/client/` |
 | Public routing and response hardening | `src/worker/` |
 
 The Worker does not own combat, progression, player identity, or browser preferences.
 
-## Determinism
+## Simulation and presentation
 
-Determinism is encoded in the state model:
+Combat state advances at a fixed 60 Hz with integer simulation quantities. Authored pixel measurements cross into simulation units at the typed content boundary.
 
-- Stored combat quantities are 32-bit integers; authored pixel values are converted to simulation units at the content boundary.
-- The simulation advances at a fixed 60 Hz rather than browser wall-clock time.
-- Command parsing happens inside the deterministic step.
-- Randomness is seeded and its state is part of the simulation snapshot.
-- Snapshot readers validate their version instead of guessing across incompatible formats.
-
-The combat, rollback, input, game, content, and renderer layers do not use ambient time or randomness as combat authority.
-
-## Layering
-
-Lower-level simulation modules do not import the Training UI:
+Presentation is downstream:
 
 ```text
-combat / input / content
+typed fighter + input
         ↓
-game / rollback
+fixed-step combat simulation
         ↓
-renderer
+frame state + contact reports
         ↓
-lab / client
+rig / renderer / effects
+        ↓
+Training UI + showreel
 ```
 
-The Worker is a separate public edge boundary. It receives requests, canonicalizes the Training path, serves Workers Static Assets, returns the generic API 404 response, and applies hardened response headers.
+`fightLabPresentation` selects a presentation clip from the authoritative fighter state. Clip sampling, forward kinematics, depth profiles, body-part paint order, mirroring, Skeleton drawing, trails, hit sparks, dust, hitstop presentation, and screen shake never feed values back into combat.
+
+The visible fighter uses an 11-bone rig and 13 clips. Seven `lab*` clips and the rig/parts were adapted through FightLab from the original Boneyard lane; six additional clips were authored in Hexframe in the same 13-pose format. The exact provenance hashes live in the README.
+
+## Training and tutorial
+
+`src/lab/app.ts` mounts the simulation, renderer, keyboard/gamepad input, dummy controller, preferences, audio, and tutorial around one full-screen stage.
+
+The tutorial contains Move, Attack, Block, and Combo lessons with at most nine simulation-driven steps. A step completes only when the simulation reports the required state or contact; elapsed wall-clock time does not complete objectives. Success feedback and the final `labWave` are presentation only.
+
+The pause menu contains seven actions: Resume, Restart, Tutorial, Moves, Settings, Controls, and Exit. Settings are Volume, Reduced motion, High contrast, Text size, and Vibration.
+
+Device-local storage is limited to convenience state: preferences, the three study toggles, and tutorial-invite dismissal. Tutorial lesson progress itself lasts only for the current run.
 
 ## Documents and browser runtime
 
-The overview and Training fallback are React 19 TSX documents rendered during the Vite build with `react-dom/server`. Their headings, navigation, explanatory copy, and fallback content exist before browser JavaScript runs.
+The overview and Training fallback are React 19 TSX documents rendered during the Vite build with `react-dom/server`. Their navigation, copy, and fallbacks exist before browser JavaScript runs.
 
-Interactive combat necessarily requires the browser runtime. React document rendering does not own simulation state, hit resolution, input parsing, persistence, or routing.
+Interactive combat and the showreel require browser JavaScript. React document rendering does not own simulation state, hit resolution, input handling, or persistence.
 
-Imperative Training views may cross one audited raw-markup boundary in `src/client/trusted-markup.ts`. That parser rejects script/style elements, inline event handlers, inline style attributes, and JavaScript URLs. Other application parser sinks are rejected by presentation-security validation.
+Repository-owned fighter-part SVG source crosses one audited markup boundary in `src/client/trusted-markup.ts`. That parser rejects script/style elements, inline event handlers, inline style attributes, and JavaScript URLs before the markup enters the rendered figure.
+
+Local development is the direct Vite loop:
+
+```bash
+npm ci
+npm run dev
+```
+
+No application credentials are needed for local development.
 
 ## Worker boundary
 
-Every deployed request passes through `src/worker/index.ts` before static assets. The reduced Worker owns only:
+Every deployed request passes through `src/worker/index.ts` before static assets. The Worker owns only:
 
-- `/` static overview delivery;
+- `/` overview delivery;
 - canonical `/play` → `/play/` redirect behavior;
-- `/play/` and its built assets;
+- `/play/` and built assets;
 - generic JSON 404 responses under `/api/*`;
 - hardened text 404s for other missing paths;
 - response security headers.
 
-Local development uses the same routing shape without application credentials. Production credentials exist only in protected deployment/provider state and are not part of the runtime application contract.
+Production credentials exist only in protected deployment/provider state and are not part of the runtime application contract.

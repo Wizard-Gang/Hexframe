@@ -127,7 +127,7 @@ describe("interactive tutorial objectives", () => {
 
   it("starts the tutorial only from the explicit query", () => {
     expect(tutorialRequested("?tutorial=1")).toBe(true);
-    expect(tutorialRequested("?debug=1")).toBe(false);
+    expect(tutorialRequested("?tutorial=0")).toBe(false);
     expect(tutorialRequested("")).toBe(false);
   });
 });
