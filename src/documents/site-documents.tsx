@@ -22,7 +22,7 @@ function Overview() {
         <p>Enter Training immediately, fight the dummy, then reveal the exact boxes, frames, contacts, save states, and deterministic replay behind the result.</p>
         <div className="overview-actions"><a className="overview-primary" href="/play/">Enter Training →</a><a href="https://github.com/Wizard-Gang/Hexframe" target="_blank" rel="noopener noreferrer">View source ↗</a></div>
       </div>
-      <figure className="overview-demo"><figcaption><span>TRAINING GRID</span><strong>PLAYER + DUMMY</strong></figcaption><div className="overview-training-stage" data-training-stage role="img" aria-label="Hexframe's training stage with the player facing a practice dummy"></div><footer><span>60 HZ COMBAT</span><span>ACTUAL GAME RENDERER</span></footer></figure>
+      <figure className="overview-demo"><figcaption><span>TRAINING STAGE</span><strong>PLAYER + DUMMY</strong></figcaption><div className="overview-training-stage" data-training-stage role="img" aria-label="Hexframe's training stage with the player facing a practice dummy"></div><footer><span>60 HZ COMBAT</span><span>ACTUAL GAME RENDERER</span></footer></figure>
     </section>
     <section className="overview-proof" aria-label="Training lab capabilities"><span>Direct Training</span><span>Public Debug toggle</span><span>Frame step and replay</span><span>Keyboard + gamepad</span></section>
     <section className="overview-sections">
@@ -40,7 +40,7 @@ function TrainingFallback() {
     <a className="skip-link" href="#training-copy">Skip to Training</a>
     <header><a href="/" aria-label="WizardGang Hexframe home"><Brand /></a><a href="/">Overview</a></header>
     <section id="training-copy">
-      <p>HEXFRAME / TRAINING GRID</p>
+      <p>HEXFRAME / TRAINING STAGE</p>
       <h1 id="training-title">Training starts here.</h1>
       <p>The deterministic Training session opens directly at <code>/play/</code>. JavaScript enables combat, the always-visible controls, and the public Debug tools.</p>
       <p>Use keyboard or gamepad to practice the fixed four-button kit. Toggle Debug on screen or with <kbd>`</kbd> to inspect frames without stopping the match.</p>

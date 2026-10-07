@@ -4,7 +4,7 @@ import { px } from "../../src/combat/constants";
 import { Simulation } from "../../src/combat/simulation/simulation";
 import { InputBit } from "../../src/combat/types";
 import { createTestFighter } from "../../src/content/test-fighter";
-import { STAGE_CATALOG } from "../../src/game/session";
+import { TRAINING_STAGE } from "../../src/renderer/svg/stage";
 
 function fighter() {
   return createTestFighter();
@@ -12,16 +12,16 @@ function fighter() {
 
 describe("reduced Training engine", () => {
   it("accepts exactly two fighters", () => {
-    const stage = STAGE_CATALOG["training-grid"].stage;
+    const stage = TRAINING_STAGE;
     const config = { characters: [fighter(), fighter()], startX: [px(-18), px(18)], stage };
     expect(new Simulation(config).getState().fighters).toHaveLength(2);
     expect(() => new Simulation({ ...config, characters: [fighter()], startX: [0] })).toThrow(/exactly 2 fighters/);
     expect(() => new Simulation({ ...config, characters: [fighter(), fighter(), fighter()], startX: [0, 1, 2] })).toThrow(/exactly 2 fighters/);
   });
 
-  it("uses the Training Grid and gives the same state for the same inputs", () => {
-    const stage = STAGE_CATALOG["training-grid"].stage;
-    expect(stage.id).toBe("training-grid");
+  it("uses the Training stage and gives the same state for the same inputs", () => {
+    const stage = TRAINING_STAGE;
+    expect(stage.id).toBe("training");
     const config = { characters: [fighter(), fighter()], startX: [px(-18), px(18)], stage };
     const first = new Simulation(config);
     const second = new Simulation(config);

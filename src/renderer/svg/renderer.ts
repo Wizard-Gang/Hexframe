@@ -1,7 +1,8 @@
 import { moveOf } from "../../combat/commands/resolve";
-import type { CharacterDef, FrameReport, SimState, StageDef } from "../../combat/types";
+import type { CharacterDef, FrameReport, SimState } from "../../combat/types";
 import { ContactKind, StateId } from "../../combat/types";
 import { debugBoxes } from "../../combat/collision/boxes";
+import { inBone } from "../../rig/fk";
 import type { Clip } from "../../rig/clip-types";
 import { sampleClip } from "../../rig/sample";
 import type { Rig } from "../../rig/types";
@@ -16,7 +17,7 @@ import {
   strikingTip,
 } from "./motion-trail";
 import type { TrailPoint } from "./motion-trail";
-import { createStage, worldToScreen } from "./stage";
+import { createStage, worldToScreen, SVG_NS, fmt } from "./stage";
 import { ContactEffectQueue, drawContactEffects, effectKind } from "./contact-effects";
 import { StageMotionEffectQueue, applyStageShake, drawLandingDust } from "./stage-effects";
 
@@ -29,7 +30,6 @@ export interface FighterRendererAssets {
 
 export interface RendererAssets {
   fighters: readonly FighterRendererAssets[];
-  stage?: StageDef;
 }
 
 export class Renderer {
@@ -44,7 +44,7 @@ export class Renderer {
   constructor(mount: HTMLElement, chars: readonly CharacterDef[], assets: RendererAssets) {
     this.chars = chars;
     this.assets = assets.fighters;
-    this.stage = createStage(mount, assets.stage);
+    this.stage = createStage(mount);
 
     for (let player = 0; player < chars.length; player++) {
       const asset = this.assets[player];
@@ -84,12 +84,8 @@ export class Renderer {
   }
 
   render(state: SimState, showHitboxes: boolean, reducedMotion = false, showSkeleton = false): void {
-    const leadX = state.fighters[0]?.x ?? 0;
-    const framed = state.fighters.filter((fighter) => fighter.health > 0 && Math.abs(fighter.x - leadX) <= 90_000);
-    const focusX = framed.length > 0
-      ? Math.trunc((Math.min(...framed.map((fighter) => fighter.x)) + Math.max(...framed.map((fighter) => fighter.x))) / 2)
-      : leadX;
-    this.stage.setCamera(focusX);
+    this.stage.setCamera(state.fighters);
+    this.stage.layers.shadows.replaceChildren();
     if (reducedMotion) this.stageMotion.clearAnimated();
 
     for (let player = 0; player < state.fighters.length; player++) {
@@ -109,6 +105,23 @@ export class Renderer {
       );
       const position = worldToScreen(fighter.x, fighter.y);
       node.place(position.x, position.y, facing, asset.presentationScale);
+      for (const name of ["shin-front", "shin-back"]) {
+        const bone = asset.rig.byName.get(name);
+        const at = placed.get(name);
+        if (!bone?.tip || !at) continue;
+        const foot = inBone(at, bone.tip);
+        const altitude = Math.max(0, -(position.y + foot.y * asset.presentationScale));
+        const shadow = document.createElementNS(SVG_NS, "ellipse");
+        shadow.setAttribute("cx", fmt(position.x + foot.x * facing * asset.presentationScale));
+        shadow.setAttribute("cy", "2");
+        shadow.setAttribute("rx", fmt(12 + Math.min(altitude, 100) * .06));
+        shadow.setAttribute("ry", "3");
+        shadow.setAttribute("fill", "#02060b");
+        shadow.setAttribute("opacity", fmt(.3 / (1 + altitude / 35)));
+        shadow.style.filter = "blur(2px)";
+        this.stage.layers.shadows.appendChild(shadow);
+      }
+
       if (fighter.state === StateId.Landing && fighter.stateFrame === 0) {
         this.stageMotion.observeLanding(player, fighter.x, fighter.y, state.frame, !reducedMotion);
       }

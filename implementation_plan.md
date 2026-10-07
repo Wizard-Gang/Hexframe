@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-190 — [FEAT] Restyle the stage floor, shadows and framing
-
-**Goal:** A clean, good-looking arena.
-
-**Scope**
-- Replace the grid backdrop with a quiet gradient and floor line, and add soft contact shadows under each fighter.
-- Frame the camera on both fighters with a sensible zoom.
-- Fold the one-entry stage catalog in `src/game/session.ts` into the stage setup.
-
-**Acceptance:** Fighters stay framed while walking apart and jumping, and shadows track their feet.
-
-**Validation:** `npm test`; browser check.
-
----
-
 ### HF-191 — [FEAT] Restyle the health HUD
 
 **Goal:** Health reads at a glance.

@@ -10,38 +10,35 @@
  * function, so there is precisely one definition of where a world point appears.
  */
 
-import { SCALE, STAGE_HALF_WIDTH, toPixels } from "../../combat/index";
+import { SCALE, px, toPixels } from "../../combat/index";
 import type { StageDef } from "../../combat/types";
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
 
-/**
- * A little air on each side of the playable width. The stage clamp stops a fighter's
- * origin at `±STAGE_HALF_WIDTH`, and their pushbox reaches further than their origin, so
- * a viewBox cut exactly at the clamp would slice a cornered fighter in half.
- */
-const STAGE_MARGIN_PX = 20;
+/** Shared combat dimensions; presentation never changes the arena bounds. */
+export const TRAINING_STAGE: StageDef = {
+  id: "training",
+  width: px(960),
+  cameraBounds: { minX: px(-480), maxX: px(480) },
+};
 
-/** Half the visible width, world pixels. */
-export const VIEW_HALF_WIDTH_PX = toPixels(STAGE_HALF_WIDTH) + STAGE_MARGIN_PX;
-
-/**
- * Visible space above and below the ground line, world pixels. The test fighter is 104 px
- * tall and its jump apexes at 63 px, so 320 px of headroom leaves the fighters in the
- * lower third of the frame with room for a taller character later. The strip below the
- * ground exists so the floor reads as a surface rather than as the edge of the picture.
- */
-export const VIEW_HEADROOM_PX = 320;
-export const VIEW_FLOOR_PX = 80;
-
-export const VIEW_WIDTH_PX = VIEW_HALF_WIDTH_PX * 2;
-export const VIEW_HEIGHT_PX = VIEW_HEADROOM_PX + VIEW_FLOOR_PX;
+export function cameraFrame(points: readonly { x: number; y: number }[], aspect: number) {
+  const xs = points.map((point) => toPixels(point.x));
+  const min = xs.length ? Math.min(...xs) : 0;
+  const max = xs.length ? Math.max(...xs) : 0;
+  const headroom = Math.max(210, ...points.map((point) => toPixels(point.y) + 160));
+  const height = Math.max(headroom + 65, (max - min + 160) / aspect, 440 / aspect);
+  const width = height * aspect;
+  return { x: (min + max - width) / 2, y: -height + 65, width, height };
+}
 
 export interface StageLayers {
-  /** Sky, floor, wall markers. Static after `createStage`. */
+  /** Gradient, floor and horizon, sized to the current view. */
   readonly background: SVGGElement;
   /** Landing dust, drawn behind the fighters. */
   readonly groundEffects: SVGGElement;
+  /** Foot projections onto the floor. */
+  readonly shadows: SVGGElement;
   /** Short presentation-only arcs left by active striking limbs. */
   readonly trails: SVGGElement;
   /** One posed fighter rig per player. */
@@ -57,7 +54,7 @@ export interface StageHandles {
   /** Parent of every layer. World coordinates, no transform: see the note above. */
   readonly world: SVGGElement;
   readonly layers: StageLayers;
-  setCamera(playerX: number): void;
+  setCamera(points: readonly { x: number; y: number }[]): void;
 }
 
 /** Sim units to screen units, and the only y flip in the renderer. */
@@ -107,20 +104,9 @@ function rect(x: number, y: number, w: number, h: number, fill: string): SVGRect
   return el;
 }
 
-/**
- * Build the stage and attach it to `mount`.
- *
- * The camera is fixed for 0.1: the whole playable width is always on screen and nothing
- * tracks the fighters. `preserveAspectRatio="xMidYMid meet"` then does the entire job of
- * being responsive — the viewBox is in world pixels and the browser scales it to whatever
- * the container is, so no code here ever reads an element's size.
- */
-export function createStage(mount: HTMLElement, stage?: StageDef): StageHandles {
+/** Build a responsive arena; camera coordinates stay in presentation pixels. */
+export function createStage(mount: HTMLElement): StageHandles {
   const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute(
-    "viewBox",
-    `${fmt(-VIEW_HALF_WIDTH_PX)} ${fmt(-VIEW_HEADROOM_PX)} ${fmt(VIEW_WIDTH_PX)} ${fmt(VIEW_HEIGHT_PX)}`,
-  );
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   svg.setAttribute("width", "100%");
   svg.setAttribute("height", "100%");
@@ -137,6 +123,7 @@ export function createStage(mount: HTMLElement, stage?: StageDef): StageHandles 
   const world = group("sm-world");
 
   const background = group("sm-background");
+  const shadows = group("sm-shadows");
   const groundEffects = group("sm-ground-effects");
   const trails = group("sm-trails");
   const fighters = group("sm-fighters");
@@ -149,28 +136,28 @@ export function createStage(mount: HTMLElement, stage?: StageDef): StageHandles 
   effects.style.pointerEvents = "none";
   debug.style.pointerEvents = "none";
 
-  const halfW = stage ? toPixels(stage.width) / 2 + STAGE_MARGIN_PX : VIEW_HALF_WIDTH_PX;
-  const stageWidth = halfW * 2;
-  const wallX = stage ? toPixels(stage.width) / 2 : toPixels(STAGE_HALF_WIDTH);
-
-  background.appendChild(rect(-halfW, -VIEW_HEADROOM_PX, stageWidth, VIEW_HEIGHT_PX, stage ? "#080a0f" : "#0d1117"));
-  background.appendChild(rect(-halfW, 0, stageWidth, VIEW_FLOOR_PX, stage ? "#121219" : "#161b22"));
-
-  // The centre line and the two walls are the only landmarks a fixed camera gives the
-  // eye, and they are exactly the three x positions the simulation cares about.
-  const centre = line(0, -VIEW_HEADROOM_PX, 0, VIEW_FLOOR_PX, "#21262d", 1);
-  centre.setAttribute("stroke-dasharray", "4 8");
-  background.appendChild(centre);
-
-  for (const side of [-1, 1]) {
-    const wall = line(wallX * side, -VIEW_HEADROOM_PX, wallX * side, VIEW_FLOOR_PX, "#30363d", 1);
-    wall.setAttribute("stroke-dasharray", "6 6");
-    background.appendChild(wall);
+  const defs = document.createElementNS(SVG_NS, "defs");
+  // Per-SVG IDs also keep the overview and Training independent.
+  const gradientId = `arena-gradient-${document.querySelectorAll("svg").length}`;
+  const gradient = document.createElementNS(SVG_NS, "linearGradient");
+  gradient.id = gradientId;
+  gradient.setAttribute("x2", "0");
+  gradient.setAttribute("y2", "1");
+  for (const [offset, color] of [["0%", "#0b111b"], ["100%", "#242b35"]] as const) {
+    const stop = document.createElementNS(SVG_NS, "stop");
+    stop.setAttribute("offset", offset);
+    stop.setAttribute("stop-color", color);
+    gradient.appendChild(stop);
   }
-
-  background.appendChild(line(-halfW, 0, halfW, 0, "#484f58", 2));
+  defs.appendChild(gradient);
+  svg.appendChild(defs);
+  const sky = rect(0, 0, 1, 1, `url(#${gradientId})`);
+  const floor = rect(0, 0, 1, 1, "#141b23");
+  const horizon = line(0, 0, 1, 0, "#46515e", 1);
+  for (const surface of [sky, floor, horizon]) background.appendChild(surface);
 
   world.appendChild(background);
+  world.appendChild(shadows);
   world.appendChild(groundEffects);
   world.appendChild(trails);
   world.appendChild(fighters);
@@ -179,14 +166,21 @@ export function createStage(mount: HTMLElement, stage?: StageDef): StageHandles 
   svg.appendChild(world);
   mount.appendChild(svg);
 
-  const setCamera = (playerX: number): void => {
-    let center = toPixels(playerX);
-    const viewHalf = VIEW_HALF_WIDTH_PX;
-    const min = toPixels(stage?.cameraBounds.minX ?? -STAGE_HALF_WIDTH) + viewHalf;
-    const max = toPixels(stage?.cameraBounds.maxX ?? STAGE_HALF_WIDTH) - viewHalf;
-    center = min <= max ? Math.max(min, Math.min(max, center)) : 0;
-    svg.setAttribute("viewBox", `${fmt(center - viewHalf)} ${fmt(-VIEW_HEADROOM_PX)} ${fmt(VIEW_WIDTH_PX)} ${fmt(VIEW_HEIGHT_PX)}`);
+  const setCamera = (points: readonly { x: number; y: number }[]): void => {
+    const bounds = mount.getBoundingClientRect();
+    const aspect = bounds.width > 0 && bounds.height > 0 ? bounds.width / bounds.height : 16 / 9;
+    const frame = cameraFrame(points, aspect);
+    svg.setAttribute("viewBox", `${fmt(frame.x)} ${fmt(frame.y)} ${fmt(frame.width)} ${fmt(frame.height)}`);
+    for (const surface of [sky, floor]) {
+      surface.setAttribute("x", fmt(frame.x));
+      surface.setAttribute("width", fmt(frame.width));
+    }
+    sky.setAttribute("y", fmt(frame.y));
+    sky.setAttribute("height", fmt(frame.height));
+    floor.setAttribute("height", "65");
+    horizon.setAttribute("x1", fmt(frame.x));
+    horizon.setAttribute("x2", fmt(frame.x + frame.width));
   };
-
-  return { svg, world, layers: { background, groundEffects, trails, fighters, effects, debug }, setCamera };
+  setCamera([]);
+  return { svg, world, layers: { background, shadows, groundEffects, trails, fighters, effects, debug }, setCamera };
 }
