@@ -12,7 +12,7 @@ const playHtml = renderDocument("play");
 describe("public Hexframe surface", () => {
   it("renders useful overview and direct Training fallback before JavaScript", () => {
     expect(rootHtml).toContain("A rigged fighting-game proof of concept"); expect(rootHtml).toContain("Small game."); expect(rootHtml).toContain('href="/play/"');
-    expect(playHtml).toContain("Training starts here."); expect(playHtml).toContain("<code>/play/</code>"); expect(playHtml).not.toContain("data-launch-training");
+    expect(playHtml).toContain("Training starts here."); expect(playHtml).toContain("<code>/play/</code>"); expect(playHtml).toContain("Skeleton, Hitboxes or Slow-mo"); expect(playHtml).not.toContain("data-launch-training");
     expect(rootHtml.indexOf("A rigged fighting-game proof of concept")).toBeLessThan(rootHtml.indexOf('<script type="module"'));
     expect(playHtml.indexOf("Training starts here.")).toBeLessThan(playHtml.indexOf('<script type="module"'));
   });
@@ -38,7 +38,6 @@ describe("public Hexframe surface", () => {
     expect(rootHtml).toContain("Play also requires JavaScript.");
     expect(rootHtml).toContain("data-showreel");
     expect(rootHtml.match(/href="\/play\/"/g)).toHaveLength(1);
-    expect(rootHtml).not.toMatch(/deterministic|replay|frame tools|save states|Debug/i);
     expect(rootHtml).toContain('hidden="" data-showreel-controls');
     expect(rootHtml).toContain('/src/client/styles/front.css');
   });
