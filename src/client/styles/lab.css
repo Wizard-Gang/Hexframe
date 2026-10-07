@@ -142,7 +142,6 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .fighter .skeleton__bone { stroke: #fff36a; stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .fighter .skeleton__joint { fill: #0b1018; stroke: #55e5d5; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
 .fighter .skeleton__joint--root { fill: #ff9b51; stroke: #fff36a; }
-.tutorial-telegraph { padding: 8px; border: 1px solid #ff8190; color: #ff8190; font: 900 14px ui-monospace, monospace; text-align: center; }
 .tutorial-hud footer { display: flex; flex-wrap: wrap; gap: 5px; }
 .tutorial-hud footer button { flex: 1; min-height: 34px; padding: 6px; font-size: 8px; }
 
@@ -217,7 +216,6 @@ kbd { padding: 4px 6px; border: 1px solid #46515b; border-bottom-width: 2px; bor
 .tutorial-objective b { color: #f4f6f7; font: 800 10px ui-monospace, monospace; }
 .tutorial-objective em { min-height: 1em; color: var(--acid); font: normal 800 8px ui-monospace, monospace; }
 .tutorial-hud > p { margin: 0; color: #9da7af; font: 10px/1.45 ui-monospace, monospace; }
-.tutorial-hud .tutorial-telegraph { min-width: 92px; }
 .tutorial-hud footer { justify-self: end; flex-wrap: nowrap; }
 .tutorial-hud footer button { min-width: 104px; }
 

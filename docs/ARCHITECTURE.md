@@ -22,7 +22,7 @@ Training contains the fixed four-button kit:
 | → / B | Overhead |
 | ↓ / A | Uppercut |
 
-Jab can route on hit into Sweep and then Uppercut. The dummy, five-lesson tutorial, frame transport, combat geometry, contact inspection, save states, and deterministic scenario replay all operate on the same browser simulation.
+Jab can route on hit into Sweep and then Uppercut. The dummy, four-lesson tutorial, frame transport, combat geometry, contact inspection, save states, and deterministic scenario replay all operate on the same browser simulation.
 
 ## Authority model
 
@@ -33,7 +33,8 @@ Jab can route on hit into Sweep and then Uppercut. The dummy, five-lesson tutori
 | Snapshot/replay state | `src/rollback/` |
 | Training interaction and tools | `src/lab/` |
 | Visual presentation | `src/renderer/` and `src/client/` |
-| Preferences, tutorial progress, Debug visibility | Device-local browser storage |
+| Tutorial progress | Current browser run |
+| Preferences, Debug visibility | Device-local browser storage |
 | Public routing and response hardening | `src/worker/` |
 
 The Worker does not own combat, progression, player identity, or browser preferences.

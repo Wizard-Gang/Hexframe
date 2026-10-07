@@ -1,8 +1,6 @@
 import type { FrameReport, InputFrame, SimState } from "../combat/types";
 import {
-  actionBit,
   ContactKind,
-  HitLevel,
   InputBit,
   StateId,
 } from "../combat/types";
@@ -40,38 +38,20 @@ export interface TutorialSnapshot {
   stepCount: number;
   lessonComplete: boolean;
   tutorialComplete: boolean;
-  telegraph: string | null;
-  completedLessons: readonly TutorialLessonId[];
 }
-
-const STORAGE_KEY = "hexframe.tutorial.progress.v2";
 
 export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
   {
-    id: "movement",
-    title: "Movement",
-    hint: "Use the live movement controls. Each objective watches the authoritative fighter state.",
+    id: "movement", title: "Move",
+    hint: "A / D to walk. W to jump.",
     steps: [
-      { objective: "Move forward", success: "Forward movement complete" },
-      { objective: "Move backward", success: "Backward movement complete" },
-      { objective: "Crouch", success: "Crouch complete" },
-      { objective: "Jump", success: "Jump complete" },
+      { objective: "Walk with A or D", success: "Walking complete" },
+      { objective: "Jump with W", success: "Jump complete" },
     ],
   },
   {
-    id: "defense",
-    title: "Defense",
-    hint: "The dummy will attack mid, low, then overhead. Hold away; add down for the low.",
-    steps: [
-      { objective: "Block the telegraphed mid", success: "Mid blocked" },
-      { objective: "Crouch-block the telegraphed low", success: "Low blocked" },
-      { objective: "Stand-block the telegraphed overhead", success: "Overhead blocked" },
-    ],
-  },
-  {
-    id: "attacks",
-    title: "Attacks",
-    hint: "Use each button in the fixed four-button kit.",
+    id: "attacks", title: "Attack",
+    hint: "Use each arrow key in the four-button kit.",
     steps: [
       { objective: "Press ↑ / Y for Jab", success: "Jab started" },
       { objective: "Press ← / X for Sweep", success: "Sweep started" },
@@ -80,20 +60,23 @@ export const TUTORIAL_LESSONS: readonly TutorialLesson[] = [
     ],
   },
   {
-    id: "combo",
-    title: "Combo",
-    hint: "Cancel on contact: Jab → Sweep → Uppercut.",
+    id: "defense", title: "Block",
+    hint: "Hold A to block Jab. Hold A + S to block the low Sweep.",
     steps: [
-      { objective: "Land Jab", success: "Starter connected" },
-      { objective: "Cancel into Sweep", success: "Link connected" },
-      { objective: "Cash out with Uppercut", success: "Combo complete" },
+      { objective: "Block the dummy’s Jab", success: "Jab blocked" },
+      { objective: "Crouch-block the dummy’s Sweep", success: "Sweep blocked" },
     ],
+  },
+  {
+    id: "combo", title: "Combo",
+    hint: "Press ↑, then ← on hit, then ↓ on hit. If it drops, try again.",
+    steps: [{ objective: "Land Jab → Sweep → Uppercut", success: "Combo complete" }],
   },
 ];
 
 const ATTACK_MOVES = [MoveId.Jab, MoveId.Sweep, MoveId.Overhead, MoveId.Uppercut];
 const COMBO_MOVES = [MoveId.Jab, MoveId.Sweep, MoveId.Uppercut];
-const DEFENSE_LEVELS = [HitLevel.Mid, HitLevel.Low, HitLevel.Overhead];
+const BLOCK_MOVES = [MoveId.Jab, MoveId.Sweep];
 
 export class TutorialController {
   active = false;
@@ -102,23 +85,17 @@ export class TutorialController {
   private lessonComplete = false;
   private tutorialComplete = false;
   private dummyClock = 0;
-  private comboClock = 0;
+  private comboHits = 0;
   private lastConfirmation: string | null = null;
   private resetRequested = false;
-  private readonly completed = loadCompletedLessons();
   private readonly onChange: (snapshot: TutorialSnapshot) => void;
-  private readonly defenseActions: readonly [number, number, number];
 
-  constructor(
-    onChange: (snapshot: TutorialSnapshot) => void,
-    defenseActions: readonly [number, number, number] = [actionBit(0), actionBit(1), actionBit(2)],
-  ) {
+  constructor(onChange: (snapshot: TutorialSnapshot) => void) {
     this.onChange = onChange;
-    this.defenseActions = defenseActions;
   }
 
   start(lessonId?: TutorialLessonId): void {
-    const requested = lessonId ?? this.firstIncompleteLesson();
+    const requested = lessonId ?? "movement";
     const index = TUTORIAL_LESSONS.findIndex((lesson) => lesson.id === requested);
     this.active = true;
     this.lessonIndex = Math.max(0, index);
@@ -126,16 +103,10 @@ export class TutorialController {
     this.lessonComplete = false;
     this.tutorialComplete = false;
     this.dummyClock = 0;
-    this.comboClock = 0;
+    this.comboHits = 0;
     this.lastConfirmation = null;
     this.resetRequested = true;
     this.emit();
-  }
-
-  restart(): void {
-    this.completed.clear();
-    persistCompletedLessons(this.completed);
-    this.start("movement");
   }
 
   stop(): void {
@@ -154,13 +125,13 @@ export class TutorialController {
     this.stepIndex = 0;
     this.lessonComplete = false;
     this.dummyClock = 0;
-    this.comboClock = 0;
+    this.comboHits = 0;
     this.lastConfirmation = null;
     this.resetRequested = true;
     this.emit();
   }
 
-  observe(_input: InputFrame, state: SimState, reports: readonly FrameReport[]): void {
+  observe(state: SimState, reports: readonly FrameReport[]): void {
     if (!this.active || this.lessonComplete || this.tutorialComplete) return;
     const lesson = TUTORIAL_LESSONS[this.lessonIndex];
     let success = false;
@@ -168,21 +139,21 @@ export class TutorialController {
     if (lesson.id === "movement") success = movementSuccess(this.stepIndex, state);
     if (lesson.id === "attacks") success = moveStarted(reports, ATTACK_MOVES[this.stepIndex]);
     if (lesson.id === "combo") {
-      success = moveConnected(reports, COMBO_MOVES[this.stepIndex]);
-      if (this.stepIndex > 0) {
-        this.comboClock++;
-        if (!success && this.comboClock > 120) {
-          this.stepIndex = 0;
-          this.comboClock = 0;
-          this.lastConfirmation = null;
-          this.resetRequested = true;
-          this.emit();
-        }
+      if (state.fighters[1].comboCount === 0 && this.comboHits > 0) {
+        this.comboHits = 0;
+        this.resetRequested = true;
       }
+      for (const contact of reports.flatMap((report) => report.contacts)) {
+        if (contact.attacker !== 0 || contact.kind !== ContactKind.Hit) continue;
+        this.comboHits = contact.moveId === COMBO_MOVES[this.comboHits]
+          ? this.comboHits + 1
+          : contact.moveId === MoveId.Jab ? 1 : 0;
+      }
+      success = this.comboHits === COMBO_MOVES.length && state.fighters[1].comboCount === 3;
     }
     if (lesson.id === "defense") {
       const contacts = reports.flatMap((report) => report.contacts).filter((contact) => contact.attacker === 1 && contact.defender === 0);
-      success = contacts.some((contact) => contact.kind === ContactKind.Block && contact.level === DEFENSE_LEVELS[this.stepIndex]);
+      success = contacts.some((contact) => contact.kind === ContactKind.Block && contact.moveId === BLOCK_MOVES[this.stepIndex]);
       if (contacts.length > 0) {
         this.dummyClock = 0;
         this.resetRequested = true;
@@ -191,13 +162,13 @@ export class TutorialController {
     if (success) this.completeStep();
   }
 
-
-  dummyInput(_state: SimState): InputFrame {
+  dummyInput(): InputFrame {
     if (!this.active || TUTORIAL_LESSONS[this.lessonIndex].id !== "defense" || this.lessonComplete) return 0;
     this.dummyClock++;
     const drillFrame = this.dummyClock % 110;
+    if (drillFrame === 0) this.resetRequested = true;
     if (drillFrame !== 1) return 0;
-    return this.defenseActions[this.stepIndex] ?? 0;
+    return this.stepIndex === 0 ? InputBit.Action1 : InputBit.Action2;
   }
 
   consumeResetRequest(): boolean {
@@ -223,15 +194,7 @@ export class TutorialController {
       stepCount: lesson.steps.length,
       lessonComplete: this.lessonComplete,
       tutorialComplete: this.tutorialComplete,
-      telegraph: lesson.id === "defense" && !this.lessonComplete
-        ? `${["MID", "LOW", "OVERHEAD"][this.stepIndex]} · HOLD THE REQUIRED GUARD`
-        : null,
-      completedLessons: [...this.completed],
     };
-  }
-
-  private firstIncompleteLesson(): TutorialLessonId {
-    return TUTORIAL_LESSONS.find((lesson) => !this.completed.has(lesson.id))?.id ?? "movement";
   }
 
   private completeStep(): void {
@@ -240,11 +203,9 @@ export class TutorialController {
     if (this.stepIndex < lesson.steps.length - 1) {
       this.stepIndex++;
       this.dummyClock = 0;
-      this.comboClock = 0;
+      this.comboHits = 0;
     } else {
       this.lessonComplete = true;
-      this.completed.add(lesson.id);
-      persistCompletedLessons(this.completed);
       if (this.lessonIndex === TUTORIAL_LESSONS.length - 1) this.tutorialComplete = true;
     }
     this.emit();
@@ -257,37 +218,12 @@ export class TutorialController {
 
 function movementSuccess(step: number, state: SimState): boolean {
   const fighter = state.fighters[0];
-  if (step === 0) return fighter.state === StateId.WalkForward;
-  if (step === 1) return fighter.state === StateId.WalkBackward;
-  if (step === 2) return fighter.state === StateId.Crouch;
+  if (step === 0) return fighter.state === StateId.WalkForward || fighter.state === StateId.WalkBackward;
   return fighter.state === StateId.JumpSquat || fighter.airborne === 1;
 }
 
 function moveStarted(reports: readonly FrameReport[], moveId: number): boolean {
   return reports.some((report) => report.moveStarts.some((event) => event.player === 0 && event.moveId === moveId));
-}
-
-function moveConnected(reports: readonly FrameReport[], moveId: number): boolean {
-  return reports.some((report) => report.contacts.some((contact) => contact.attacker === 0 && contact.moveId === moveId && contact.kind === ContactKind.Hit));
-}
-
-function loadCompletedLessons(): Set<TutorialLessonId> {
-  try {
-    const value: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
-    if (!Array.isArray(value)) return new Set();
-    const valid = new Set(TUTORIAL_LESSONS.map((lesson) => lesson.id));
-    return new Set(value.filter((id): id is TutorialLessonId => typeof id === "string" && valid.has(id as TutorialLessonId)));
-  } catch {
-    return new Set();
-  }
-}
-
-function persistCompletedLessons(completed: ReadonlySet<TutorialLessonId>): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completed]));
-  } catch {
-    // Tutorial progress remains valid for the current session when storage is unavailable.
-  }
 }
 
 export function tutorialRequested(search: string): boolean {
