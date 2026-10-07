@@ -21,7 +21,7 @@ On hit, Jab can route into Sweep and then Uppercut.
 
 The public Debug toggle is always available on screen and with the backtick key. It reveals frame transport, combat geometry, authoritative frame inspection, contact history, save states, and deterministic scenario capture/replay without adding a server-side player record.
 
-The five-lesson tutorial runs inside Training. `?tutorial=1` starts it directly. Preferences, tutorial progress, and Debug visibility are device-local.
+The four-lesson tutorial runs inside Training. `?tutorial=1` starts Move, Attack, Block and Combo directly. Tutorial progress lasts only for the current run. Preferences and Debug visibility are device-local.
 
 ## Public routing
 
@@ -68,7 +68,7 @@ Privileged repository-setting mutation and production deployment are not ordinar
 - `src/client/` owns browser entry points and presentation.
 - `src/worker/` serves hardened static content, canonicalizes the Training path, and returns the generic API 404 boundary.
 
-Combat state is not trusted or stored by the Worker. The current product keeps preferences, tutorial progress, and Debug visibility on the device.
+Combat state is not trusted or stored by the Worker. The current product keeps preferences and Debug visibility on the device.
 
 See [Architecture](docs/ARCHITECTURE.md) and [Security model](docs/SECURITY-MODEL.md) for the detailed boundaries.
 

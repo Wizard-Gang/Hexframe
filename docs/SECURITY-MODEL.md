@@ -7,7 +7,7 @@ Hexframe is a public browser Training product. Its security model keeps combat a
 | Boundary | What crosses it | Security treatment |
 | --- | --- | --- |
 | Browser → Worker | Public document, asset, and API-path requests | Untrusted input; route, method, and response-hardening rules apply |
-| Browser → device storage | Preferences, tutorial progress, Debug visibility | Local convenience state only; grants no server capability |
+| Browser → device storage | Preferences, Debug visibility | Local convenience state only; grants no server capability |
 | Browser → simulation | Player and dummy inputs | Deterministic client-side combat state |
 | Release workflow → provider | Protected deployment credentials | Available only inside the governed production path |
 
@@ -30,7 +30,7 @@ The overview, Training, tutorial, and Debug tools are public. The Worker has no 
 
 The Worker stores no player save, inventory, equipment, progression, identity, application credential, or session. Training constructs its fighter content from bundled authored data.
 
-Preferences, tutorial progress, and Debug visibility remain in browser storage. They are not synchronized account data and are not a backup service.
+Tutorial progress lasts only for the current run. Preferences and Debug visibility remain in browser storage. They are not synchronized account data and are not a backup service.
 
 ## Response hardening
 

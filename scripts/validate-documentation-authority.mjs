@@ -58,7 +58,7 @@ assert.match(readme, /MIT-licensed/i);
 assert.match(readme, /react.*react-dom/is);
 assert.match(readme, /characters\/fighter\/parts\//);
 assert.doesNotMatch(readme, /characters\/test_fighter\/model\.svg/);
-assert.match(readme, /five-lesson tutorial/i);
+assert.match(readme, /four-lesson tutorial/i);
 assert.match(readme, /public Debug toggle/i);
 
 console.log("Validated the four-document authority set and README references/commands.");

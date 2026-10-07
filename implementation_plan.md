@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-194 — [FEAT] Rebuild the tutorial as four short lessons
-
-**Goal:** A two-minute tutorial that feels like a game.
-
-**Scope**
-- The lessons are Move (walk, jump), Attack (all four buttons), Block (block the dummy's Jab, then its low Sweep) and Combo (Jab → Sweep → Uppercut), with at most nine steps.
-- Delete the lesson, UI-event, telegraph and storage code the new lessons do not use.
-- Replace `tests/lab/tutorial.test.ts` with a short headless run of every lesson.
-
-**Acceptance:** The headless test completes all four lessons from scripted inputs, and no step passes on elapsed time alone.
-
-**Validation:** `npm test -- tests/lab`; a keyboard-only browser run-through.
-
----
-
 ### HF-195 — [FEAT] Polish tutorial feedback and completion
 
 **Goal:** Every step feels rewarded.

@@ -1,3 +1,4 @@
+import { px } from "../combat/constants";
 import { replaceTrustedMarkup } from "../client/trusted-markup";
 import type { FrameReport, SimConfig } from "../combat/types";
 import { ContactKind } from "../combat/types";
@@ -83,8 +84,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   timeline.inputProvider = () => {
     if (menuOpen()) return combatCharacters.map(() => 0);
     const playerInput = keyboard.sample() | gamepad.sample();
-    lastPlayerInput = playerInput;
-    if (tutorial.active) return [playerInput, tutorial.dummyInput(sim.getState())];
+    if (tutorial.active) return [playerInput, tutorial.dummyInput()];
     return [playerInput, dummy.inputFor(sim.getState(), enemyIndex, timeline.lastReport)];
   };
 
@@ -96,7 +96,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let previousUi = gamepad.sampleUi();
   let focusBeforeMenu: HTMLElement | null = null;
   let lastMenuFocus: HTMLElement | null = null;
-  let lastPlayerInput = 0;
   let latestTutorialSnapshot: TutorialSnapshot | null = null;
 
   gameAudio.update(preferences.audio);
@@ -134,7 +133,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       const reports = timeline.tick(realFrames);
       if (reports.length > 0) {
         processReports(reports);
-        tutorial.observe(lastPlayerInput, sim.getState(), reports);
+        tutorial.observe(sim.getState(), reports);
         if (tutorial.consumeResetRequest()) resetMatch();
       }
     }
@@ -161,7 +160,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "slow-mo") setTrainingToggle("slowMotion", !viewState.slowMotion);
     if (action === "hitboxes") setTrainingToggle("hitboxes", !viewState.hitboxes);
     if (action === "skeleton") setTrainingToggle("skeleton", !viewState.skeleton);
-    if (action === "start-tutorial") startTutorial(tutorial.active);
+    if (action === "start-tutorial") startTutorial();
     if (action === "next-tutorial-lesson") advanceTutorial();
     if (action === "exit-tutorial") exitTutorial();
     if (button.dataset.menuDetailTarget) showMenuDetail(button.dataset.menuDetailTarget as MenuDetail);
@@ -206,7 +205,7 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   mount.addEventListener("input", input);
   window.addEventListener("keydown", keydown);
   syncTutorialUi(tutorial.snapshot());
-  if (tutorialRequested(window.location.search)) startTutorial(false);
+  if (tutorialRequested(window.location.search)) startTutorial();
   render();
   animationId = requestAnimationFrame(loop);
 
@@ -328,10 +327,9 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     }
   }
 
-  function startTutorial(restart: boolean): void {
+  function startTutorial(): void {
     if (menuOpen()) closeMenu();
-    if (restart) tutorial.restart();
-    else tutorial.start();
+    tutorial.start();
     resetMatch();
     timeline.paused = false;
   }
@@ -374,11 +372,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
       textIn(hud, "#tutorial-objective", snapshot.lessonComplete ? snapshot.success : snapshot.objective);
       textIn(hud, "#tutorial-success", snapshot.confirmation ? `✓ ${snapshot.confirmation.toUpperCase()}` : "");
       textIn(hud, "#tutorial-hint", snapshot.hint);
-      const telegraph = hud.querySelector<HTMLElement>("#tutorial-telegraph");
-      if (telegraph) {
-        telegraph.hidden = snapshot.telegraph === null;
-        telegraph.textContent = snapshot.telegraph ?? "";
-      }
       const next = hud.querySelector<HTMLButtonElement>("[data-action='next-tutorial-lesson']");
       if (next) {
         next.hidden = !snapshot.lessonComplete;
@@ -394,10 +387,14 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   function resetMatch(): void {
     timeline.reset();
+    if (tutorial.active && ["defense", "combo"].includes(tutorial.snapshot().lessonId)) {
+      const fighters = sim.getState().fighters;
+      fighters[0].x = px(-18);
+      fighters[1].x = px(18);
+    }
     healthChips.forEach((chip) => chip.reset());
     dummy.reset();
     renderer.clearEffects();
-    lastPlayerInput = 0;
   }
 
   function processReports(reports: readonly FrameReport[]): void {
