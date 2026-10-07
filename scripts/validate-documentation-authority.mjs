@@ -31,6 +31,13 @@ for (const path of retiredDocumentation) {
 }
 
 const readme = readFileSync(join(root, "README.md"), "utf8");
+const architecture = readFileSync(join(root, "docs/ARCHITECTURE.md"), "utf8");
+const securityModel = readFileSync(join(root, "docs/SECURITY-MODEL.md"), "utf8");
+const productDocs = [
+  ["README.md", readme],
+  ["docs/ARCHITECTURE.md", architecture],
+  ["docs/SECURITY-MODEL.md", securityModel],
+];
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
 for (const match of readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
@@ -54,11 +61,37 @@ for (const move of ["Jab", "Sweep", "Overhead", "Uppercut"]) {
   assert.match(readme, new RegExp(move), `README must document ${move}`);
 }
 
+for (const term of ["11-bone", "FightLab", "Boneyard", "Skeleton", "Hitboxes", "Slow-mo", "Vite"]) {
+  assert.match(readme, new RegExp(term, "i"), `README must document ${term}`);
+}
+
+assert.match(readme, /9d22b4be382c3eb6ddbd147970c9e5316c9bf5f2/);
+assert.match(readme, /ed5547fdd5eaed4876aba1d9790685d40d948218/);
+assert.match(readme, /ebf545f3c7b3bbc58bc0c3a936de154e84553371/);
 assert.match(readme, /MIT-licensed/i);
 assert.match(readme, /react.*react-dom/is);
 assert.match(readme, /characters\/fighter\/parts\//);
 assert.doesNotMatch(readme, /characters\/test_fighter\/model\.svg/);
-assert.match(readme, /four-lesson tutorial/i);
-assert.match(readme, /public Debug toggle/i);
+assert.match(readme, /four short lessons|four-lesson tutorial/i);
 
-console.log("Validated the four-document authority set and README references/commands.");
+const retiredProductClaims = [
+  /public Debug toggle/i,
+  /save states?/i,
+  /scenario (?:capture|replay)/i,
+  /replay tooling/i,
+  /snapshot\/replay state/i,
+  /stamina/i,
+  /perfect guard/i,
+  /double-tap dash/i,
+  /motion inputs?/i,
+  /P2 record/i,
+  /randomness is seeded/i,
+];
+
+for (const [path, content] of productDocs) {
+  for (const retired of retiredProductClaims) {
+    assert.doesNotMatch(content, retired, `${path} describes a removed fighter-lab system: ${retired}`);
+  }
+}
+
+console.log("Validated the four-document authority set, README references/commands, MVP vocabulary, and rig provenance.");
