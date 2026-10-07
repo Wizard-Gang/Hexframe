@@ -111,6 +111,18 @@ describe("interactive tutorial objectives", () => {
     expect(tutorial.snapshot().lessonComplete).toBe(true);
 
     expect(tutorial.snapshot().tutorialComplete).toBe(true);
+
+    tutorial.stop();
+    expect(tutorial.snapshot().active).toBe(false);
+
+    tutorial.start();
+    expect(tutorial.snapshot()).toMatchObject({
+      active: true,
+      lessonId: "movement",
+      title: "Move",
+      stepIndex: 0,
+      tutorialComplete: false,
+    });
   });
 
   it("starts the tutorial only from the explicit query", () => {

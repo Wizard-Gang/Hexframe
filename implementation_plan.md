@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-195 — [FEAT] Polish tutorial feedback and completion
-
-**Goal:** Every step feels rewarded.
-
-**Scope**
-- Show the current step as one line near the stage, and flash a check with a confirm cue on success.
-- End with the fighter's `labWave` celebration and a card offering Free play or Restart.
-- Keep the first-visit prompt dismissible and non-blocking.
-
-**Acceptance:** Each completed step gives visual and audio confirmation, and the completion card appears once.
-
-**Validation:** `npm test -- tests/lab`; browser run-through.
-
----
-
 ### HF-196 — [DOCS] Consolidate documentation for the rigging MVP
 
 **Goal:** The docs describe the small product that exists.
