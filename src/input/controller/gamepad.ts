@@ -30,7 +30,6 @@ function pressed(pad: Gamepad, index: number): boolean {
 export class GamepadController {
   private readonly index: number;
   private readonly source: GamepadSource;
-  private axisThreshold = AXIS_THRESHOLD;
 
   constructor(index = 0, source: GamepadSource = navigator) {
     this.index = index;
@@ -43,10 +42,6 @@ export class GamepadController {
 
   get name(): string {
     return this.pad()?.id ?? "No gamepad";
-  }
-
-  setDeadzone(value: number): void {
-    this.axisThreshold = Math.max(0.15, Math.min(0.9, value));
   }
 
   rumble(strength: number, duration = 90): void {
@@ -68,10 +63,10 @@ export class GamepadController {
 
     const horizontal = pad.axes[0] ?? 0;
     const vertical = pad.axes[1] ?? 0;
-    if (pressed(pad, 12) || vertical <= -this.axisThreshold) bits |= InputBit.Up;
-    if (pressed(pad, 13) || vertical >= this.axisThreshold) bits |= InputBit.Down;
-    if (pressed(pad, 14) || horizontal <= -this.axisThreshold) bits |= InputBit.Left;
-    if (pressed(pad, 15) || horizontal >= this.axisThreshold) bits |= InputBit.Right;
+    if (pressed(pad, 12) || vertical <= -AXIS_THRESHOLD) bits |= InputBit.Up;
+    if (pressed(pad, 13) || vertical >= AXIS_THRESHOLD) bits |= InputBit.Down;
+    if (pressed(pad, 14) || horizontal <= -AXIS_THRESHOLD) bits |= InputBit.Left;
+    if (pressed(pad, 15) || horizontal >= AXIS_THRESHOLD) bits |= InputBit.Right;
 
     // Spatial diamond: Y/X/B/A maps to ↑/←/→/↓, matching the keyboard arrow cluster.
     const faceToPosition: readonly [number, number][] = [
@@ -96,10 +91,10 @@ export class GamepadController {
     const horizontal = pad.axes[0] ?? 0;
     const vertical = pad.axes[1] ?? 0;
     return {
-      up: pressed(pad, 12) || vertical <= -this.axisThreshold,
-      down: pressed(pad, 13) || vertical >= this.axisThreshold,
-      left: pressed(pad, 14) || horizontal <= -this.axisThreshold,
-      right: pressed(pad, 15) || horizontal >= this.axisThreshold,
+      up: pressed(pad, 12) || vertical <= -AXIS_THRESHOLD,
+      down: pressed(pad, 13) || vertical >= AXIS_THRESHOLD,
+      left: pressed(pad, 14) || horizontal <= -AXIS_THRESHOLD,
+      right: pressed(pad, 15) || horizontal >= AXIS_THRESHOLD,
       confirm: pressed(pad, 0),
       back: pressed(pad, 1),
       menu: pressed(pad, 8),

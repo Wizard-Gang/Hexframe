@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-192 — [REFACTOR] Cut Settings to five options
-
-**Goal:** Settings fit on one short page.
-
-**Scope**
-- Keep Volume, Reduced motion, High contrast, Text size and Vibration.
-- Delete the rest, with their preference fields, styles and tests: interface volume, audio captions, mute when unfocused, camera shake, HUD opacity, theme, colour vision, dyslexia-friendly type, the strong-focus toggle (strong focus stays on), the screen-reader combat log, input glyphs and stick deadzone.
-- Ignore stale stored preferences safely.
-
-**Acceptance:** Settings shows exactly five options, and each has a visible effect.
-
-**Validation:** `npm test -- tests/lab`; browser check.
-
----
-
 ### HF-193 — [FEAT] Turn the overview into a rigging showreel
 
 **Goal:** The home page shows the rig moving.

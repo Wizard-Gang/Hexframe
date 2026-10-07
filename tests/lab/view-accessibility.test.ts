@@ -5,7 +5,6 @@ import { DEFAULT_PREFERENCES } from "../../src/lab/preferences";
 import { buildLabView } from "../../src/lab/view";
 
 const appSource = readFileSync(new URL("../../src/lab/app.ts", import.meta.url), "utf8");
-const preferencesSource = readFileSync(new URL("../../src/lab/preferences.ts", import.meta.url), "utf8");
 const figureSource = readFileSync(new URL("../../src/renderer/character/figure-view.ts", import.meta.url), "utf8");
 const overlaySource = readFileSync(new URL("../../src/renderer/svg/debug-overlay.ts", import.meta.url), "utf8");
 
@@ -63,19 +62,18 @@ describe("Training accessibility and study controls", () => {
 
   it("keeps live regions, tutorial controls, and gamepad navigation hooks", () => {
     const html = view(true);
-    expect(html).toContain('id="combat-announcer" role="status" aria-live="polite"');
     expect(html).toContain('id="tutorial-hud" aria-live="polite"');
 
     for (const action of ["next-tutorial-lesson", "exit-tutorial"]) expect(html).toContain(`data-action="${action}"`);
     expect(html).not.toContain('data-action="skip-tutorial-lesson"');
     expect(html.indexOf('id="tutorial-hud"')).toBeLessThan(html.indexOf('aria-label="Combat arena"'));
-    expect(html.match(/data-gamepad-nav/g)?.length ?? 0).toBeGreaterThan(20);
+    expect(html.match(/data-gamepad-nav/g)?.length ?? 0).toBeGreaterThan(15);
   });
 
-  it("retains only settings that still have Training behavior", () => {
+  it("shows exactly the five retained settings", () => {
     const html = view();
-    for (const retired of ["Mono audio", "Music", "Ambience", "Dynamic range", "Visual quality", "Menu wrap", "Particles", "Combat flashes", "Damage numbers"]) expect(html).not.toContain(retired);
-    for (const retiredKey of ["music", "ambience", "mono", "dynamicRange", "quality", "menuWrap", "holdToConfirm", "particles", "combatFlashes", "damageNumbers"]) expect(preferencesSource).not.toMatch(new RegExp(`\\b${retiredKey}\\s*:`));
+    expect([...html.matchAll(/data-pref-key="([^\"]+)"/g)].map((match) => match[1])).toEqual(["master", "motion", "contrast", "textScale", "vibration"]);
+    for (const label of ["Volume", "Reduced motion", "High contrast", "Text size", "Vibration"]) expect(html).toContain(`<strong>${label}</strong>`);
   });
 
   it("keeps only one seven-control strip and a one-line hint around the arena", () => {

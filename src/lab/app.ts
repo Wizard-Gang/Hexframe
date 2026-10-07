@@ -12,7 +12,7 @@ import { DEFAULT_ACTION_KEYMAP, DEFAULT_KEYMAP_P1 } from "../input/controller/ke
 import { Renderer } from "../renderer/svg/renderer";
 import { DummyController, DummyMode } from "./dummy/dummy";
 import type { DummyModeValue } from "./dummy/dummy";
-import { applyPreferences, loadPreferences, persistPreferences, resetPreferences } from "./preferences";
+import { applyPreferences, loadPreferences, persistPreferences } from "./preferences";
 import type { LabPreferences } from "./preferences";
 import { Timeline } from "./timeline/timeline";
 import { buildLabView } from "./view";
@@ -96,12 +96,9 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   let previousUi = gamepad.sampleUi();
   let focusBeforeMenu: HTMLElement | null = null;
   let lastMenuFocus: HTMLElement | null = null;
-  let captionTimer = 0;
   let lastPlayerInput = 0;
   let latestTutorialSnapshot: TutorialSnapshot | null = null;
 
-  gamepad.setDeadzone(preferences.controls.stickDeadzone);
-  gameAudio.setCaptionHandler(showCaption);
   gameAudio.update(preferences.audio);
 
   const healthChips = combatCharacters.map(() => new HealthChip());
@@ -165,7 +162,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     if (action === "hitboxes") setTrainingToggle("hitboxes", !viewState.hitboxes);
     if (action === "skeleton") setTrainingToggle("skeleton", !viewState.skeleton);
     if (action === "start-tutorial") startTutorial(tutorial.active);
-    if (action === "reset-preferences" && confirmDestructive("Reset every setting to its default?")) replacePreferences(resetPreferences());
     if (action === "next-tutorial-lesson") advanceTutorial();
     if (action === "exit-tutorial") exitTutorial();
     if (button.dataset.menuDetailTarget) showMenuDetail(button.dataset.menuDetailTarget as MenuDetail);
@@ -205,18 +201,10 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     render();
   };
 
-  const visibility = (): void => gameAudio.handleVisibility(document.hidden);
-  const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const motionChange = (): void => {
-    if (preferences.accessibility.motion === "system") applyPreferences(preferences);
-  };
-
   mount.addEventListener("click", click);
   mount.addEventListener("change", change);
   mount.addEventListener("input", input);
   window.addEventListener("keydown", keydown);
-  document.addEventListener("visibilitychange", visibility);
-  motionQuery.addEventListener("change", motionChange);
   syncTutorialUi(tutorial.snapshot());
   if (tutorialRequested(window.location.search)) startTutorial(false);
   render();
@@ -225,16 +213,12 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   return () => {
     disposed = true;
     cancelAnimationFrame(animationId);
-    window.clearTimeout(captionTimer);
     mount.removeEventListener("click", click);
     mount.removeEventListener("change", change);
     mount.removeEventListener("input", input);
     window.removeEventListener("keydown", keydown);
-    document.removeEventListener("visibilitychange", visibility);
-    motionQuery.removeEventListener("change", motionChange);
     keyboard.dispose();
     renderer.dispose();
-    gameAudio.setCaptionHandler(null);
     gameAudio.dispose();
     mount.replaceChildren();
   };
@@ -308,9 +292,6 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
   }
 
 
-  function confirmDestructive(message: string): boolean {
-    return window.confirm(message);
-  }
 
 
 
@@ -339,33 +320,11 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
     persistPreferences(preferences);
     applyPreferences(preferences);
     gameAudio.update(preferences.audio);
-    gamepad.setDeadzone(preferences.controls.stickDeadzone);
     const output = mount.querySelector<HTMLOutputElement>(`[data-pref-output='${section}.${key}']`);
     if (output && target instanceof HTMLInputElement) {
       const percent = Math.round(Number(target.value) * 100);
       output.value = `${percent}%`;
       target.setAttribute("aria-valuetext", `${percent}%`);
-    }
-  }
-
-  function replacePreferences(next: LabPreferences): void {
-    for (const section of Object.keys(next) as (keyof LabPreferences)[]) Object.assign(preferences[section], next[section]);
-    applyPreferences(preferences);
-    gameAudio.update(preferences.audio);
-    gamepad.setDeadzone(preferences.controls.stickDeadzone);
-    for (const element of mount.querySelectorAll("[data-pref-section][data-pref-key]")) {
-      const target = element as unknown as HTMLInputElement | HTMLSelectElement;
-      const section = target.dataset.prefSection as keyof LabPreferences;
-      const key = target.dataset.prefKey ?? "";
-      const value = (preferences[section] as unknown as Record<string, unknown>)[key];
-      if (target instanceof HTMLInputElement && target.type === "checkbox") target.checked = Boolean(value);
-      else target.value = String(value);
-      if (target instanceof HTMLInputElement && target.type === "range") {
-        const percent = Math.round(Number(target.value) * 100);
-        const output = mount.querySelector<HTMLOutputElement>(`[data-pref-output='${section}.${key}']`);
-        if (output) output.value = `${percent}%`;
-        target.setAttribute("aria-valuetext", `${percent}%`);
-      }
     }
   }
 
@@ -443,28 +402,16 @@ export async function startLab(mount: HTMLElement): Promise<() => void> {
 
   function processReports(reports: readonly FrameReport[]): void {
     renderer.enqueueReports(reports);
-    const announcements: string[] = [];
     for (const report of reports) {
       for (const contact of report.contacts) {
         gameAudio.play(contact.kind === ContactKind.Hit ? "hit" : "block");
         if (contact.kind === ContactKind.Hit) gamepad.rumble(preferences.controls.vibration, 95);
         else gamepad.rumble(preferences.controls.vibration * 0.28, 48);
-        announcements.push(contact.kind === ContactKind.Hit
-          ? `Player ${contact.attacker + 1} hits for ${contact.damage}.`
-          : `Player ${contact.defender + 1} blocks.`);
+
       }
     }
-    if (preferences.accessibility.screenReaderCombat && announcements.length > 0) required("combat-announcer").textContent = announcements.slice(-3).join(" ");
   }
 
-
-  function showCaption(text: string): void {
-    const caption = required("audio-caption");
-    caption.textContent = text;
-    caption.hidden = false;
-    window.clearTimeout(captionTimer);
-    captionTimer = window.setTimeout(() => { caption.hidden = true; }, 1250);
-  }
 
   function handleGamepadUi(): void {
     const now = gamepad.sampleUi();
