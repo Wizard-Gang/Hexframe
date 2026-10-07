@@ -70,21 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-196 — [DOCS] Consolidate documentation for the rigging MVP
-
-**Goal:** The docs describe the small product that exists.
-
-**Scope**
-- Rewrite the README, `docs/ARCHITECTURE.md` and `docs/SECURITY-MODEL.md` around the kit, the FightLab rig and its machine-generated bodies, the view toggles and the Vite dev loop.
-- Record the FightLab and Boneyard provenance for the rig, parts and clips.
-- Sweep the remaining styles, copy and tests for removed features.
-
-**Acceptance:** Every README link and command resolves, and no document describes a removed system.
-
-**Validation:** `npm run validate:documentation-authority`; `npm run check`.
-
----
-
 ### HF-197 — [BUILD] Release v0.9.0
 
 **Goal:** Ship the rigging MVP.
