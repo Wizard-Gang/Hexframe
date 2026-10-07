@@ -70,20 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-193 — [FEAT] Turn the overview into a rigging showreel
-
-**Goal:** The home page shows the rig moving.
-
-**Scope**
-- The overview hero renders the fighter performing idle and the four attacks on a loop through `FigureView` and the sampler, with a Skeleton toggle.
-- Tighten the copy to the proof-of-concept story with one Play button, and remove claims about frame tools, replay and determinism.
-
-**Acceptance:** The build-time document is still useful without JavaScript; the showreel loops smoothly and holds still under reduced motion.
-
-**Validation:** `npm run validate:documents`; `npm test -- tests/client`; browser check of `/`.
-
----
-
 ### HF-194 — [FEAT] Rebuild the tutorial as four short lessons
 
 **Goal:** A two-minute tutorial that feels like a game.
