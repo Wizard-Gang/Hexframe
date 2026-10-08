@@ -1,5 +1,6 @@
 node_modules/
 dist/
+src/worker/release.generated.ts
 .wrangler/
 *.tsbuildinfo
 .DS_Store

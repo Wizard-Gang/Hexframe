@@ -1,5 +1,6 @@
-/** Public runtime bindings for static asset routing. */
-export interface Env {
+import type { EdgeEnv } from "#wg-edge";
+
+/** Public runtime bindings for the shared edge shell and static Training assets. */
+export interface Env extends EdgeEnv {
   ASSETS: Fetcher;
-  ENVIRONMENT: string;
 }

@@ -1,138 +1,51 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const read = (path) => readFileSync(join(root, path), "utf8");
-
 const pkg = JSON.parse(read("package.json"));
 const scripts = pkg.scripts ?? {};
+const lock = JSON.parse(read("platform/vendor.lock.json"));
 
-assert.equal(scripts["verify:release-identity"], "node scripts/release-identity.mjs");
-assert.equal(scripts["test:release-workflow"], "node --test scripts/release-workflow-cases.mjs");
-assert.equal(scripts["test:release-identity"], "node --test scripts/release-identity-cases.mjs");
-assert.match(String(scripts.check), /npm run test:release-workflow/, "canonical check must exercise release workflow cases");
-assert.equal(scripts["test:release-cutter"], "node --test scripts/release-cutter-cases.mjs");
-assert.match(String(scripts.check), /npm run test:release-cutter/, "canonical check must exercise release cutter cases");
-assert.match(String(scripts.check), /npm run test:release-identity/, "canonical check must exercise release identity cases");
-assert.match(String(scripts.check), /npm run test:deploy/, "canonical check must exercise guarded deploy cases");
-assert.match(String(scripts.check), /npm run test:release-deploy-contract/, "canonical check must exercise release-to-deploy contract cases");
-
-assert.equal(scripts.deploy, undefined, "generic package scripts must not expose an unguarded production deploy");
-assert.equal(scripts["secrets:push"], undefined, "normal package scripts must not expose production secret mutation");
-assert.equal(scripts["deploy:dry-run"], "node scripts/deploy.mjs --dry-run");
-assert.equal(scripts["deploy:production"], "node scripts/deploy.mjs --production");
-assert.equal(scripts["test:deploy"], "node --test scripts/deploy-cases.mjs");
-assert.equal(scripts["test:release-deploy-contract"], "node --test scripts/release-deploy-contract-cases.mjs");
-for (const [name, command] of Object.entries(scripts)) {
-  assert.doesNotMatch(String(command), /wrangler\s+secret\s+put/i, `${name} mutates production secrets`);
-  assert.doesNotMatch(String(command), /(?:^|\s)(?:npx\s+)?wrangler\s+deploy/i, `${name} bypasses the repository deploy CLI`);
+assert.equal(lock.source, "Wizard-Gang/baseline");
+assert.equal(lock.commit, "7a5e351639e801999554130e346bfa65a3807585");
+assert.equal(scripts["check:platform"], "node platform/conformance/cli.mjs pin && node platform/conformance/cli.mjs wrangler --worker hexframe");
+assert.match(String(scripts.check), /npm run check:platform/);
+for (const retired of ["deploy", "deploy:dry-run", "deploy:production", "test:deploy", "test:release-deploy-contract"]) {
+  assert.equal(scripts[retired], undefined, `${retired} must not expose a repository-local production deploy path`);
 }
-
-const localDeploy = read("scripts/deploy.mjs");
-assert.match(localDeploy, /"--dry-run"/, "deploy CLI must preserve an explicit non-mutating dry-run mode");
-assert.match(localDeploy, /"--production"/, "deploy CLI must require an explicit production mode");
-assert.match(localDeploy, /GITHUB_ACTIONS/, "production deploy must require GitHub Actions context");
-assert.match(localDeploy, /GITHUB_EVENT_NAME/, "production deploy must require the release tag event");
-assert.match(localDeploy, /GITHUB_REPOSITORY/, "production deploy must bind to this repository");
-assert.match(localDeploy, /EXPECTED_TAG/, "production deploy must bind to the caller's expected tag");
-assert.match(localDeploy, /CLOUDFLARE_API_TOKEN/, "production deploy must require protected provider credentials");
-assert.match(localDeploy, /CLOUDFLARE_ACCOUNT_ID/, "production deploy must require protected provider credentials");
-assert.match(localDeploy, /verify:release-identity/, "production deploy must reuse the repository release identity CLI");
-assert.match(localDeploy, /"wrangler", "deploy"/, "production deploy mechanics must live in the repository CLI");
-assert.match(localDeploy, /"deployments", "list"/, "authenticated live-version verification must live in the repository CLI");
-assert.match(localDeploy, /"--dry-run"/, "dry run should validate production configuration");
-assert.doesNotMatch(localDeploy, /sync-secrets|ADMIN_/);
-
-const releaseIdentity = read("scripts/release-identity.mjs");
-assert.doesNotMatch(
-  releaseIdentity,
-  /GH_TOKEN|GITHUB_TOKEN|CLOUDFLARE_API_TOKEN|wrangler\s+deploy|gh\s+release\s+create/i,
-  "release identity verifier must remain credential-free and non-mutating",
-);
-
+for (const path of [".github/workflows/deploy.yml", "scripts/deploy.mjs", "scripts/deploy-cases.mjs", "scripts/release-deploy-contract-cases.mjs"]) {
+  assert.equal(existsSync(join(root, path)), false, `${path} is retired`);
+}
 const release = read(".github/workflows/release.yml");
 assert.match(release, /push:\s*\n\s+tags:\s*\n\s+- "v\[0-9\]\+\.\[0-9\]\+\.\[0-9\]\+"/);
-assert.match(release, /workflow_dispatch:/, "release workflow must accept exact-tag dispatch from the release cutter");
-assert.match(
-  release,
-  /npm run verify:release-identity -- --tag "\$GITHUB_REF_NAME" --ref-type "\$GITHUB_REF_TYPE" --fetch-origin/,
-  "release workflow must delegate release identity to the repository CLI",
-);
-assert.doesNotMatch(
-  release,
-  /git cat-file|package_version=|tagged_commit=|checked_out_commit=/,
-  "release workflow must not reimplement release identity",
-);
-
-const releaseInstall = release.indexOf("npm ci");
-const releaseCheck = release.indexOf("npm run check");
-const releasePublish = release.indexOf("gh release create");
-assert.ok(releaseInstall >= 0, "release reproduction must perform a clean npm ci install");
-assert.ok(releaseCheck > releaseInstall, "canonical npm run check must follow npm ci");
-assert.ok(releasePublish > releaseCheck, "GitHub Release publication must follow successful canonical check");
-assert.doesNotMatch(release, /^\s*npm run typecheck\s*$/m, "release workflow must not duplicate canonical typecheck ownership");
-assert.doesNotMatch(release, /^\s*npm test\s*$/m, "release workflow must not duplicate canonical test ownership");
-assert.doesNotMatch(release, /^\s*npm run build\s*$/m, "release workflow must not duplicate canonical build ownership");
-
+assert.match(release, /workflow_dispatch:/);
+assert.match(release, /npm run verify:release-identity -- --tag "\$GITHUB_REF_NAME" --ref-type "\$GITHUB_REF_TYPE" --fetch-origin/);
 assert.match(release, /gh release create/);
-assert.match(release, /--generate-notes/, "GitHub must generate human-readable release notes from repository state");
+assert.match(release, /--generate-notes/);
 assert.match(release, /--verify-tag/);
-assert.doesNotMatch(release, /docs\/releases|CHANGELOG\.md|--notes-file/, "release workflow must not depend on checked-in release history");
-assert.match(release, /deploy:\s*\n\s+needs:\s*reproduce/, "production deploy must remain downstream of successful release reproduction");
-assert.match(release, /uses:\s*\.\/\.github\/workflows\/deploy\.yml/);
+assert.match(release, new RegExp(`uses: Wizard-Gang/baseline/\\.github/workflows/deploy-worker\\.yml@${lock.commit}`));
+assert.match(release, /worker:\s*hexframe/);
 assert.match(release, /tag:\s*\$\{\{ github\.ref_name \}\}/);
-
+assert.match(release, /expected_sha:\s*\$\{\{ github\.sha \}\}/);
+assert.match(release, /secrets:\s*inherit/);
+assert.doesNotMatch(release, /PRODUCTION_HOST|secrets\.CLOUDFLARE_ACCOUNT_ID|wrangler\s+deploy/i);
+const releaseIdentity = read("scripts/release-identity.mjs");
+assert.doesNotMatch(releaseIdentity, /GH_TOKEN|GITHUB_TOKEN|CLOUDFLARE_API_TOKEN|wrangler\s+deploy|gh\s+release\s+create/i);
 const cutter = read(".github/workflows/release-cutter.yml");
-assert.match(cutter, /workflow_run:/, "release cutter must follow CI completion");
-assert.match(cutter, /workflows: \["CI"\]/, "release cutter must follow CI only");
-assert.match(cutter, /branches: \[main\]/, "release cutter must be scoped to main");
-assert.doesNotMatch(cutter, /workflow_dispatch:/, "release cutter itself must not be manually dispatchable");
-assert.match(cutter, /contents:\s*write/, "release cutter needs tag write permission");
-assert.match(cutter, /actions:\s*write/, "release cutter needs Release dispatch permission");
-assert.match(cutter, /git tag -a/, "release cutter must create annotated tags");
-assert.match(cutter, /actions\/workflows\/release\.yml\/dispatches/, "release cutter must dispatch the existing Release workflow");
-assert.doesNotMatch(cutter, /CLOUDFLARE|wrangler|environment:\s*production/i, "release cutter must not own production provider mutation");
-
-const deploy = read(".github/workflows/deploy.yml");
-assert.match(deploy, /workflow_call:/);
-assert.doesNotMatch(deploy, /workflow_dispatch:/, "production deploy must not be manually dispatchable");
-assert.match(deploy, /environment:\s*production/);
-assert.match(deploy, /ref:\s*\$\{\{ github\.ref \}\}/, "deploy must checkout the caller's immutable tag ref");
-assert.match(deploy, /EXPECTED_TAG:\s*\$\{\{ inputs\.tag \}\}/, "deploy workflow must pass the exact caller tag to the guarded CLI");
-assert.match(deploy, /CLOUDFLARE_API_TOKEN:\s*\$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/);
-assert.match(deploy, /CLOUDFLARE_ACCOUNT_ID:\s*\$\{\{ secrets\.CLOUDFLARE_ACCOUNT_ID \}\}/);
-assert.match(deploy, /run:\s*npm run deploy:production/, "deploy workflow must delegate production mutation to the guarded npm CLI");
-assert.doesNotMatch(
-  deploy,
-  /git cat-file|package_version=|tagged_commit=|checked_out_commit=|npm run verify:release-identity/,
-  "deploy workflow must not reimplement guarded deployment identity",
-);
-assert.doesNotMatch(deploy, /(?:npx\s+)?wrangler\s+(?:deploy|deployments)/, "deploy workflow must not own Wrangler production mechanics");
-
-const workflows = readdirSync(join(root, ".github/workflows")).filter((name) => name.endsWith(".yml"));
-const deployCallers = workflows.filter((name) => name !== "deploy.yml" && read(`.github/workflows/${name}`).includes("uses: ./.github/workflows/deploy.yml"));
-assert.deepEqual(deployCallers, ["release.yml"], "only the release workflow may call the production deploy workflow");
-
-assert.equal(existsSync(join(root, "CHANGELOG.md")), false, "checked-in CHANGELOG.md is not a release-history authority");
-assert.equal(existsSync(join(root, "docs/releases")), false, "per-version Markdown release archive is not maintained");
-
-const releasePolicy = read("docs/RELEASE-MANAGEMENT.md");
-assert.match(releasePolicy, /GitHub Releases are the human-readable release-history authority/i);
-assert.match(releasePolicy, /Actions runs carry release validation evidence/i);
-assert.match(releasePolicy, /provider deployment history carries runtime deployment evidence/i);
-assert.match(releasePolicy, /CHANGELOG\.md.*not maintained|not maintained.*CHANGELOG\.md/is);
-
-const docsToCheck = [
-  "README.md",
-  "CONTRIBUTING.md",
-  "AGENTS.md",
-  "docs/RELEASE-MANAGEMENT.md",
-];
-for (const path of docsToCheck) {
-  const source = read(path);
-  assert.doesNotMatch(source, /\]\([^)]*(?:docs\/releases\/|CHANGELOG\.md)[^)]*\)/, `${path} links to retired checked-in release history`);
-}
-
-console.log("Validated immutable release-only production mutation and GitHub release-history authority.");
+assert.match(cutter, /workflow_run:/);
+assert.match(cutter, /workflows: \["CI"\]/);
+assert.match(cutter, /branches: \[main\]/);
+assert.doesNotMatch(cutter, /workflow_dispatch:/);
+assert.match(cutter, /git tag -a/);
+assert.match(cutter, /actions\/workflows\/release\.yml\/dispatches/);
+assert.doesNotMatch(cutter, /CLOUDFLARE|wrangler|environment:\s*production/i);
+const wrangler = read("wrangler.jsonc");
+assert.match(wrangler, /"WG_APP": "hexframe"/);
+assert.match(wrangler, /"hexframe\.wizardgang\.ai"/);
+assert.match(wrangler, /"WG_OPS_TOKEN"/);
+assert.match(wrangler, /"WG_SESSION_KEY"/);
+assert.doesNotMatch(wrangler, /"env"\s*:|d1_databases|r2_buckets|kv_namespaces|CLOUDFLARE_ACCOUNT_ID|ENVIRONMENT/);
+console.log("Validated the shared baseline shell and single release-only production deployment boundary.");

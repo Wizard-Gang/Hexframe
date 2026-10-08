@@ -10,12 +10,11 @@ function environment(paths: string[]): Env {
       const path = new URL(input.url).pathname;
       paths.push(path);
       if (path === "/play/index.html") return new Response('<script src="/play/assets/game.js"></script><link href="/play/assets/game.css">', { headers: { "content-type": "text/html; charset=utf-8" } });
-      if (path === "/index.html") return new Response('<main><h1>Hexframe</h1><a href="/play/">Open training</a></main>', { headers: { "content-type": "text/html; charset=utf-8" } });
       if (path === "/play/assets/game.js") return new Response("export {};", { headers: { "content-type": "text/javascript" } });
       return new Response("missing", { status: 404 });
     },
   } as unknown as Fetcher;
-  return { ASSETS: assets, ENVIRONMENT: "test" };
+  return { WG_APP: "hexframe", ASSETS: assets };
 }
 
 describe("public Training route", () => {
@@ -59,21 +58,25 @@ describe("public Training route", () => {
     expect(response.status).toBe(405); expect(response.headers.get("allow")).toBe("GET, HEAD");
   });
 
-  it("serves a public project overview at the root", async () => {
-    const paths: string[] = []; const response = await worker.fetch(new Request("https://hexframe.test/"), environment(paths));
-    expect(response.status).toBe(200); expect(paths).toEqual(["/index.html"]); expect(await response.text()).toContain("Open training");
+  it("redirects the public root to Training", async () => {
+    const paths: string[] = [];
+    const response = await worker.fetch(new Request("https://hexframe.wizardgang.ai/"), environment(paths), {});
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("/play/");
+    expect(paths).toEqual([]);
   });
 
-
   it("keeps the canonical /play slash redirect and preserves tutorial entry", async () => {
-    const retired = await worker.fetch(new Request("https://hexframe.test/play?debug=1"), environment([]));
+    const retired = await worker.fetch(new Request("https://hexframe.wizardgang.ai/play?debug=1"), environment([]), {});
     expect(retired.status).toBe(308); expect(retired.headers.get("location")).toBe("/play/");
-    const tutorial = await worker.fetch(new Request("https://hexframe.test/play?tutorial=1"), environment([]));
+    const tutorial = await worker.fetch(new Request("https://hexframe.wizardgang.ai/play?tutorial=1"), environment([]), {});
     expect(tutorial.status).toBe(308); expect(tutorial.headers.get("location")).toBe("/play/?tutorial=1");
   });
 
-  it.each(["/training", "/fight", "/forge", "/settings"])("returns 404 for retired route %s", async (pathname) => {
-    const paths: string[] = []; const response = await worker.fetch(new Request(`https://hexframe.test${pathname}`), environment(paths));
-    expect(response.status).toBe(404); expect(paths).toEqual([pathname]);
+  it.each(["/training", "/fight", "/forge", "/settings"])("returns shell 404 for retired route %s", async (pathname) => {
+    const paths: string[] = [];
+    const response = await worker.fetch(new Request(`https://hexframe.wizardgang.ai${pathname}`), environment(paths), {});
+    expect(response.status).toBe(404);
+    expect(paths).toEqual([]);
   });
 });
