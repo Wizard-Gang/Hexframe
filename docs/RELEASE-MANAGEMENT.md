@@ -34,7 +34,7 @@ The verifier is exposed as `npm run verify:release-identity`; a caller supplies 
 
 Published release tags are never moved, rewritten, or deleted.
 
-Build output follows the same evidence boundary. `version.json` derives `commit` from the exact checkout and `builtAt` from that commit's immutable timestamp. A release label is used only when an annotated semantic-version tag points exactly at that commit, or when an explicitly supplied `RELEASE` names that same exact annotated tag. Descendants of a release tag remain development identities, and a dirty checkout receives a `+dirty` release suffix.
+Runtime identity follows the shared `wg-edge` boundary. The release build supplies `WG_VERSION` and `WG_COMMIT`; the Worker serves those values from the shell at `/version.json`. The existing deterministic build stamp remains build evidence, but the shared shell is the runtime identity authority.
 
 The committed GitHub-settings contract requires an active `v*` tag ruleset that blocks tag updates and deletion; live provider state is checked with `npm run verify:github-settings`.
 
@@ -51,7 +51,7 @@ Evidence is divided by concern:
 - GitHub Releases carry human-readable release history.
 - Actions runs carry release validation evidence.
 - Provider deployment history carries runtime deployment evidence.
-- `version.json` exposes the deployed release and commit identity from the built product.
+- The vendored `wg-edge` shell exposes the deployed app, semantic version and commit identity at `/version.json`.
 
 `CHANGELOG.md` and per-version Markdown release files are not maintained.
 
@@ -75,17 +75,14 @@ A successful merge, pull request, branch push, or arbitrary `main` commit does n
 
 ## Production mutation boundary
 
-Production mutation is supported only by the tag-driven GitHub Actions release path.
+Production mutation is supported only by the tag-driven GitHub Actions release path and the baseline reusable deploy workflow.
 
-- `.github/workflows/deploy.yml` is callable only from the Release workflow.
-- The deploy job runs inside the protected `production` GitHub environment.
-- The Release caller passes `secrets: inherit` to the reusable Deploy workflow so the called job can resolve the Cloudflare secrets from its protected `production` environment after approval. Removing this handoff causes empty credential bindings and must fail the release/deploy contract tests.
-- The deployment checkout is the caller's immutable tag ref.
-- The deploy workflow invokes the repository-owned `npm run deploy:production` command inside the protected environment. That command fails closed unless it is running in GitHub Actions for this repository's exact semantic release tag from an authorized tag-push or exact-tag Release dispatch event, receives the same expected tag from the Release workflow, has the protected Cloudflare credentials, and passes the shared release-identity CLI again before mutation.
-- The guarded production command builds with the validated tag, performs the Wrangler production deployment, and verifies the uploaded Version ID is the live deployment serving 100% of traffic. The workflow retains provider protection, secret injection, sequencing, and public `version.json` evidence.
-- After authenticated Version ID verification, public `version.json` must match the same release tag and resolved deployed commit. A Cloudflare managed challenge is the only public-check exception; it is recorded as a warning because authenticated provider verification remains authoritative. Other retrieval failures and identity mismatches fail the deploy workflow.
-- `npm run deploy:dry-run` uses the same repository deploy CLI in explicit non-mutating mode to build and validate the production Wrangler configuration with `--dry-run`; it cannot publish.
-- Production secret values remain in protected GitHub/provider state. Local repository scripts do not push them, and the repository does not provide a supported local production mutation path.
+- The Release workflow publishes the already-validated annotated tag, then calls `Wizard-Gang/baseline/.github/workflows/deploy-worker.yml@7a5e351639e801999554130e346bfa65a3807585`.
+- The caller passes `worker: hexframe`, the exact release tag, the exact tagged commit, and `secrets: inherit`. Current baseline requires the inherited caller environment secret so its protected `production` deploy job can read `CLOUDFLARE_API_TOKEN`; the account identifier remains a protected environment variable.
+- The reusable workflow re-verifies the annotated tag, package version, exact commit, vendored platform pin and Wrangler conformance before any provider mutation.
+- The protected deploy job builds with `WG_VERSION` and `WG_COMMIT`, runs the lockfile-pinned Wrangler with resource provisioning disabled, and requires the uploaded version to reach 100% of production traffic.
+- The shared `wg-edge` shell owns `/version.json`; baseline verifies its public `app`, `version` and `commit` against the immutable release before the deployment succeeds.
+- Hexframe keeps no repository-local production deploy workflow or production deploy CLI. Normal implementation work cannot deploy production.
 
 ## Corrections and rollback
 

@@ -51,8 +51,11 @@ jobs:
 
   deploy:
     needs: reproduce
-    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+    uses: Wizard-Gang/baseline/.github/workflows/deploy-worker.yml@7a5e351639e801999554130e346bfa65a3807585
     with:
+      worker: hexframe
       tag: ${{ github.ref_name }}
-    # Preserve the called job's protected production environment secret context.
+      expected_sha: ${{ github.sha }}
     secrets: inherit

@@ -21,12 +21,8 @@
     "test:plan-queue": "node scripts/check-portfolio-contract.mjs",
     "check:public-secrets": "node scripts/check-public-secrets.mjs",
     "test:public-secrets": "node --test scripts/public-secret-cases.mjs",
-    "check": "npm run test:plan-queue && npm run check:history && npm run test:public-secrets && npm run check:public-secrets && npm run test:patch-integrity && npm run check:patch-integrity && npm run typecheck && npm run test && npm run test:dependency-advisory && npm run test:release-workflow && npm run test:release-cutter && npm run test:release-identity && npm run test:deploy && npm run test:release-deploy-contract && npm run test:version-stamp && npm run test:build-identity && npm run test:github-settings && npm run build && npm run validate:documents && npm run validate:presentation-security && npm run validate:release-boundary && npm run validate:documentation-authority",
+    "check": "npm run test:plan-queue && npm run check:history && npm run check:platform && npm run test:public-secrets && npm run check:public-secrets && npm run test:patch-integrity && npm run check:patch-integrity && npm run typecheck && npm run test && npm run test:dependency-advisory && npm run test:release-workflow && npm run test:release-cutter && npm run test:release-identity && npm run test:version-stamp && npm run test:build-identity && npm run test:github-settings && npm run build && npm run validate:documents && npm run validate:presentation-security && npm run validate:release-boundary && npm run validate:documentation-authority",
     "validate:presentation-security": "node scripts/validate-presentation-security.mjs",
-    "deploy:dry-run": "node scripts/deploy.mjs --dry-run",
-    "deploy:production": "node scripts/deploy.mjs --production",
-    "test:deploy": "node --test scripts/deploy-cases.mjs",
-    "test:release-deploy-contract": "node --test scripts/release-deploy-contract-cases.mjs",
     "validate:release-boundary": "node scripts/validate-release-boundary.mjs",
     "validate:documentation-authority": "node scripts/validate-documentation-authority.mjs",
     "test:github-settings": "node --test scripts/github-repository-settings-cases.mjs",
@@ -42,7 +38,12 @@
     "test:version-stamp": "node --test scripts/version-stamp-cases.mjs",
     "test:build-identity": "node scripts/build-identity-cases.mjs",
     "test:patch-integrity": "node --test scripts/patch-integrity-cases.mjs",
-    "check:patch-integrity": "node scripts/check-patch-integrity.mjs"
+    "check:patch-integrity": "node scripts/check-patch-integrity.mjs",
+    "generate:worker-release": "node scripts/generate-worker-release.mjs",
+    "pretypecheck": "npm run generate:worker-release",
+    "pretest": "npm run generate:worker-release",
+    "prebuild": "npm run generate:worker-release",
+    "check:platform": "node platform/conformance/cli.mjs pin && node platform/conformance/cli.mjs wrangler --worker hexframe"
   },
   "dependencies": {
     "react": "19.3.0",
@@ -66,6 +67,12 @@
   "overrides": {
     "miniflare": {
       "sharp": "0.35.5"
+    }
+  },
+  "imports": {
+    "#wg-edge": {
+      "types": "./platform/wg-edge/index.d.ts",
+      "default": "./platform/wg-edge/index.mjs"
     }
   }
 }

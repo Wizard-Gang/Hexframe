@@ -39,9 +39,6 @@ jobs:
       - name: Dependency advisory (network)
         run: npm run audit:dependencies
 
-      - name: Production config dry run
-        run: npm run deploy:dry-run
-
 
   change-id:
     # Every controlled change carries exactly one permanent ID and one primary type.
@@ -68,6 +65,9 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
+      - name: Verify pinned platform before credential scan
+        run: node platform/conformance/cli.mjs pin
+
       - name: Scan tracked tree for credential material
         run: |
           set -o pipefail
@@ -88,7 +88,10 @@ jobs:
             exit 1
           fi
 
-          if git grep -nEI 'BEGIN (RSA |OPENSSH |EC |PGP )?PRIVATE KEY' -- .; then
+          # The pinned baseline README and GitHub helper intentionally contain PEM marker text
+          # as documentation/error messages. Pin verification above makes those two vendored files immutable here.
+          if git grep -nEI 'BEGIN (RSA |OPENSSH |EC |PGP )?PRIVATE KEY' -- . \
+             ':!platform/wg-edge/README.md' ':!platform/wg-edge/github.mjs'; then
             echo "::error::Private key material found"
             exit 1
           fi

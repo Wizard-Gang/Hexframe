@@ -67,7 +67,7 @@ Local development needs no application credentials. Vite serves both `/` and `/p
 | Documentation authority | `npm run validate:documentation-authority` | Verifies the current docs set, README references/commands, MVP vocabulary, and provenance |
 | Dependency advisory gate | `npm run audit:dependencies` | Read-only npm registry query; fails closed on high/critical findings or an untrustworthy response |
 | Live GitHub settings check | `npm run verify:github-settings` | Read-only provider comparison; requires an administration-readable token |
-| Production config dry run | `npm run deploy:dry-run` | Non-publishing Wrangler production configuration validation |
+| Platform conformance | `npm run check:platform` | Verifies the vendored baseline pin and Hexframe Worker configuration |
 
 Privileged repository-setting mutation and production deployment are not ordinary development commands. See the governed documents below before using those paths.
 
