@@ -70,18 +70,6 @@ Tasks follow these defaults unless the owner changes them before the task starts
 
 ## Open tasks
 
-### HF-197 — [BUILD] Release v0.9.0
-
-**Goal:** Ship the rigging MVP.
-
-**Scope**
-- Set `package.json` and `package-lock.json` to 0.9.0, and retire HF-197 from `implementation_plan.md`.
-- After merge, the Release Cutter tags v0.9.0 and the Release workflow publishes it; the owner approves the protected `production` deployment.
-
-**Acceptance:** Production `/version.json` reports v0.9.0, and `/` and `/play/` show the new rig, effects and tutorial. If approval is pending, stop there and report.
-
-**Validation:** Standard validation; the Release and Deploy runs; a production browser check.
-
 ### HF-199 — [OPS] Adopt the shared wg-edge shell and the baseline deploy workflow
 
 **Goal:** Hexframe runs on baseline's shared Worker shell, conforming config and single deploy path, as Phase 4 of the Cloudflare consolidation. Baseline's `config/cloudflare.json` and `config/secrets.json` are the authority.
